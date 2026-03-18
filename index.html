@@ -1,0 +1,1878 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>智慧課堂助手</title>
+  
+  <!-- 引入 Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- 設定 Tailwind 自訂動畫 -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            mono: ['"Courier New"', 'Courier', 'monospace'],
+          },
+          animation: {
+            'pop-in': 'popIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+            'glow': 'pulseGlow 2s infinite',
+            'float': 'float 3s ease-in-out infinite',
+            'shimmer': 'shimmer 2.5s linear infinite',
+            'spin-slow': 'spin 8s linear infinite',
+            'gradient-xy': 'gradientXY 10s ease infinite',
+            'bounce-soft': 'bounceSoft 2s infinite',
+            'ping-slow': 'ping 2s cubic-bezier(0, 0, 0.2, 1) infinite',
+          },
+          keyframes: {
+            popIn: {
+              '0%': { transform: 'scale(0.95) translateY(10px)', opacity: '0' },
+              '100%': { transform: 'scale(1) translateY(0)', opacity: '1' },
+            },
+            pulseGlow: {
+              '0%, 100%': { boxShadow: '0 0 20px 0px rgba(99, 102, 241, 0.4)' },
+              '50%': { boxShadow: '0 0 40px 15px rgba(99, 102, 241, 0.7)' },
+            },
+            float: {
+              '0%, 100%': { transform: 'translateY(0)' },
+              '50%': { transform: 'translateY(-10px)' },
+            },
+            shimmer: {
+              '0%': { transform: 'translateX(-150%) skewX(-15deg)' },
+              '100%': { transform: 'translateX(250%) skewX(-15deg)' },
+            },
+            gradientXY: {
+              '0%, 100%': { backgroundSize: '400% 400%', backgroundPosition: '0% 50%' },
+              '50%': { backgroundSize: '400% 400%', backgroundPosition: '100% 50%' },
+            },
+            bounceSoft: {
+              '0%, 100%': { transform: 'translateY(-5%)', animationTimingFunction: 'cubic-bezier(0.8,0,1,1)' },
+              '50%': { transform: 'translateY(0)', animationTimingFunction: 'cubic-bezier(0,0,0.2,1)' },
+            }
+          }
+        }
+      }
+    }
+  </script>
+  
+  <!-- 引入 Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    /* 隱藏捲軸但保留功能 */
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    
+    /* 計時器圓環進度條動畫 */
+    .timer-circle {
+      transition: stroke-dashoffset 1s linear, stroke 0.5s ease;
+    }
+
+    /* 隱藏數字輸入框的原生上下箭頭，讓畫面更乾淨俐落 */
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    input[type="number"] {
+      -moz-appearance: textfield;
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-slate-950 text-slate-100 font-sans selection:bg-indigo-500/30 overflow-x-hidden relative flex flex-col">
+
+  <!-- 動態漸層背景 -->
+  <div class="fixed inset-0 bg-gradient-to-br from-indigo-900/20 via-slate-950 to-purple-900/20 animate-gradient-xy pointer-events-none -z-20"></div>
+  <div class="fixed top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full bg-indigo-600/10 blur-[120px] animate-pulse pointer-events-none -z-10"></div>
+  <div class="fixed bottom-[-20%] right-[-10%] w-[50%] h-[50%] rounded-full bg-purple-600/10 blur-[120px] animate-pulse pointer-events-none -z-10" style="animation-delay: 1s"></div>
+
+  <!-- 彩帶畫布 -->
+  <canvas id="confetti-canvas" class="fixed inset-0 pointer-events-none z-50"></canvas>
+
+  <!-- 頂部導覽列 -->
+  <header class="p-4 md:p-6 flex flex-col md:flex-row justify-between items-center gap-4 border-b border-white/10 bg-slate-900/50 backdrop-blur-md sticky top-0 z-40 shadow-lg shadow-black/20">
+    <div class="flex items-center gap-3">
+      <div class="p-2 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl shadow-lg shadow-indigo-500/30 animate-float shrink-0">
+        <i data-lucide="sparkles" class="w-6 h-6 text-white"></i>
+      </div>
+      <div class="flex flex-col">
+        <h1 class="text-2xl md:text-3xl font-black bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent drop-shadow-sm whitespace-nowrap leading-tight">
+          智慧課堂助手
+        </h1>
+        <div id="header-time" class="text-sm font-mono text-slate-400 flex items-center gap-1.5 mt-0.5">
+          <i data-lucide="clock" class="w-3.5 h-3.5"></i> <span>00:00:00</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 主功能切換導覽列 -->
+    <div class="flex bg-slate-950/60 p-1.5 rounded-2xl border border-white/10 shadow-inner w-full md:w-auto overflow-x-auto no-scrollbar">
+      <button onclick="switchAppMode('draw')" id="nav-draw" class="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-indigo-600 text-white font-bold transition-all shadow-md whitespace-nowrap">
+        <i data-lucide="users" class="w-4 h-4"></i> 抽籤機
+      </button>
+      <button onclick="switchAppMode('clock')" id="nav-clock" class="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-white/5 font-bold transition-all whitespace-nowrap">
+        <i data-lucide="clock" class="w-4 h-4"></i> 考試大鐘
+      </button>
+      <button onclick="switchAppMode('timer')" id="nav-timer" class="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-white/5 font-bold transition-all relative whitespace-nowrap">
+        <i data-lucide="timer" class="w-4 h-4"></i> 小組計時
+        <!-- 計時器運行中小紅點指示 -->
+        <span id="timer-running-dot" class="hidden absolute top-2 right-4 w-2 h-2 rounded-full bg-red-500 animate-ping"></span>
+        <span id="timer-running-dot-static" class="hidden absolute top-2 right-4 w-2 h-2 rounded-full bg-red-500"></span>
+      </button>
+      <button onclick="switchAppMode('score')" id="nav-score" class="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-white/5 font-bold transition-all whitespace-nowrap">
+        <i data-lucide="award" class="w-4 h-4"></i> 計分板
+      </button>
+      <button onclick="switchAppMode('board')" id="nav-board" class="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-white/5 font-bold transition-all whitespace-nowrap">
+        <i data-lucide="edit-3" class="w-4 h-4"></i> 互動白板
+      </button>
+    </div>
+
+    <button id="mute-btn" class="p-3 rounded-full bg-white/5 hover:bg-white/20 transition-all duration-300 border border-white/10 hover:scale-110 hidden md:block shrink-0">
+      <i data-lucide="volume-2" id="mute-icon" class="w-5 h-5 text-indigo-400 transition-colors"></i>
+    </button>
+  </header>
+
+  <!-- 主要內容區 -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 relative flex flex-col">
+    
+    <!-- ========================================== -->
+    <!-- 模組 1: 抽籤機 (DRAW MODE) -->
+    <!-- ========================================== -->
+    <div id="app-draw" class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start animate-pop-in h-full flex-1">
+      <!-- 左側：設定區 -->
+      <div class="lg:col-span-4 space-y-6 bg-slate-900/60 p-6 rounded-3xl border border-white/10 backdrop-blur-sm shadow-xl">
+        <div class="flex items-center gap-2 mb-2">
+          <i data-lucide="settings" class="w-5 h-5 text-indigo-400"></i>
+          <h2 class="text-xl font-semibold">抽籤設定</h2>
+        </div>
+
+        <!-- 模式切換 -->
+        <div class="flex p-1 bg-slate-950/60 border border-white/10 rounded-xl shadow-inner relative">
+          <button id="mode-number-btn" class="flex-1 py-2 text-sm font-bold rounded-lg bg-indigo-600 text-white shadow-md transition-all duration-300 relative z-10">抽號碼</button>
+          <button id="mode-name-btn" class="flex-1 py-2 text-sm font-bold rounded-lg text-slate-400 hover:text-slate-200 transition-all duration-300 relative z-10">抽姓名</button>
+        </div>
+        
+        <!-- 號碼模式專屬設定 -->
+        <div id="number-settings" class="space-y-6 animate-pop-in" style="animation-duration: 0.3s">
+          <div class="space-y-2">
+            <label class="flex justify-between text-sm font-medium text-slate-400">
+              <span>編號範圍</span>
+            </label>
+            <div class="flex items-center gap-2">
+              <div class="flex-1 flex items-center bg-slate-950/50 border border-white/10 rounded-xl p-2 shadow-inner">
+                <input type="number" id="start-num" value="1" min="0" class="w-full bg-transparent border-none text-xl text-center font-bold focus:outline-none text-indigo-300">
+              </div>
+              <span class="text-slate-500 font-bold">至</span>
+              <div class="flex-1 flex items-center bg-slate-950/50 border border-white/10 rounded-xl p-2 shadow-inner">
+                <input type="number" id="end-num" value="50" min="0" class="w-full bg-transparent border-none text-xl text-center font-bold focus:outline-none text-indigo-300">
+              </div>
+            </div>
+          </div>
+
+          <div class="space-y-2">
+            <label class="text-sm font-medium text-slate-400">排除號碼 <span class="text-xs text-slate-500">(例如: 4, 17-20)</span></label>
+            <div class="flex items-center bg-slate-950/50 border border-white/10 rounded-xl p-2 shadow-inner">
+              <i data-lucide="ban" class="w-5 h-5 ml-2 text-red-400/70"></i>
+              <input type="text" id="exclude-input" placeholder="單號或區間，以逗號分隔" class="w-full bg-transparent border-none text-base pl-3 focus:outline-none text-indigo-300 placeholder-slate-700">
+            </div>
+          </div>
+        </div>
+
+        <!-- 姓名模式專屬設定 -->
+        <div id="name-settings" class="space-y-6 hidden animate-pop-in" style="animation-duration: 0.3s">
+          <div class="space-y-2">
+            <label class="flex justify-between text-sm font-medium text-slate-400">
+              <span>名單輸入</span>
+              <span class="text-xs text-slate-500">換行、逗號或頓號分隔</span>
+            </label>
+            <textarea id="name-input" rows="5" placeholder="例如：&#10;王小明&#10;陳大山&#10;林美麗" class="w-full bg-slate-950/50 border border-white/10 rounded-xl p-3 text-lg font-medium text-indigo-300 focus:outline-none focus:border-indigo-500/50 resize-none shadow-inner no-scrollbar"></textarea>
+          </div>
+        </div>
+
+        <!-- 共用設定區隔線 -->
+        <div class="h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent my-4"></div>
+
+        <!-- 共用：籤筒狀態與抽出數量 -->
+        <div class="space-y-4">
+          <div class="flex justify-between items-center bg-slate-800/30 px-4 py-2 rounded-lg border border-white/5">
+            <span class="text-sm font-medium text-slate-400">籤筒狀態</span>
+            <span class="text-indigo-400 font-bold" id="pool-info">共 50 個選項</span>
+          </div>
+
+          <div class="space-y-2">
+            <label class="text-sm font-medium text-slate-400">抽出數量</label>
+            <div class="flex items-center bg-slate-950/50 border border-white/10 rounded-xl p-2 shadow-inner">
+              <i data-lucide="users" class="w-5 h-5 ml-2 text-slate-500"></i>
+              <input type="number" id="draw-count" value="1" min="1" class="w-full bg-transparent border-none text-xl text-center font-bold focus:outline-none text-indigo-300">
+            </div>
+          </div>
+        </div>
+
+        <!-- 不重複抽籤開關 -->
+        <div class="flex items-center justify-between bg-slate-950/50 border border-white/10 rounded-xl p-4 shadow-inner">
+          <div class="flex flex-col">
+            <span class="text-sm font-medium text-slate-200">不重複抽籤</span>
+            <span class="text-xs text-slate-500">已抽出的選項不會再次出現</span>
+          </div>
+          <button id="unique-toggle" class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none bg-indigo-500">
+            <span id="unique-toggle-knob" class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform translate-x-6"></span>
+          </button>
+        </div>
+
+        <!-- 歷史紀錄顯示 -->
+        <div id="history-container" class="space-y-2 animate-pop-in hidden">
+          <div class="flex items-center justify-between">
+            <label class="flex items-center gap-2 text-sm font-medium text-slate-400">
+              <i data-lucide="history" class="w-4 h-4"></i>
+              <span id="history-count">已抽出結果 (0)</span>
+            </label>
+            <span class="text-xs text-indigo-400/80 animate-pulse flex items-center gap-1">
+              <i data-lucide="mouse-pointer-click" class="w-3 h-3"></i> 點擊可加回
+            </span>
+          </div>
+          <div id="history-list" class="flex flex-wrap gap-2 p-3 bg-slate-950/50 rounded-xl border border-white/10 max-h-32 overflow-y-auto shadow-inner no-scrollbar">
+            <!-- 歷史結果會插在這裡 -->
+          </div>
+        </div>
+
+        <!-- 錯誤訊息 -->
+        <div id="error-msg" class="hidden p-3 bg-red-500/20 border border-red-500/30 rounded-lg text-red-400 text-sm text-center"></div>
+
+        <!-- 操作按鈕 -->
+        <div class="pt-2 flex gap-3">
+          <button id="draw-btn" class="flex-1 group relative py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2 transition-all duration-300 overflow-hidden bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-500/30 hover:shadow-indigo-500/50 animate-glow">
+            <span id="draw-btn-content" class="flex items-center justify-center gap-2">
+              <i data-lucide="play" class="w-5 h-5 fill-current"></i> 開始抽籤
+            </span>
+            <div id="draw-btn-fx" class="absolute inset-0 -translate-x-full group-hover:animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-white/20 to-transparent" style="transform-origin: left"></div>
+          </button>
+          
+          <button id="reset-btn" class="p-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors border border-white/5 disabled:opacity-50 disabled:cursor-not-allowed" title="重置" disabled>
+            <i data-lucide="rotate-ccw" class="w-6 h-6"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- 右側：顯示區 -->
+      <div class="lg:col-span-8 h-full min-h-[500px] flex flex-col relative bg-slate-900/40 backdrop-blur-sm rounded-3xl border border-white/10 shadow-2xl overflow-hidden p-8 group">
+        <!-- 背景裝飾 -->
+        <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-gradient-to-b from-indigo-500/20 to-transparent blur-[80px] rounded-full pointer-events-none transition-opacity duration-700 group-hover:opacity-70"></div>
+        
+        <div id="display-area" class="flex-1 flex flex-col items-center justify-center relative z-10 w-full">
+          <!-- 待命狀態 -->
+          <div id="standby-view" class="text-center space-y-6 opacity-80">
+            <div class="relative w-32 h-32 mx-auto animate-float">
+              <div class="absolute inset-0 bg-indigo-500/30 blur-2xl rounded-full animate-pulse"></div>
+              <i data-lucide="trophy" class="w-full h-full text-slate-500 relative z-10 drop-shadow-lg"></i>
+            </div>
+            <p class="text-2xl text-slate-400 font-medium tracking-widest animate-pulse">等待抽籤開始...</p>
+          </div>
+
+          <!-- 抽籤中狀態 -->
+          <div id="rolling-view" class="hidden w-full max-w-4xl flex flex-wrap justify-center gap-4">
+            <!-- 跳動的選項會插在這裡 -->
+          </div>
+
+          <!-- 結果公佈狀態 -->
+          <div id="result-view" class="hidden w-full flex flex-col items-center">
+            <div class="inline-block mb-10 px-8 py-3 rounded-full bg-gradient-to-r from-amber-500/10 via-orange-500/20 to-amber-500/10 border border-amber-500/30 animate-bounce-soft shadow-[0_0_30px_rgba(245,158,11,0.2)]">
+              <span class="text-amber-400 font-bold tracking-widest text-lg">🎉 恭喜以下得獎者 🎉</span>
+            </div>
+            <div id="winners-container" class="flex flex-wrap justify-center gap-6 w-full max-w-4xl">
+              <!-- 得獎者卡片會插在這裡 -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ========================================== -->
+    <!-- 模組 2: 考試大鐘 (CLOCK MODE) -->
+    <!-- ========================================== -->
+    <div id="app-clock" class="hidden flex-col items-center justify-center min-h-[75vh] w-full animate-pop-in relative flex-1">
+      <div class="absolute inset-0 bg-indigo-900/10 rounded-[3rem] border border-white/5 backdrop-blur-sm -z-10 shadow-2xl"></div>
+      
+      <div class="text-center space-y-8 p-10">
+        <!-- 日期顯示 -->
+        <div id="clock-date" class="text-3xl md:text-5xl font-medium text-indigo-300/80 tracking-widest drop-shadow-md">
+          載入日期中...
+        </div>
+        
+        <!-- 時間顯示 -->
+        <div id="clock-time" class="text-[6rem] sm:text-[10rem] md:text-[14rem] font-black font-mono leading-none tracking-tight bg-gradient-to-b from-white via-indigo-100 to-indigo-500 bg-clip-text text-transparent drop-shadow-[0_0_40px_rgba(99,102,241,0.6)]">
+          00:00:00
+        </div>
+        
+        <!-- 秒數進度條(視覺點綴) -->
+        <div class="w-full max-w-2xl mx-auto h-2 bg-slate-800 rounded-full overflow-hidden mt-8 shadow-inner border border-white/5">
+          <div id="clock-seconds-bar" class="h-full bg-gradient-to-r from-indigo-500 to-purple-500 transition-all duration-1000 ease-linear shadow-[0_0_10px_rgba(99,102,241,0.8)]" style="width: 0%"></div>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ========================================== -->
+    <!-- 模組 3: 小組計時器 (TIMER MODE) - 全新設計版面 -->
+    <!-- ========================================== -->
+    <div id="app-timer" class="hidden grid-cols-1 lg:grid-cols-12 gap-8 items-center min-h-[75vh] w-full animate-pop-in relative flex-1">
+      
+      <!-- 左側：設定控制面板 (5 欄寬) -->
+      <div class="lg:col-span-5 h-full flex flex-col justify-center">
+        <div class="bg-slate-900/60 p-8 md:p-10 rounded-[2.5rem] border border-white/10 backdrop-blur-md shadow-2xl flex flex-col gap-8 relative overflow-hidden">
+          
+          <!-- 面板背景光暈 -->
+          <div class="absolute top-[-50px] right-[-50px] w-48 h-48 bg-indigo-500/20 rounded-full blur-[60px] pointer-events-none"></div>
+
+          <!-- 標題 -->
+          <div class="flex items-center gap-3 relative z-10">
+            <div class="p-2.5 bg-indigo-500/20 rounded-xl border border-indigo-500/30">
+              <i data-lucide="timer" class="w-7 h-7 text-indigo-400"></i>
+            </div>
+            <div>
+              <h2 class="text-2xl font-bold text-white tracking-wide">小組計時設定</h2>
+              <p class="text-sm text-slate-400 mt-1">設定倒數時間或選擇快速模組</p>
+            </div>
+          </div>
+
+          <!-- 自訂時間輸入 (數位儀表板風格) -->
+          <div class="bg-slate-950/80 rounded-2xl p-6 border border-white/5 shadow-inner relative z-10 flex flex-col items-center">
+            <div class="flex items-center justify-center gap-3">
+              <!-- 分鐘 -->
+              <div class="flex flex-col items-center">
+                <input type="number" id="timer-input-m" min="0" max="99" value="5" class="w-24 h-24 text-5xl font-mono font-black text-center bg-slate-900 border border-white/10 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/50 rounded-2xl text-indigo-300 transition-all shadow-inner">
+                <span class="text-[10px] text-slate-500 mt-3 font-bold uppercase tracking-widest">Minutes</span>
+              </div>
+              <!-- 冒號 -->
+              <div class="text-4xl text-slate-600 font-black pb-8 animate-pulse">:</div>
+              <!-- 秒數 -->
+              <div class="flex flex-col items-center">
+                <input type="number" id="timer-input-s" min="0" max="59" value="0" class="w-24 h-24 text-5xl font-mono font-black text-center bg-slate-900 border border-white/10 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/50 rounded-2xl text-indigo-300 transition-all shadow-inner">
+                <span class="text-[10px] text-slate-500 mt-3 font-bold uppercase tracking-widest">Seconds</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 快速設定 (質感藥丸按鈕) -->
+          <div class="space-y-3 relative z-10">
+            <label class="text-sm font-medium text-slate-400 flex items-center gap-2">
+              <i data-lucide="zap" class="w-4 h-4 text-amber-400"></i> 快速設定
+            </label>
+            <div class="grid grid-cols-3 gap-3">
+              <button class="timer-preset-btn py-3 bg-slate-800/60 hover:bg-indigo-600 border border-slate-700/50 hover:border-indigo-400 text-slate-300 hover:text-white rounded-xl font-bold text-sm transition-all duration-300 shadow-sm hover:shadow-[0_0_15px_rgba(99,102,241,0.4)]" data-sec="60">1 分鐘</button>
+              <button class="timer-preset-btn py-3 bg-slate-800/60 hover:bg-indigo-600 border border-slate-700/50 hover:border-indigo-400 text-slate-300 hover:text-white rounded-xl font-bold text-sm transition-all duration-300 shadow-sm hover:shadow-[0_0_15px_rgba(99,102,241,0.4)]" data-sec="180">3 分鐘</button>
+              <button class="timer-preset-btn py-3 bg-slate-800/60 hover:bg-indigo-600 border border-slate-700/50 hover:border-indigo-400 text-slate-300 hover:text-white rounded-xl font-bold text-sm transition-all duration-300 shadow-sm hover:shadow-[0_0_15px_rgba(99,102,241,0.4)]" data-sec="300">5 分鐘</button>
+              <button class="timer-preset-btn py-3 bg-slate-800/60 hover:bg-indigo-600 border border-slate-700/50 hover:border-indigo-400 text-slate-300 hover:text-white rounded-xl font-bold text-sm transition-all duration-300 shadow-sm hover:shadow-[0_0_15px_rgba(99,102,241,0.4)]" data-sec="600">10 分鐘</button>
+              <button class="timer-preset-btn py-3 bg-slate-800/60 hover:bg-indigo-600 border border-slate-700/50 hover:border-indigo-400 text-slate-300 hover:text-white rounded-xl font-bold text-sm transition-all duration-300 shadow-sm hover:shadow-[0_0_15px_rgba(99,102,241,0.4)]" data-sec="900">15 分鐘</button>
+              <button class="timer-preset-btn py-3 bg-slate-800/60 hover:bg-indigo-600 border border-slate-700/50 hover:border-indigo-400 text-slate-300 hover:text-white rounded-xl font-bold text-sm transition-all duration-300 shadow-sm hover:shadow-[0_0_15px_rgba(99,102,241,0.4)]" data-sec="1200">20 分鐘</button>
+            </div>
+          </div>
+
+          <div class="h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent relative z-10"></div>
+
+          <!-- 播放控制按鈕 -->
+          <div class="flex gap-4 relative z-10">
+            <button id="timer-toggle-btn" class="flex-1 group flex items-center justify-center gap-3 py-4 bg-indigo-600 hover:bg-indigo-500 text-white text-xl font-bold rounded-2xl transition-all duration-300 shadow-[0_0_20px_rgba(99,102,241,0.4)] hover:shadow-[0_0_30px_rgba(99,102,241,0.6)]">
+              <i data-lucide="play" id="timer-toggle-icon" class="w-6 h-6 fill-current group-hover:scale-110 transition-transform"></i>
+              <span id="timer-toggle-text">開始計時</span>
+            </button>
+            <button id="timer-reset-btn" class="group p-4 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-2xl transition-all duration-300 border border-white/10 hover:border-slate-500 shadow-md" title="重置時間">
+              <i data-lucide="rotate-ccw" class="w-6 h-6 group-hover:-rotate-90 transition-transform duration-500"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 右側：超大型計時光環 (7 欄寬) -->
+      <div class="lg:col-span-7 h-full flex items-center justify-center relative min-h-[400px]">
+        <!-- 巨大光暈背景 -->
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60%] h-[60%] bg-indigo-600/10 blur-[100px] rounded-full pointer-events-none"></div>
+
+        <div class="relative flex items-center justify-center w-[320px] h-[320px] sm:w-[450px] sm:h-[450px] lg:w-[500px] lg:h-[500px]">
+          <!-- 背景與進度圓環 SVG -->
+          <svg class="absolute inset-0 w-full h-full -rotate-90 drop-shadow-[0_0_30px_rgba(99,102,241,0.3)]">
+            <!-- 底部軌道 (較細) -->
+            <circle cx="50%" cy="50%" r="46%" fill="none" stroke="rgba(255,255,255,0.03)" stroke-width="2%"></circle>
+            <!-- 跑動的進度條 (較粗且帶有發光質感) -->
+            <circle id="timer-progress" cx="50%" cy="50%" r="46%" fill="none" stroke="url(#gradient)" stroke-width="3.5%" stroke-linecap="round" class="timer-circle"></circle>
+            <defs>
+              <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#818cf8" />
+                <stop offset="50%" stop-color="#c084fc" />
+                <stop offset="100%" stop-color="#f472b6" />
+              </linearGradient>
+              <!-- 警告色漸層 (剩餘 10 秒時使用) -->
+              <linearGradient id="gradient-warn" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#f87171" />
+                <stop offset="100%" stop-color="#fbbf24" />
+              </linearGradient>
+            </defs>
+          </svg>
+          
+          <!-- 中間數字顯示 -->
+          <div class="relative flex flex-col items-center justify-center">
+            <div id="timer-display" class="text-[6rem] sm:text-[8rem] lg:text-[10rem] font-black font-mono leading-none tracking-tighter text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]">
+              05:00
+            </div>
+            
+            <!-- 時間到提示 -->
+            <div id="timer-status-text" class="absolute -bottom-16 lg:-bottom-20 px-6 py-2 rounded-full bg-red-500/20 border border-red-500/50 text-xl md:text-2xl text-red-400 font-black tracking-widest uppercase opacity-0 transition-opacity drop-shadow-[0_0_15px_rgba(248,113,113,0.5)] backdrop-blur-md">
+              Time's Up!
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ========================================== -->
+    <!-- 模組 4: 課堂計分板 (SCORE MODE) -->
+    <!-- ========================================== -->
+    <div id="app-score" class="hidden flex-col gap-6 w-full animate-pop-in relative flex-1 h-full">
+      <!-- 控制列 -->
+      <div class="flex flex-wrap justify-between items-center bg-slate-900/60 p-4 md:p-6 rounded-3xl border border-white/10 backdrop-blur-sm shadow-xl gap-4">
+        <div class="flex items-center gap-3">
+          <div class="p-2.5 bg-amber-500/20 rounded-xl border border-amber-500/30">
+            <i data-lucide="award" class="w-6 h-6 text-amber-400"></i>
+          </div>
+          <div>
+            <h2 class="text-xl font-bold text-white tracking-wide">課堂計分板</h2>
+            <p class="text-xs text-slate-400 mt-1">點擊組別名稱可修改，最高支援 12 組</p>
+          </div>
+        </div>
+        
+        <div class="flex items-center gap-3 w-full md:w-auto overflow-x-auto no-scrollbar pb-1 md:pb-0">
+          <button id="score-add-btn" class="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-sm font-bold transition-all shadow-lg whitespace-nowrap">
+            <i data-lucide="plus" class="w-4 h-4"></i> 新增組別
+          </button>
+          <button id="score-remove-btn" class="flex items-center gap-2 px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-sm font-bold transition-all border border-white/5 whitespace-nowrap">
+            <i data-lucide="minus" class="w-4 h-4"></i> 減少組別
+          </button>
+          <div class="w-px h-8 bg-white/10 mx-1 hidden md:block"></div>
+          <button id="score-reset-btn" class="flex items-center gap-2 px-4 py-2.5 bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/30 rounded-xl text-sm font-bold transition-all whitespace-nowrap">
+            <i data-lucide="rotate-ccw" class="w-4 h-4"></i> 分數歸零
+          </button>
+        </div>
+      </div>
+
+      <!-- 噪音偵測 (折疊面板) -->
+      <div class="bg-slate-900/60 rounded-3xl border border-white/10 backdrop-blur-sm shadow-xl overflow-hidden transition-all duration-300">
+        <!-- 面板標題列 (點擊折疊/展開) -->
+        <button id="noise-toggle-btn" class="w-full flex items-center justify-between p-4 md:px-6 hover:bg-white/5 transition-colors group">
+          <div class="flex items-center gap-3">
+            <div class="p-2 bg-rose-500/20 rounded-xl border border-rose-500/30 group-hover:scale-110 transition-transform">
+              <i data-lucide="mic" class="w-5 h-5 text-rose-400"></i>
+            </div>
+            <div>
+              <h3 class="font-bold text-white tracking-wide text-left">噪音偵測系統</h3>
+              <p class="text-xs text-slate-400 text-left mt-0.5">自動扣分與安靜獎勵機制</p>
+            </div>
+          </div>
+          <i data-lucide="chevron-down" id="noise-toggle-icon" class="w-5 h-5 text-slate-400 transition-transform duration-300"></i>
+        </button>
+        
+        <!-- 面板內容 -->
+        <div id="noise-panel-content" class="hidden border-t border-white/5 p-4 md:p-6 space-y-5">
+          <div class="flex flex-col md:flex-row gap-6 items-center">
+            <!-- 麥克風開關 -->
+            <button id="noise-mic-btn" class="w-full md:w-auto flex items-center justify-center gap-2 px-6 py-3.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-white/10 rounded-xl font-bold transition-all shadow-md whitespace-nowrap">
+              <i data-lucide="mic-off" id="noise-mic-icon" class="w-5 h-5"></i> <span id="noise-mic-text">開啟麥克風</span>
+            </button>
+            
+            <!-- 音量顯示條 -->
+            <div class="flex-1 w-full space-y-2">
+              <div class="flex justify-between text-sm">
+                <span class="text-slate-400 font-medium">當前音量</span>
+                <span id="noise-current-val" class="text-rose-400 font-mono font-bold">0%</span>
+              </div>
+              <div class="relative h-4 bg-slate-950 rounded-full overflow-hidden border border-white/10 shadow-inner">
+                <div id="noise-bar" class="absolute left-0 top-0 bottom-0 bg-gradient-to-r from-emerald-400 via-amber-400 to-rose-500 transition-all duration-75" style="width: 0%"></div>
+                <!-- 達標線標記 -->
+                <div id="noise-threshold-marker" class="absolute top-0 bottom-0 w-1 bg-white/90 shadow-[0_0_5px_rgba(255,255,255,1)] z-10 transition-all duration-200" style="left: 80%"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 詳細設定區塊 -->
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 bg-slate-950/50 p-4 md:px-6 rounded-2xl border border-white/5">
+            <!-- 門檻設定 -->
+            <div class="flex flex-col space-y-3 justify-center">
+              <div class="flex justify-between text-sm">
+                <span class="text-slate-400 font-medium flex items-center gap-1.5"><i data-lucide="sliders" class="w-4 h-4"></i> 觸發門檻 (達標線)</span>
+                <span id="noise-threshold-val" class="text-slate-300 font-mono font-bold">80%</span>
+              </div>
+              <input type="range" id="noise-threshold-slider" min="10" max="100" value="80" class="w-full accent-rose-500 cursor-pointer h-2 bg-slate-800 rounded-lg appearance-none">
+            </div>
+            
+            <!-- 扣分設定 -->
+            <div class="flex items-center justify-between lg:pl-6 lg:border-l border-white/10 pt-4 lg:pt-0 border-t lg:border-t-0">
+              <div class="flex flex-col">
+                <span class="text-sm font-bold text-rose-300">達標自動全班扣分</span>
+                <div class="flex items-center gap-1.5 mt-1.5 text-xs text-slate-400">
+                  每次扣 <input type="number" id="noise-deduct-pts" value="1" min="1" max="99" class="w-12 bg-slate-900 border border-white/20 rounded text-center text-white focus:outline-none focus:border-rose-500 px-1 py-0.5 shadow-inner"> 分
+                </div>
+              </div>
+              <button id="noise-auto-deduct-toggle" class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none bg-slate-700 shadow-inner shrink-0">
+                <span id="noise-auto-deduct-knob" class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform translate-x-1 shadow-sm"></span>
+              </button>
+            </div>
+
+            <!-- 加分設定 -->
+            <div class="flex items-center justify-between lg:pl-6 lg:border-l border-white/10 pt-4 lg:pt-0 border-t lg:border-t-0">
+              <div class="flex flex-col">
+                <span class="text-sm font-bold text-emerald-300">維持安靜全班加分</span>
+                <div class="flex items-center gap-1.5 mt-1.5 text-xs text-slate-400">
+                  <input type="number" id="noise-reward-time" value="30" min="5" max="3600" class="w-12 bg-slate-900 border border-white/20 rounded text-center text-white focus:outline-none focus:border-emerald-500 px-1 py-0.5 shadow-inner"> 秒加
+                  <input type="number" id="noise-reward-pts" value="1" min="1" max="99" class="w-10 bg-slate-900 border border-white/20 rounded text-center text-white focus:outline-none focus:border-emerald-500 px-1 py-0.5 shadow-inner"> 分
+                </div>
+              </div>
+              <button id="noise-auto-reward-toggle" class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none bg-slate-700 shadow-inner shrink-0">
+                <span id="noise-auto-reward-knob" class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform translate-x-1 shadow-sm"></span>
+              </button>
+            </div>
+          </div>
+          
+          <!-- 安靜挑戰進度 UI (僅在開啟自動加分時顯示) -->
+          <div id="quiet-progress-container" class="hidden w-full space-y-1.5 px-1">
+             <div class="flex justify-between text-xs font-bold text-slate-400">
+               <span class="flex items-center gap-1.5"><i data-lucide="shield-check" class="w-3.5 h-3.5 text-emerald-400"></i> 安靜挑戰進度</span>
+               <span id="quiet-progress-text">0 / 30 秒</span>
+             </div>
+             <div class="h-2 w-full bg-slate-950 rounded-full overflow-hidden border border-white/5 shadow-inner">
+               <div id="quiet-progress-bar" class="h-full bg-gradient-to-r from-emerald-500 to-teal-400 transition-all duration-[200ms] ease-linear" style="width: 0%"></div>
+             </div>
+          </div>
+
+          <!-- 狀態訊息 -->
+          <div id="noise-message-area" class="flex items-center justify-center gap-2 font-bold text-sm h-6 opacity-0 transition-opacity duration-300">
+            <!-- 訊息由 JS 動態填入 -->
+          </div>
+        </div>
+      </div>
+
+      <!-- 計分卡片網格 -->
+      <div id="score-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6 flex-1 auto-rows-max pb-10">
+        <!-- 卡片由 JS 動態生成 -->
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- 模組 5: 互動白板 (BOARD MODE) -->
+    <!-- ========================================== -->
+    <div id="app-board" class="hidden flex-col w-full min-h-[70vh] animate-pop-in relative flex-1 bg-slate-900/60 rounded-[2rem] border border-white/10 backdrop-blur-sm shadow-xl overflow-hidden">
+      <!-- 白板工具列 -->
+      <div class="flex flex-wrap items-center justify-between p-4 bg-slate-950/80 border-b border-white/10 gap-4 z-10 shadow-md">
+        <!-- 顏色選擇 -->
+        <div class="flex items-center gap-2 md:gap-3 bg-slate-900 p-2 rounded-xl border border-white/5 shadow-inner">
+          <button class="color-btn w-8 h-8 rounded-full bg-white border-2 border-indigo-500 shadow-[0_0_10px_rgba(255,255,255,0.5)] transition-all hover:scale-110" data-color="#ffffff" title="白色"></button>
+          <button class="color-btn w-8 h-8 rounded-full bg-red-500 border-2 border-transparent transition-all hover:scale-110" data-color="#ef4444" title="紅色"></button>
+          <button class="color-btn w-8 h-8 rounded-full bg-blue-500 border-2 border-transparent transition-all hover:scale-110" data-color="#3b82f6" title="藍色"></button>
+          <button class="color-btn w-8 h-8 rounded-full bg-green-500 border-2 border-transparent transition-all hover:scale-110" data-color="#22c55e" title="綠色"></button>
+          <button class="color-btn w-8 h-8 rounded-full bg-yellow-400 border-2 border-transparent transition-all hover:scale-110" data-color="#facc15" title="黃色"></button>
+        </div>
+        
+        <!-- 筆刷粗細 -->
+        <div class="flex items-center gap-3 bg-slate-900 p-2 px-4 rounded-xl border border-white/5 shadow-inner flex-1 max-w-[250px]">
+          <i data-lucide="minus" class="w-4 h-4 text-slate-400"></i>
+          <input type="range" id="brush-size" min="1" max="30" value="4" class="w-full accent-indigo-500 cursor-pointer">
+          <i data-lucide="plus" class="w-5 h-5 text-slate-400"></i>
+        </div>
+
+        <!-- 橡皮擦與清空按鈕 -->
+        <div class="flex items-center gap-2">
+          <button id="eraser-btn" class="flex items-center gap-2 px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl font-bold text-sm transition-all border border-white/5 shadow-sm whitespace-nowrap">
+            <i data-lucide="eraser" class="w-4 h-4"></i> 橡皮擦
+          </button>
+          <div class="w-px h-6 bg-white/10 mx-1 hidden md:block"></div>
+          <button id="clear-board-btn" class="flex items-center gap-2 px-4 py-2.5 bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/30 rounded-xl font-bold text-sm transition-all whitespace-nowrap shadow-sm">
+            <i data-lucide="trash-2" class="w-4 h-4"></i> 清空
+          </button>
+        </div>
+      </div>
+      
+      <!-- 畫布容器 -->
+      <div class="flex-1 relative cursor-crosshair overflow-hidden bg-slate-900/40" id="canvas-container">
+        <!-- touch-none 是防止在手機上畫畫時螢幕跟著滾動的關鍵 -->
+        <canvas id="whiteboard-canvas" class="absolute inset-0 w-full h-full touch-none"></canvas>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- 頁尾作者資訊與免責聲明 -->
+  <footer class="py-6 text-center z-40 relative flex flex-col items-center justify-center mt-auto gap-3">
+    <a href="https://jamespolik.pixnet.net/" target="_blank" rel="noopener noreferrer" class="text-slate-400 hover:text-indigo-400 transition-colors duration-300 font-medium text-sm flex items-center gap-1.5 bg-slate-900/50 px-4 py-2 rounded-full border border-white/5 shadow-inner">
+      <i data-lucide="link" class="w-4 h-4"></i> 小黃老師嘿技術
+    </a>
+  </footer>
+
+  <script>
+    // ----------------------------------------------------------------------
+    // 系統初始化與通用函數
+    lucide.createIcons();
+
+    // 應用程式全域狀態
+    const appState = {
+      currentMode: 'draw', // 'draw', 'clock', 'timer', 'score', 'board'
+      isMuted: false
+    };
+
+    // DOM 快取：頂部導覽
+    const navEls = {
+      draw: document.getElementById('nav-draw'),
+      clock: document.getElementById('nav-clock'),
+      timer: document.getElementById('nav-timer'),
+      score: document.getElementById('nav-score'),
+      board: document.getElementById('nav-board'),
+      dotPing: document.getElementById('timer-running-dot'),
+      dotStatic: document.getElementById('timer-running-dot-static'),
+      muteBtn: document.getElementById('mute-btn'),
+      muteIcon: document.getElementById('mute-icon')
+    };
+
+    // DOM 快取：容器
+    const viewEls = {
+      draw: document.getElementById('app-draw'),
+      clock: document.getElementById('app-clock'),
+      timer: document.getElementById('app-timer'),
+      score: document.getElementById('app-score'),
+      board: document.getElementById('app-board')
+    };
+
+    // 音效系統
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    
+    // 共用靜音切換
+    navEls.muteBtn.addEventListener('click', () => {
+      appState.isMuted = !appState.isMuted;
+      if (appState.isMuted) {
+        navEls.muteIcon.setAttribute('data-lucide', 'volume-x');
+        navEls.muteIcon.classList.replace('text-indigo-400', 'text-slate-400');
+      } else {
+        navEls.muteIcon.setAttribute('data-lucide', 'volume-2');
+        navEls.muteIcon.classList.replace('text-slate-400', 'text-indigo-400');
+      }
+      lucide.createIcons();
+    });
+
+    // 頂部全域時間顯示
+    const updateHeaderTime = () => {
+      const now = new Date();
+      const hh = String(now.getHours()).padStart(2, '0');
+      const mm = String(now.getMinutes()).padStart(2, '0');
+      const ss = String(now.getSeconds()).padStart(2, '0');
+      const headerTimeSpan = document.querySelector('#header-time span');
+      if (headerTimeSpan) {
+        headerTimeSpan.textContent = `${hh}:${mm}:${ss}`;
+      }
+    };
+    setInterval(updateHeaderTime, 1000);
+    updateHeaderTime(); // 初始化立即執行一次
+
+    // 主功能切換邏輯
+    window.switchAppMode = (mode) => {
+      appState.currentMode = mode;
+      
+      // 更新導覽列樣式
+      const activeClass = ['bg-indigo-600', 'text-white', 'shadow-md'];
+      const inactiveClass = ['text-slate-400', 'hover:text-slate-200', 'hover:bg-white/5'];
+
+      ['draw', 'clock', 'timer', 'score', 'board'].forEach(m => {
+        const btn = navEls[m];
+        if (m === mode) {
+          btn.classList.remove(...inactiveClass);
+          btn.classList.add(...activeClass);
+          
+          viewEls[m].classList.remove('hidden');
+          
+          if (m === 'timer') {
+             viewEls[m].classList.add('grid');
+          } else {
+             // 讓 draw 以外的其他模組(包含 board)切換為 flex
+             viewEls[m].classList.add((m === 'clock' || m === 'score' || m === 'board') ? 'flex' : 'grid');
+          }
+
+          // 觸發特定模式的重新計算/排版
+          if (m === 'clock') updateClock(); 
+          if (m === 'timer') updateTimerDisplay();
+          if (m === 'board') {
+            // 切換到白板時，稍微延遲確保容器佔滿空間後再調整畫布大小
+            setTimeout(resizeCanvas, 50);
+          }
+        } else {
+          btn.classList.remove(...activeClass);
+          btn.classList.add(...inactiveClass);
+          viewEls[m].classList.add('hidden');
+          viewEls[m].classList.remove('grid', 'flex'); // 確保被隱藏時不會帶有 display class
+        }
+      });
+    };
+
+    // ----------------------------------------------------------------------
+    // 模組 1: 抽籤機 (DRAW MODE)
+    // ----------------------------------------------------------------------
+    let drawState = {
+      mode: 'number',
+      startNum: 1, endNum: 50, drawCount: 1,
+      excludeText: "", nameText: "",
+      isDrawing: false, uniqueDraw: true,
+      drawnNumbers: [], availableList: []
+    };
+
+    const drawEls = {
+      modeNumberBtn: document.getElementById('mode-number-btn'),
+      modeNameBtn: document.getElementById('mode-name-btn'),
+      numberSettings: document.getElementById('number-settings'),
+      nameSettings: document.getElementById('name-settings'),
+      nameInput: document.getElementById('name-input'),
+      startNum: document.getElementById('start-num'),
+      endNum: document.getElementById('end-num'),
+      drawCount: document.getElementById('draw-count'),
+      excludeInput: document.getElementById('exclude-input'),
+      poolInfo: document.getElementById('pool-info'),
+      uniqueToggle: document.getElementById('unique-toggle'),
+      uniqueToggleKnob: document.getElementById('unique-toggle-knob'),
+      historyContainer: document.getElementById('history-container'),
+      historyCount: document.getElementById('history-count'),
+      historyList: document.getElementById('history-list'),
+      errorMsg: document.getElementById('error-msg'),
+      drawBtn: document.getElementById('draw-btn'),
+      drawBtnContent: document.getElementById('draw-btn-content'),
+      drawBtnFx: document.getElementById('draw-btn-fx'),
+      resetBtn: document.getElementById('reset-btn'),
+      standbyView: document.getElementById('standby-view'),
+      rollingView: document.getElementById('rolling-view'),
+      resultView: document.getElementById('result-view'),
+      winnersContainer: document.getElementById('winners-container'),
+      canvas: document.getElementById('confetti-canvas')
+    };
+
+    // 音效 (抽籤用)
+    const playTick = () => {
+      if (appState.isMuted) return;
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(40, audioCtx.currentTime + 0.1);
+      gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.1);
+    };
+
+    const playWin = () => {
+      if (appState.isMuted) return;
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      const notes = [261.63, 329.63, 392.00, 523.25]; 
+      notes.forEach((freq, i) => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = freq;
+        const startTime = audioCtx.currentTime + i * 0.1;
+        gain.gain.setValueAtTime(0, startTime);
+        gain.gain.linearRampToValueAtTime(0.3, startTime + 0.05);
+        gain.gain.exponentialRampToValueAtTime(0.01, startTime + 1.5);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(startTime);
+        osc.stop(startTime + 1.5);
+      });
+    };
+
+    // 彩帶特效
+    let confettiAnimationId = null;
+    let confettiParticles = [];
+    const ctx = drawEls.canvas.getContext('2d');
+
+    const triggerConfetti = () => {
+      drawEls.canvas.width = window.innerWidth;
+      drawEls.canvas.height = window.innerHeight;
+      confettiParticles = [];
+      for (let i = 0; i < 150; i++) {
+        confettiParticles.push({
+          x: drawEls.canvas.width / 2, y: drawEls.canvas.height / 2,
+          vx: (Math.random() - 0.5) * 30, vy: (Math.random() - 1) * 30 - 10,
+          size: Math.random() * 10 + 8, color: `hsl(${Math.random() * 360}, 100%, 60%)`,
+          rotation: Math.random() * 360, rotationSpeed: (Math.random() - 0.5) * 20,
+          opacity: 1
+        });
+      }
+      if (confettiAnimationId) cancelAnimationFrame(confettiAnimationId);
+      animateConfetti();
+    };
+
+    const animateConfetti = () => {
+      ctx.clearRect(0, 0, drawEls.canvas.width, drawEls.canvas.height);
+      let activeParticles = false;
+      confettiParticles.forEach((p) => {
+        if (p.opacity <= 0) return;
+        activeParticles = true;
+        p.x += p.vx; p.y += p.vy; p.vy += 0.8; p.vx *= 0.98;
+        p.rotation += p.rotationSpeed; p.opacity -= 0.005;
+        ctx.save(); ctx.translate(p.x, p.y); ctx.rotate((p.rotation * Math.PI) / 180);
+        ctx.globalAlpha = Math.max(0, p.opacity); ctx.fillStyle = p.color;
+        ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size); ctx.restore();
+      });
+      if (activeParticles) confettiAnimationId = requestAnimationFrame(animateConfetti);
+      else { confettiParticles = []; ctx.clearRect(0, 0, drawEls.canvas.width, drawEls.canvas.height); }
+    };
+
+    // 抽籤邏輯
+    const shuffle = (array) => {
+      let currentIndex = array.length, randomIndex;
+      const newArray = [...array];
+      while (currentIndex !== 0) {
+        randomIndex = Math.floor(Math.random() * currentIndex);
+        currentIndex--;
+        [newArray[currentIndex], newArray[randomIndex]] = [newArray[randomIndex], newArray[currentIndex]];
+      }
+      return newArray;
+    };
+
+    const parseExcludes = (text) => {
+      if (!text) return [];
+      const parts = text.split(/[,，、]/).map(p => p.trim());
+      const excludes = new Set();
+      parts.forEach(part => {
+        const rangeMatch = part.match(/^(\d+)[-~～](\d+)$/);
+        if (rangeMatch) {
+          const min = Math.min(parseInt(rangeMatch[1]), parseInt(rangeMatch[2]));
+          const max = Math.max(parseInt(rangeMatch[1]), parseInt(rangeMatch[2]));
+          for (let i = min; i <= max; i++) excludes.add(i.toString());
+        } else {
+          if (!isNaN(parseInt(part))) excludes.add(parseInt(part).toString());
+        }
+      });
+      return Array.from(excludes);
+    };
+
+    const updateAvailableList = () => {
+      const itemsList = [];
+      if (drawState.mode === 'number') {
+        const excludes = parseExcludes(drawState.excludeText);
+        if (drawState.startNum <= drawState.endNum) {
+          for (let i = drawState.startNum; i <= drawState.endNum; i++) {
+            if (!excludes.includes(i.toString())) itemsList.push(i.toString());
+          }
+        }
+      } else {
+        if (drawState.nameText.trim()) {
+          drawState.nameText.split(/[\n,，、]+/).forEach(part => {
+            if (part.trim()) itemsList.push(part.trim());
+          });
+        }
+      }
+      
+      drawState.availableList = drawState.uniqueDraw ? itemsList.filter(n => !drawState.drawnNumbers.includes(n)) : itemsList;
+
+      const typeStr = drawState.mode === 'number' ? '個號碼' : '個人';
+      let infoText = `共 ${itemsList.length} ${typeStr}`;
+      if (drawState.uniqueDraw && drawState.drawnNumbers.length > 0) infoText = `剩餘 ${drawState.availableList.length} / ${infoText}`;
+      drawEls.poolInfo.textContent = infoText;
+      validateInputs();
+    };
+
+    const showError = (msg) => {
+      if (msg) { drawEls.errorMsg.textContent = msg; drawEls.errorMsg.classList.remove('hidden'); }
+      else drawEls.errorMsg.classList.add('hidden');
+    };
+
+    const validateInputs = () => {
+      let isValid = true;
+      if (drawState.mode === 'number' && drawState.startNum > drawState.endNum) {
+        showError("起始編號不能大於結束編號！"); isValid = false;
+      } else if (drawState.availableList.length === 0 && !drawState.isDrawing) {
+        showError(drawState.mode === 'number' ? "沒有可抽的號碼了！" : "名單為空或已抽完！"); isValid = false;
+      } else if (drawState.drawCount < 1 || drawState.drawCount > drawState.availableList.length) {
+        showError(`抽出數量必須介於 1 到 ${drawState.availableList.length} 之間！`); isValid = false;
+      } else showError("");
+
+      if (!isValid || drawState.isDrawing) {
+        drawEls.drawBtn.classList.replace('bg-indigo-600', 'bg-slate-800');
+        drawEls.drawBtn.classList.remove('hover:bg-indigo-500', 'text-white', 'shadow-lg', 'animate-glow');
+        drawEls.drawBtn.classList.add('text-slate-500', 'cursor-not-allowed');
+        drawEls.drawBtn.disabled = true; drawEls.drawBtnFx.classList.add('hidden');
+      } else {
+        drawEls.drawBtn.classList.replace('bg-slate-800', 'bg-indigo-600');
+        drawEls.drawBtn.classList.add('hover:bg-indigo-500', 'text-white', 'shadow-lg', 'animate-glow');
+        drawEls.drawBtn.classList.remove('text-slate-500', 'cursor-not-allowed');
+        drawEls.drawBtn.disabled = false; drawEls.drawBtnFx.classList.remove('hidden');
+      }
+      drawEls.resetBtn.disabled = drawState.isDrawing || (drawState.drawnNumbers.length === 0 && drawEls.resultView.classList.contains('hidden'));
+    };
+
+    const renderHistory = () => {
+      if (drawState.uniqueDraw && drawState.drawnNumbers.length > 0) {
+        drawEls.historyContainer.classList.remove('hidden');
+        drawEls.historyCount.textContent = `已抽出結果 (${drawState.drawnNumbers.length})`;
+        drawEls.historyList.innerHTML = drawState.drawnNumbers.map(num => 
+          `<button data-val="${num}" title="點擊將 [${num}] 加回籤筒" class="group relative px-3 py-1 min-w-[3rem] bg-slate-800 hover:bg-indigo-600 transition-all cursor-pointer text-slate-300 rounded-lg text-sm border border-slate-700 hover:border-indigo-400 font-medium shadow-sm overflow-hidden flex justify-center items-center">
+            <span class="group-hover:opacity-0 transition-opacity">${num}</span>
+            <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-indigo-600">
+              <i data-lucide="rotate-ccw" class="w-4 h-4 text-white"></i>
+            </div>
+          </button>`
+        ).join('');
+        lucide.createIcons({ root: drawEls.historyList });
+      } else drawEls.historyContainer.classList.add('hidden');
+    };
+
+    const fullReset = () => {
+      drawState.drawnNumbers = [];
+      drawEls.standbyView.classList.remove('hidden');
+      drawEls.rollingView.classList.add('hidden');
+      drawEls.resultView.classList.add('hidden');
+      updateAvailableList(); renderHistory();
+    };
+
+    let drawInterval;
+    const startDraw = () => {
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      drawState.isDrawing = true; updateAvailableList();
+      
+      drawEls.standbyView.classList.add('hidden');
+      drawEls.resultView.classList.add('hidden');
+      drawEls.rollingView.classList.remove('hidden');
+      drawEls.drawBtnContent.innerHTML = `<div class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-[spin_1s_linear_infinite]"></div> 抽籤中...`;
+      validateInputs(); 
+
+      let elapsed = 0;
+      drawInterval = setInterval(() => {
+        const preview = shuffle(drawState.availableList).slice(0, drawState.drawCount);
+        drawEls.rollingView.innerHTML = preview.map(name => `
+          <div class="px-8 py-6 bg-gradient-to-br from-indigo-600 to-purple-700 border border-white/20 rounded-2xl text-4xl md:text-5xl font-black text-white shadow-[0_0_40px_rgba(99,102,241,0.6)] backdrop-blur-md" 
+               style="transform: scale(${0.95 + Math.random() * 0.1}) translateY(${(Math.random() - 0.5) * 10}px); filter: blur(${Math.random() * 1.5}px);">
+            ${name}
+          </div>
+        `).join('');
+        playTick(); elapsed += 80;
+        if (elapsed >= 3000) { clearInterval(drawInterval); finishDraw(); }
+      }, 80);
+    };
+
+    const finishDraw = () => {
+      const finalWinners = shuffle(drawState.availableList).slice(0, drawState.drawCount);
+      if (drawState.uniqueDraw) drawState.drawnNumbers = [...drawState.drawnNumbers, ...finalWinners];
+
+      drawState.isDrawing = false;
+      drawEls.rollingView.classList.add('hidden');
+      drawEls.resultView.classList.remove('hidden');
+
+      drawEls.winnersContainer.innerHTML = finalWinners.map((name, idx) => `
+        <div class="animate-pop-in relative group" style="animation-delay: ${idx * 0.1}s">
+          <div class="absolute inset-0 bg-gradient-to-r from-amber-300 to-orange-500 rounded-2xl blur-xl opacity-40 group-hover:opacity-100 transition-opacity"></div>
+          <div class="relative px-12 py-10 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 border border-amber-400/50 rounded-2xl flex flex-col items-center gap-4 hover:scale-110 hover:-translate-y-4 transition-all animate-float shadow-2xl overflow-hidden">
+            <i data-lucide="trophy" class="w-12 h-12 text-amber-400 drop-shadow-[0_0_15px_rgba(251,191,36,0.8)]"></i>
+            <span class="text-4xl md:text-6xl font-black bg-gradient-to-b from-yellow-200 via-amber-400 to-orange-500 bg-clip-text text-transparent drop-shadow-md break-all">${name}</span>
+          </div>
+        </div>
+      `).join('');
+      
+      drawEls.drawBtnContent.innerHTML = `<i data-lucide="play" class="w-5 h-5 fill-current"></i> 開始抽籤`;
+      lucide.createIcons(); playWin(); triggerConfetti();
+      updateAvailableList(); renderHistory(); validateInputs();
+    };
+
+    // 綁定事件
+    const switchDrawMode = (mode) => {
+      if (drawState.isDrawing) return;
+      drawState.mode = mode;
+      if (mode === 'number') {
+        drawEls.modeNumberBtn.className = "flex-1 py-2 text-sm font-bold rounded-lg bg-indigo-600 text-white shadow-md transition-all relative z-10";
+        drawEls.modeNameBtn.className = "flex-1 py-2 text-sm font-bold rounded-lg text-slate-400 hover:text-slate-200 transition-all relative z-10";
+        drawEls.numberSettings.classList.remove('hidden'); drawEls.nameSettings.classList.add('hidden');
+      } else {
+        drawEls.modeNameBtn.className = "flex-1 py-2 text-sm font-bold rounded-lg bg-indigo-600 text-white shadow-md transition-all relative z-10";
+        drawEls.modeNumberBtn.className = "flex-1 py-2 text-sm font-bold rounded-lg text-slate-400 hover:text-slate-200 transition-all relative z-10";
+        drawEls.nameSettings.classList.remove('hidden'); drawEls.numberSettings.classList.add('hidden');
+      }
+      fullReset();
+    };
+
+    drawEls.modeNumberBtn.addEventListener('click', () => switchDrawMode('number'));
+    drawEls.modeNameBtn.addEventListener('click', () => switchDrawMode('name'));
+    drawEls.startNum.addEventListener('input', () => { drawState.startNum = parseInt(drawEls.startNum.value)||0; fullReset(); });
+    drawEls.endNum.addEventListener('input', () => { drawState.endNum = parseInt(drawEls.endNum.value)||0; fullReset(); });
+    drawEls.drawCount.addEventListener('input', () => { drawState.drawCount = parseInt(drawEls.drawCount.value)||1; validateInputs(); });
+    drawEls.excludeInput.addEventListener('input', (e) => { drawState.excludeText = e.target.value; fullReset(); });
+    drawEls.nameInput.addEventListener('input', (e) => { drawState.nameText = e.target.value; fullReset(); });
+    
+    drawEls.uniqueToggle.addEventListener('click', () => {
+      if (drawState.isDrawing) return;
+      drawState.uniqueDraw = !drawState.uniqueDraw;
+      if (drawState.uniqueDraw) {
+        drawEls.uniqueToggle.classList.replace('bg-slate-700', 'bg-indigo-500');
+        drawEls.uniqueToggleKnob.classList.replace('translate-x-1', 'translate-x-6');
+      } else {
+        drawEls.uniqueToggle.classList.replace('bg-indigo-500', 'bg-slate-700');
+        drawEls.uniqueToggleKnob.classList.replace('translate-x-6', 'translate-x-1');
+      }
+      updateAvailableList(); renderHistory();
+    });
+
+    drawEls.historyList.addEventListener('click', (e) => {
+      const btn = e.target.closest('button[data-val]');
+      if (!btn || drawState.isDrawing) return;
+      drawState.drawnNumbers = drawState.drawnNumbers.filter(n => n !== btn.getAttribute('data-val'));
+      updateAvailableList(); renderHistory(); validateInputs();
+    });
+
+    drawEls.drawBtn.addEventListener('click', () => { if (!drawEls.drawBtn.disabled) startDraw(); });
+    drawEls.resetBtn.addEventListener('click', () => { if (!drawEls.resetBtn.disabled) fullReset(); });
+    updateAvailableList();
+
+
+    // ----------------------------------------------------------------------
+    // 模組 2: 考試大鐘 (CLOCK MODE)
+    // ----------------------------------------------------------------------
+    const clockEls = {
+      date: document.getElementById('clock-date'),
+      time: document.getElementById('clock-time'),
+      secBar: document.getElementById('clock-seconds-bar')
+    };
+
+    const daysStr = ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"];
+
+    const updateClock = () => {
+      // 只有在當前模式是大鐘時才執行完整 DOM 更新，節省效能
+      if (appState.currentMode !== 'clock') return; 
+      
+      const now = new Date();
+      const y = now.getFullYear();
+      const m = now.getMonth() + 1;
+      const d = now.getDate();
+      const day = daysStr[now.getDay()];
+      
+      const hh = String(now.getHours()).padStart(2, '0');
+      const mm = String(now.getMinutes()).padStart(2, '0');
+      const ss = String(now.getSeconds()).padStart(2, '0');
+
+      clockEls.date.textContent = `${y}年${m}月${d}日 ${day}`;
+      clockEls.time.textContent = `${hh}:${mm}:${ss}`;
+      
+      // 秒數進度條：0秒時 0%，59秒時近乎 100%
+      const secPercentage = (now.getSeconds() / 60) * 100;
+      clockEls.secBar.style.width = `${secPercentage}%`;
+    };
+
+    // 每秒更新大時鐘
+    setInterval(updateClock, 1000);
+
+
+    // ----------------------------------------------------------------------
+    // 模組 3: 小組計時器 (TIMER MODE)
+    // ----------------------------------------------------------------------
+    let timerState = {
+      totalSeconds: 300,
+      remainingSeconds: 300,
+      isRunning: false,
+      intervalId: null
+    };
+
+    const timerEls = {
+      inputM: document.getElementById('timer-input-m'),
+      inputS: document.getElementById('timer-input-s'),
+      display: document.getElementById('timer-display'),
+      progress: document.getElementById('timer-progress'),
+      toggleBtn: document.getElementById('timer-toggle-btn'),
+      toggleIcon: document.getElementById('timer-toggle-icon'),
+      toggleText: document.getElementById('timer-toggle-text'),
+      resetBtn: document.getElementById('timer-reset-btn'),
+      presetBtns: document.querySelectorAll('.timer-preset-btn'),
+      statusText: document.getElementById('timer-status-text')
+    };
+
+    // 計算 SVG 圓環周長，將總長度設為 1000 方便百分比計算
+    timerEls.progress.setAttribute('pathLength', '1000');
+    timerEls.progress.style.strokeDasharray = '1000';
+
+    const playTimerAlarm = () => {
+      if (appState.isMuted) return;
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      
+      // 發出急促的滴滴聲 (響3次)
+      for(let i=0; i<3; i++){
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(800, audioCtx.currentTime + i*0.3);
+        
+        gain.gain.setValueAtTime(0, audioCtx.currentTime + i*0.3);
+        gain.gain.linearRampToValueAtTime(0.3, audioCtx.currentTime + i*0.3 + 0.05);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + i*0.3 + 0.2);
+        
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(audioCtx.currentTime + i*0.3);
+        osc.stop(audioCtx.currentTime + i*0.3 + 0.2);
+      }
+    };
+
+    const updateTimerDisplay = () => {
+      const m = String(Math.floor(timerState.remainingSeconds / 60)).padStart(2, '0');
+      const s = String(timerState.remainingSeconds % 60).padStart(2, '0');
+      timerEls.display.textContent = `${m}:${s}`;
+
+      // 更新圓環進度 (1000 -> 0)
+      if (timerState.totalSeconds > 0) {
+        const ratio = timerState.remainingSeconds / timerState.totalSeconds;
+        timerEls.progress.style.strokeDashoffset = 1000 - (1000 * ratio);
+        
+        // 如果剩下不到 10 秒，改變圓環顏色為警告色 (利用切換 stroke)
+        if (timerState.remainingSeconds <= 10 && timerState.remainingSeconds > 0) {
+          timerEls.progress.setAttribute('stroke', 'url(#gradient-warn)');
+          timerEls.display.classList.add('text-red-400', 'animate-pulse');
+          timerEls.display.classList.remove('text-white');
+        } else {
+          timerEls.progress.setAttribute('stroke', 'url(#gradient)');
+          timerEls.display.classList.remove('text-red-400', 'animate-pulse');
+          timerEls.display.classList.add('text-white');
+        }
+      }
+    };
+
+    const applyInputsToTimer = () => {
+      if (timerState.isRunning) return;
+      const m = parseInt(timerEls.inputM.value) || 0;
+      const s = parseInt(timerEls.inputS.value) || 0;
+      const total = (m * 60) + s;
+      
+      if (total > 0) {
+        timerState.totalSeconds = total;
+        timerState.remainingSeconds = total;
+        timerEls.statusText.classList.remove('opacity-100', 'animate-bounce-soft');
+        timerEls.statusText.classList.add('opacity-0');
+        updateTimerDisplay();
+      }
+    };
+
+    timerEls.inputM.addEventListener('change', applyInputsToTimer);
+    timerEls.inputS.addEventListener('change', applyInputsToTimer);
+
+    // 快速設定按鈕
+    timerEls.presetBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (timerState.isRunning) stopTimer();
+        const sec = parseInt(btn.getAttribute('data-sec'));
+        timerEls.inputM.value = Math.floor(sec / 60);
+        timerEls.inputS.value = sec % 60;
+        applyInputsToTimer();
+      });
+    });
+
+    const stopTimer = () => {
+      timerState.isRunning = false;
+      clearInterval(timerState.intervalId);
+      
+      // 更新按鈕UI
+      timerEls.toggleBtn.classList.replace('bg-amber-500', 'bg-indigo-600');
+      timerEls.toggleBtn.classList.replace('hover:bg-amber-400', 'hover:bg-indigo-500');
+      timerEls.toggleBtn.classList.replace('shadow-[0_0_20px_rgba(245,158,11,0.4)]', 'shadow-[0_0_20px_rgba(99,102,241,0.4)]');
+      timerEls.toggleBtn.classList.replace('hover:shadow-[0_0_30px_rgba(245,158,11,0.6)]', 'hover:shadow-[0_0_30px_rgba(99,102,241,0.6)]');
+      timerEls.toggleIcon.setAttribute('data-lucide', 'play');
+      timerEls.toggleText.textContent = "開始計時";
+      
+      // 更新導覽列小紅點
+      navEls.dotPing.classList.add('hidden');
+      navEls.dotStatic.classList.add('hidden');
+      
+      lucide.createIcons();
+    };
+
+    const startTimer = () => {
+      if (timerState.remainingSeconds <= 0) applyInputsToTimer();
+      if (timerState.remainingSeconds <= 0) return; // 依然是 0 就不啟動
+
+      timerState.isRunning = true;
+      timerEls.statusText.classList.remove('opacity-100', 'animate-bounce-soft');
+      timerEls.statusText.classList.add('opacity-0');
+      
+      // 更新按鈕UI (改為暫停狀態)
+      timerEls.toggleBtn.classList.replace('bg-indigo-600', 'bg-amber-500');
+      timerEls.toggleBtn.classList.replace('hover:bg-indigo-500', 'hover:bg-amber-400');
+      timerEls.toggleBtn.classList.replace('shadow-[0_0_20px_rgba(99,102,241,0.4)]', 'shadow-[0_0_20px_rgba(245,158,11,0.4)]');
+      timerEls.toggleBtn.classList.replace('hover:shadow-[0_0_30px_rgba(99,102,241,0.6)]', 'hover:shadow-[0_0_30px_rgba(245,158,11,0.6)]');
+      timerEls.toggleIcon.setAttribute('data-lucide', 'pause');
+      timerEls.toggleText.textContent = "暫停計時";
+      
+      // 更新導覽列小紅點
+      navEls.dotPing.classList.remove('hidden');
+      navEls.dotStatic.classList.remove('hidden');
+
+      lucide.createIcons();
+
+      timerState.intervalId = setInterval(() => {
+        timerState.remainingSeconds--;
+        if (appState.currentMode === 'timer') updateTimerDisplay();
+
+        if (timerState.remainingSeconds <= 0) {
+          stopTimer();
+          updateTimerDisplay(); // 強制更新一次顯示 00:00
+          timerEls.statusText.classList.remove('opacity-0');
+          timerEls.statusText.classList.add('opacity-100', 'animate-bounce-soft');
+          playTimerAlarm();
+        }
+      }, 1000);
+    };
+
+    timerEls.toggleBtn.addEventListener('click', () => {
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      if (timerState.isRunning) {
+        stopTimer();
+      } else {
+        startTimer();
+      }
+    });
+
+    timerEls.resetBtn.addEventListener('click', () => {
+      stopTimer();
+      applyInputsToTimer();
+      timerEls.statusText.classList.remove('opacity-100', 'animate-bounce-soft');
+      timerEls.statusText.classList.add('opacity-0');
+    });
+
+    // 初始載入設定
+    applyInputsToTimer();
+
+    // ----------------------------------------------------------------------
+    // 模組 4: 課堂計分板 (SCORE MODE) 與 噪音偵測
+    // ----------------------------------------------------------------------
+    const scoreState = {
+      teams: [
+        { id: 1, name: "第一組", score: 0 },
+        { id: 2, name: "第二組", score: 0 },
+        { id: 3, name: "第三組", score: 0 },
+        { id: 4, name: "第四組", score: 0 }
+      ],
+      maxTeams: 12
+    };
+
+    // 擴充噪音偵測狀態
+    const noiseState = {
+      isPanelOpen: false,
+      isMicActive: false,
+      stream: null,
+      source: null,
+      analyser: null,
+      dataArray: null,
+      animationId: null,
+      threshold: 80,
+      
+      autoDeduct: false,
+      deductPoints: 1, // 自訂扣幾分
+      cooldown: false,
+      cooldownTimer: null,
+
+      autoReward: false,
+      rewardTime: 30, // 自訂安靜幾秒加分
+      rewardPoints: 1, // 自訂加幾分
+      quietTimeElapsed: 0, // 目前已經安靜了多久(毫秒)
+      lastTickTime: null, // 用來精準計算時間差
+      
+      msgTimer: null
+    };
+
+    const scoreEls = {
+      grid: document.getElementById('score-grid'),
+      addBtn: document.getElementById('score-add-btn'),
+      removeBtn: document.getElementById('score-remove-btn'),
+      resetBtn: document.getElementById('score-reset-btn')
+    };
+
+    const noiseEls = {
+      toggleBtn: document.getElementById('noise-toggle-btn'),
+      toggleIcon: document.getElementById('noise-toggle-icon'),
+      panelContent: document.getElementById('noise-panel-content'),
+      micBtn: document.getElementById('noise-mic-btn'),
+      micIcon: document.getElementById('noise-mic-icon'),
+      micText: document.getElementById('noise-mic-text'),
+      currentVal: document.getElementById('noise-current-val'),
+      bar: document.getElementById('noise-bar'),
+      thresholdMarker: document.getElementById('noise-threshold-marker'),
+      thresholdVal: document.getElementById('noise-threshold-val'),
+      thresholdSlider: document.getElementById('noise-threshold-slider'),
+      
+      autoDeductToggle: document.getElementById('noise-auto-deduct-toggle'),
+      autoDeductKnob: document.getElementById('noise-auto-deduct-knob'),
+      deductPtsInput: document.getElementById('noise-deduct-pts'),
+      
+      autoRewardToggle: document.getElementById('noise-auto-reward-toggle'),
+      autoRewardKnob: document.getElementById('noise-auto-reward-knob'),
+      rewardTimeInput: document.getElementById('noise-reward-time'),
+      rewardPtsInput: document.getElementById('noise-reward-pts'),
+      
+      progressContainer: document.getElementById('quiet-progress-container'),
+      progressText: document.getElementById('quiet-progress-text'),
+      progressBar: document.getElementById('quiet-progress-bar'),
+
+      messageArea: document.getElementById('noise-message-area')
+    };
+
+    const playScoreSound = (type) => {
+      if (appState.isMuted) return;
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      
+      if (type === 'add') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.1);
+      } else if (type === 'sub') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(400, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(200, audioCtx.currentTime + 0.1);
+      } else if (type === 'warning') {
+        // 噪音警告聲
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(300, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(150, audioCtx.currentTime + 0.3);
+      } else {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(440, audioCtx.currentTime);
+      }
+
+      gain.gain.setValueAtTime(0, audioCtx.currentTime);
+      gain.gain.linearRampToValueAtTime(type==='warning' ? 0.4 : 0.3, audioCtx.currentTime + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + (type==='warning'?0.4:0.2));
+      
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + (type==='warning'?0.4:0.2));
+    };
+
+    const renderScoreboard = () => {
+      scoreEls.grid.innerHTML = scoreState.teams.map((team, index) => {
+        const colors = [
+          'from-indigo-500/20 to-purple-500/20 border-indigo-500/30 text-indigo-300',
+          'from-emerald-500/20 to-teal-500/20 border-emerald-500/30 text-emerald-300',
+          'from-amber-500/20 to-orange-500/20 border-amber-500/30 text-amber-300',
+          'from-rose-500/20 to-pink-500/20 border-rose-500/30 text-rose-300',
+          'from-cyan-500/20 to-blue-500/20 border-cyan-500/30 text-cyan-300',
+          'from-fuchsia-500/20 to-purple-500/20 border-fuchsia-500/30 text-fuchsia-300'
+        ];
+        const colorClass = colors[index % colors.length];
+        
+        return `
+          <div class="bg-gradient-to-br ${colorClass} border rounded-3xl p-5 flex flex-col items-center gap-4 relative group shadow-lg backdrop-blur-sm transition-transform hover:-translate-y-1">
+            <input type="text" data-id="${team.id}" value="${team.name}" class="team-name-input w-full bg-transparent border-b border-transparent focus:border-white/30 text-center text-xl font-bold text-white focus:outline-none transition-colors px-2 py-1 placeholder-white/30" placeholder="輸入隊名">
+            <div class="text-6xl md:text-7xl font-black font-mono tracking-tighter drop-shadow-md relative py-2 w-full text-center score-display transition-transform duration-200" data-id="${team.id}">
+              ${team.score}
+            </div>
+            <div class="flex items-center justify-center gap-2 w-full mt-auto pt-2">
+              <button data-action="sub" data-id="${team.id}" class="w-12 h-12 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-slate-300 hover:text-white transition-all active:scale-95">
+                <i data-lucide="minus" class="w-6 h-6"></i>
+              </button>
+              <button data-action="add" data-id="${team.id}" class="flex-1 h-12 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/20 flex items-center justify-center text-white font-bold text-xl transition-all active:scale-95 shadow-inner">
+                + 1
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+      
+      lucide.createIcons();
+      scoreEls.addBtn.disabled = scoreState.teams.length >= scoreState.maxTeams;
+      scoreEls.removeBtn.disabled = scoreState.teams.length <= 1;
+      scoreEls.addBtn.style.opacity = scoreEls.addBtn.disabled ? '0.5' : '1';
+      scoreEls.removeBtn.style.opacity = scoreEls.removeBtn.disabled ? '0.5' : '1';
+    };
+
+    // 支援傳入不同顏色來區分加減分的動畫
+    const animateScoreUpdate = (type) => {
+      const colorClass = type === 'add' ? 'text-emerald-400' : 'text-rose-400';
+      scoreState.teams.forEach(team => {
+        const scoreDisplay = document.querySelector(`.score-display[data-id="${team.id}"]`);
+        if (scoreDisplay) {
+          scoreDisplay.classList.add('scale-125', colorClass);
+          setTimeout(() => {
+            scoreDisplay.classList.remove('scale-125', colorClass);
+          }, 300);
+        }
+      });
+    };
+
+    // 事件委派：加減分數與更改名稱
+    scoreEls.grid.addEventListener('click', (e) => {
+      const btn = e.target.closest('button[data-action]');
+      if (!btn) return;
+      
+      const action = btn.getAttribute('data-action');
+      const id = parseInt(btn.getAttribute('data-id'));
+      const team = scoreState.teams.find(t => t.id === id);
+      
+      if (team) {
+        if (action === 'add') {
+          team.score += 1;
+          playScoreSound('add');
+        } else if (action === 'sub') {
+          team.score -= 1;
+          playScoreSound('sub');
+        }
+        
+        const scoreDisplay = document.querySelector(`.score-display[data-id="${id}"]`);
+        if (scoreDisplay) {
+          scoreDisplay.textContent = team.score;
+          scoreDisplay.classList.add('scale-125', 'text-white');
+          setTimeout(() => {
+            scoreDisplay.classList.remove('scale-125', 'text-white');
+          }, 200);
+        }
+      }
+    });
+
+    scoreEls.grid.addEventListener('change', (e) => {
+      if (e.target.classList.contains('team-name-input')) {
+        const id = parseInt(e.target.getAttribute('data-id'));
+        const team = scoreState.teams.find(t => t.id === id);
+        if (team) {
+          team.name = e.target.value.trim() || `第 ${id} 組`;
+          e.target.value = team.name;
+        }
+      }
+    });
+
+    // 控制列按鈕
+    scoreEls.addBtn.addEventListener('click', () => {
+      if (scoreState.teams.length < scoreState.maxTeams) {
+        const nextId = (scoreState.teams[scoreState.teams.length - 1]?.id || 0) + 1;
+        scoreState.teams.push({ id: nextId, name: `第 ${scoreState.teams.length + 1} 組`, score: 0 });
+        renderScoreboard();
+      }
+    });
+
+    scoreEls.removeBtn.addEventListener('click', () => {
+      if (scoreState.teams.length > 1) {
+        scoreState.teams.pop();
+        renderScoreboard();
+      }
+    });
+
+    scoreEls.resetBtn.addEventListener('click', () => {
+      if (scoreEls.resetBtn.dataset.confirm === 'true') {
+        scoreState.teams.forEach(t => t.score = 0);
+        renderScoreboard();
+        scoreEls.resetBtn.dataset.confirm = 'false';
+        scoreEls.resetBtn.innerHTML = `<i data-lucide="rotate-ccw" class="w-4 h-4"></i> 分數歸零`;
+        lucide.createIcons();
+      } else {
+        scoreEls.resetBtn.dataset.confirm = 'true';
+        scoreEls.resetBtn.innerHTML = `<i data-lucide="alert-triangle" class="w-4 h-4"></i> 再次點擊確認`;
+        lucide.createIcons();
+        setTimeout(() => {
+          if (scoreEls.resetBtn.dataset.confirm === 'true') {
+            scoreEls.resetBtn.dataset.confirm = 'false';
+            scoreEls.resetBtn.innerHTML = `<i data-lucide="rotate-ccw" class="w-4 h-4"></i> 分數歸零`;
+            lucide.createIcons();
+          }
+        }, 3000);
+      }
+    });
+
+    // ====== 噪音偵測系統邏輯 ======
+
+    // 展開/折疊面板
+    noiseEls.toggleBtn.addEventListener('click', () => {
+      noiseState.isPanelOpen = !noiseState.isPanelOpen;
+      if (noiseState.isPanelOpen) {
+        noiseEls.panelContent.classList.remove('hidden');
+        noiseEls.toggleIcon.classList.add('rotate-180');
+      } else {
+        noiseEls.panelContent.classList.add('hidden');
+        noiseEls.toggleIcon.classList.remove('rotate-180');
+      }
+    });
+
+    // 顯示噪音系統的提示訊息
+    const showNoiseMessage = (msg, colorClass, iconName = 'bell') => {
+      noiseEls.messageArea.innerHTML = `<i data-lucide="${iconName}" class="w-4 h-4"></i> ${msg}`;
+      // 動態替換顏色
+      noiseEls.messageArea.className = `flex items-center justify-center gap-2 font-bold text-sm h-6 transition-opacity duration-300 opacity-100 text-${colorClass}-400`;
+      lucide.createIcons({ root: noiseEls.messageArea });
+      
+      if (noiseState.msgTimer) clearTimeout(noiseState.msgTimer);
+      noiseState.msgTimer = setTimeout(() => {
+        noiseEls.messageArea.classList.replace('opacity-100', 'opacity-0');
+      }, 4000);
+    };
+
+    // 更新安靜進度條 UI
+    const updateQuietProgressUI = () => {
+      if (!noiseState.autoReward || !noiseState.isMicActive) return;
+      
+      const targetMs = noiseState.rewardTime * 1000;
+      const progressPercent = Math.min(100, (noiseState.quietTimeElapsed / targetMs) * 100);
+      const currentSeconds = Math.floor(noiseState.quietTimeElapsed / 1000);
+      
+      noiseEls.progressBar.style.width = `${progressPercent}%`;
+      noiseEls.progressText.textContent = `${currentSeconds} / ${noiseState.rewardTime} 秒`;
+    };
+
+    // 麥克風音量監聽迴圈
+    const updateNoiseLevel = () => {
+      if (!noiseState.isMicActive || !noiseState.analyser) return;
+
+      const now = Date.now();
+      const dt = noiseState.lastTickTime ? (now - noiseState.lastTickTime) : 0;
+      noiseState.lastTickTime = now;
+
+      noiseState.analyser.getByteFrequencyData(noiseState.dataArray);
+      let sum = 0;
+      for (let i = 0; i < noiseState.dataArray.length; i++) {
+        sum += noiseState.dataArray[i];
+      }
+      let average = sum / noiseState.dataArray.length;
+      
+      let volumePercent = Math.min(100, Math.round((average / 150) * 100));
+
+      noiseEls.currentVal.textContent = `${volumePercent}%`;
+      noiseEls.bar.style.width = `${volumePercent}%`;
+
+      // 檢查是否超過門檻
+      if (volumePercent >= noiseState.threshold) {
+        // UI 變色
+        noiseEls.currentVal.classList.replace('text-rose-400', 'text-red-500');
+        noiseEls.bar.classList.add('from-red-500', 'via-red-600', 'to-red-500');
+        
+        // 如果吵鬧，安靜進度歸零
+        if (noiseState.autoReward && noiseState.quietTimeElapsed > 0) {
+           noiseState.quietTimeElapsed = 0;
+           updateQuietProgressUI();
+        }
+
+        // 觸發自動扣分 (若開啟且不在冷卻中)
+        if (noiseState.autoDeduct && !noiseState.cooldown) {
+          triggerAutoDeduct();
+        }
+      } else {
+        // 在門檻以下 (安靜狀態)
+        noiseEls.currentVal.classList.replace('text-red-500', 'text-rose-400');
+        noiseEls.bar.classList.remove('from-red-500', 'via-red-600', 'to-red-500');
+
+        // 安靜挑戰加分邏輯
+        if (noiseState.autoReward) {
+           noiseState.quietTimeElapsed += dt;
+           updateQuietProgressUI();
+
+           // 達成指定時間
+           if (noiseState.quietTimeElapsed >= (noiseState.rewardTime * 1000)) {
+               triggerAutoReward();
+           }
+        }
+      }
+
+      noiseState.animationId = requestAnimationFrame(updateNoiseLevel);
+    };
+
+    // 觸發自動扣分
+    const triggerAutoDeduct = () => {
+      noiseState.cooldown = true;
+      playScoreSound('warning');
+      
+      scoreState.teams.forEach(t => t.score -= noiseState.deductPoints);
+      renderScoreboard();
+      animateScoreUpdate('sub');
+
+      showNoiseMessage(`音量過大！全班已扣 ${noiseState.deductPoints} 分！(冷卻中...)`, 'rose', 'alert-octagon');
+      
+      noiseState.cooldownTimer = setTimeout(() => {
+        noiseState.cooldown = false;
+      }, 5000);
+    };
+
+    // 觸發自動加分
+    const triggerAutoReward = () => {
+      playScoreSound('add');
+      
+      scoreState.teams.forEach(t => t.score += noiseState.rewardPoints);
+      renderScoreboard();
+      animateScoreUpdate('add');
+      
+      // 歸零重新開始計算下一輪
+      noiseState.quietTimeElapsed = 0;
+      updateQuietProgressUI();
+
+      showNoiseMessage(`達成安靜挑戰！全班已加 ${noiseState.rewardPoints} 分！`, 'emerald', 'party-popper');
+    };
+
+    // 啟動/關閉麥克風
+    noiseEls.micBtn.addEventListener('click', async () => {
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+
+      if (noiseState.isMicActive) {
+        // 關閉
+        noiseState.isMicActive = false;
+        noiseState.lastTickTime = null;
+        if (noiseState.stream) {
+          noiseState.stream.getTracks().forEach(track => track.stop());
+        }
+        if (noiseState.animationId) cancelAnimationFrame(noiseState.animationId);
+        
+        noiseEls.micBtn.classList.replace('bg-rose-600', 'bg-slate-800');
+        noiseEls.micBtn.classList.replace('hover:bg-rose-500', 'hover:bg-slate-700');
+        noiseEls.micIcon.setAttribute('data-lucide', 'mic-off');
+        noiseEls.micText.textContent = "開啟麥克風";
+        noiseEls.bar.style.width = "0%";
+        noiseEls.currentVal.textContent = "0%";
+        
+        // 重置安靜進度
+        noiseState.quietTimeElapsed = 0;
+        updateQuietProgressUI();
+
+        lucide.createIcons();
+      } else {
+        // 開啟
+        try {
+          noiseState.stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          noiseState.source = audioCtx.createMediaStreamSource(noiseState.stream);
+          noiseState.analyser = audioCtx.createAnalyser();
+          noiseState.analyser.fftSize = 256;
+          noiseState.source.connect(noiseState.analyser);
+          
+          noiseState.dataArray = new Uint8Array(noiseState.analyser.frequencyBinCount);
+          noiseState.isMicActive = true;
+          noiseState.lastTickTime = Date.now();
+          noiseState.quietTimeElapsed = 0;
+          
+          noiseEls.micBtn.classList.replace('bg-slate-800', 'bg-rose-600');
+          noiseEls.micBtn.classList.replace('hover:bg-slate-700', 'hover:bg-rose-500');
+          noiseEls.micIcon.setAttribute('data-lucide', 'mic');
+          noiseEls.micText.textContent = "關閉麥克風";
+          lucide.createIcons();
+
+          updateNoiseLevel();
+        } catch (err) {
+          alert("無法存取麥克風，請確認瀏覽器權限設定。");
+        }
+      }
+    });
+
+    // 設定：門檻調整
+    noiseEls.thresholdSlider.addEventListener('input', (e) => {
+      noiseState.threshold = parseInt(e.target.value);
+      noiseEls.thresholdVal.textContent = `${noiseState.threshold}%`;
+      noiseEls.thresholdMarker.style.left = `${noiseState.threshold}%`;
+    });
+
+    // 設定：自訂扣分數
+    noiseEls.deductPtsInput.addEventListener('input', (e) => {
+      let val = parseInt(e.target.value) || 1;
+      if (val < 1) val = 1;
+      noiseState.deductPoints = val;
+    });
+
+    // 設定：自動扣分開關
+    noiseEls.autoDeductToggle.addEventListener('click', () => {
+      noiseState.autoDeduct = !noiseState.autoDeduct;
+      if (noiseState.autoDeduct) {
+        noiseEls.autoDeductToggle.classList.replace('bg-slate-700', 'bg-rose-500');
+        noiseEls.autoDeductKnob.classList.replace('translate-x-1', 'translate-x-6');
+      } else {
+        noiseEls.autoDeductToggle.classList.replace('bg-rose-500', 'bg-slate-700');
+        noiseEls.autoDeductKnob.classList.replace('translate-x-6', 'translate-x-1');
+      }
+    });
+
+    // 設定：自訂加分秒數與分數
+    noiseEls.rewardTimeInput.addEventListener('input', (e) => {
+      let val = parseInt(e.target.value) || 30;
+      if (val < 5) val = 5;
+      noiseState.rewardTime = val;
+      updateQuietProgressUI(); // 即時更新 UI 的總秒數文字
+    });
+
+    noiseEls.rewardPtsInput.addEventListener('input', (e) => {
+      let val = parseInt(e.target.value) || 1;
+      if (val < 1) val = 1;
+      noiseState.rewardPoints = val;
+    });
+
+    // 設定：自動加分開關
+    noiseEls.autoRewardToggle.addEventListener('click', () => {
+      noiseState.autoReward = !noiseState.autoReward;
+      
+      if (noiseState.autoReward) {
+        noiseEls.autoRewardToggle.classList.replace('bg-slate-700', 'bg-emerald-500');
+        noiseEls.autoRewardKnob.classList.replace('translate-x-1', 'translate-x-6');
+        noiseEls.progressContainer.classList.remove('hidden');
+        noiseState.quietTimeElapsed = 0; // 開啟時從 0 開始算
+        noiseState.lastTickTime = Date.now();
+      } else {
+        noiseEls.autoRewardToggle.classList.replace('bg-emerald-500', 'bg-slate-700');
+        noiseEls.autoRewardKnob.classList.replace('translate-x-6', 'translate-x-1');
+        noiseEls.progressContainer.classList.add('hidden');
+      }
+    });
+
+    // 初始化渲染計分板
+    renderScoreboard();
+
+    // ----------------------------------------------------------------------
+    // 模組 5: 互動白板 (BOARD MODE)
+    // ----------------------------------------------------------------------
+    const boardEls = {
+      canvas: document.getElementById('whiteboard-canvas'),
+      container: document.getElementById('canvas-container'),
+      colorBtns: document.querySelectorAll('.color-btn'),
+      brushSize: document.getElementById('brush-size'),
+      eraserBtn: document.getElementById('eraser-btn'),
+      clearBtn: document.getElementById('clear-board-btn')
+    };
+
+    const boardCtx = boardEls.canvas.getContext('2d', { willReadFrequently: true });
+    
+    let boardState = {
+      isDrawing: false,
+      color: '#ffffff',
+      lineWidth: 4,
+      isErasing: false,
+      lastX: 0,
+      lastY: 0
+    };
+
+    // 處理畫布響應式大小與重繪保存內容
+    const resizeCanvas = () => {
+      if (appState.currentMode !== 'board') return;
+      
+      // 保存原有內容
+      const tempCanvas = document.createElement('canvas');
+      tempCanvas.width = boardEls.canvas.width;
+      tempCanvas.height = boardEls.canvas.height;
+      const tempCtx = tempCanvas.getContext('2d');
+      if (boardEls.canvas.width > 0 && boardEls.canvas.height > 0) {
+          tempCtx.drawImage(boardEls.canvas, 0, 0);
+      }
+
+      // 重新取得容器大小並設定
+      const rect = boardEls.container.getBoundingClientRect();
+      boardEls.canvas.width = rect.width;
+      boardEls.canvas.height = rect.height;
+
+      // 恢復設定
+      boardCtx.lineCap = 'round';
+      boardCtx.lineJoin = 'round';
+      
+      // 恢復原有內容
+      if (tempCanvas.width > 0 && tempCanvas.height > 0) {
+        boardCtx.drawImage(tempCanvas, 0, 0);
+      }
+    };
+
+    window.addEventListener('resize', resizeCanvas);
+
+    // 取得指標在 Canvas 內的相對位置
+    const getPointerPos = (e) => {
+      const rect = boardEls.canvas.getBoundingClientRect();
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      return {
+        x: clientX - rect.left,
+        y: clientY - rect.top
+      };
+    };
+
+    const startDrawing = (e) => {
+      boardState.isDrawing = true;
+      const pos = getPointerPos(e);
+      boardState.lastX = pos.x;
+      boardState.lastY = pos.y;
+      draw(e);
+    };
+
+    const stopDrawing = () => {
+      boardState.isDrawing = false;
+      boardCtx.beginPath();
+    };
+
+    const draw = (e) => {
+      if (!boardState.isDrawing) return;
+      e.preventDefault(); // 阻止滾動等預設行為
+      
+      const pos = getPointerPos(e);
+
+      boardCtx.lineWidth = boardState.lineWidth;
+      boardCtx.lineCap = 'round';
+      boardCtx.lineJoin = 'round';
+      
+      if (boardState.isErasing) {
+        boardCtx.globalCompositeOperation = 'destination-out';
+        boardCtx.lineWidth = boardState.lineWidth * 2; // 橡皮擦稍微粗一點
+      } else {
+        boardCtx.globalCompositeOperation = 'source-over';
+        boardCtx.strokeStyle = boardState.color;
+      }
+
+      boardCtx.beginPath();
+      boardCtx.moveTo(boardState.lastX, boardState.lastY);
+      boardCtx.lineTo(pos.x, pos.y);
+      boardCtx.stroke();
+
+      boardState.lastX = pos.x;
+      boardState.lastY = pos.y;
+    };
+
+    // 綁定滑鼠事件
+    boardEls.canvas.addEventListener('mousedown', startDrawing);
+    boardEls.canvas.addEventListener('mousemove', draw);
+    boardEls.canvas.addEventListener('mouseup', stopDrawing);
+    boardEls.canvas.addEventListener('mouseout', stopDrawing);
+
+    // 綁定觸控事件
+    boardEls.canvas.addEventListener('touchstart', startDrawing, { passive: false });
+    boardEls.canvas.addEventListener('touchmove', draw, { passive: false });
+    boardEls.canvas.addEventListener('touchend', stopDrawing);
+    boardEls.canvas.addEventListener('touchcancel', stopDrawing);
+
+    // 白板工具控制邏輯
+    boardEls.colorBtns.forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        boardState.isErasing = false;
+        boardState.color = e.target.dataset.color;
+        
+        // 更新 UI
+        boardEls.colorBtns.forEach(b => b.classList.replace('border-indigo-500', 'border-transparent'));
+        boardEls.colorBtns.forEach(b => b.classList.remove('shadow-[0_0_10px_rgba(255,255,255,0.5)]'));
+        e.target.classList.replace('border-transparent', 'border-indigo-500');
+        if(boardState.color === '#ffffff') {
+           e.target.classList.add('shadow-[0_0_10px_rgba(255,255,255,0.5)]');
+        }
+
+        // 恢復橡皮擦按鈕外觀
+        boardEls.eraserBtn.classList.remove('bg-indigo-600', 'text-white');
+        boardEls.eraserBtn.classList.add('bg-slate-800', 'text-slate-300');
+      });
+    });
+
+    boardEls.brushSize.addEventListener('input', (e) => {
+      boardState.lineWidth = e.target.value;
+    });
+
+    boardEls.eraserBtn.addEventListener('click', () => {
+      boardState.isErasing = true;
+      boardEls.eraserBtn.classList.replace('bg-slate-800', 'bg-indigo-600');
+      boardEls.eraserBtn.classList.replace('text-slate-300', 'text-white');
+      
+      // 移除顏色選擇的高光
+      boardEls.colorBtns.forEach(b => b.classList.replace('border-indigo-500', 'border-transparent'));
+      boardEls.colorBtns.forEach(b => b.classList.remove('shadow-[0_0_10px_rgba(255,255,255,0.5)]'));
+    });
+
+    boardEls.clearBtn.addEventListener('click', () => {
+      boardCtx.clearRect(0, 0, boardEls.canvas.width, boardEls.canvas.height);
+    });
+
+    // 初始載入時設定一次畫布大小
+    window.addEventListener('load', () => {
+        if(appState.currentMode === 'board') resizeCanvas();
+    });
+
+  </script>
+</body>
+</html>
