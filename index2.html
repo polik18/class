@@ -58,7 +58,7 @@
   
   <!-- 引入 Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
-  <!-- 引入 PeerJS (WebRTC) 用於 IRS 即時反饋系統 -->
+  <!-- 引入 PeerJS (WebRTC) 用於 即問即答 系統 -->
   <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 
   <style>
@@ -129,7 +129,7 @@
         <i data-lucide="edit-3" class="w-4 h-4"></i> 互動白板
       </button>
       <button onclick="switchAppMode('irs')" id="nav-irs" class="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-white/5 font-bold transition-all whitespace-nowrap">
-        <i data-lucide="radio" class="w-4 h-4"></i> IRS反饋
+        <i data-lucide="radio" class="w-4 h-4"></i> 即問即答
       </button>
     </div>
 
@@ -604,14 +604,14 @@
     </div>
 
     <!-- ========================================== -->
-    <!-- 模組 6: IRS即時反饋 (IRS MODE) -->
+    <!-- 模組 6: 即問即答 (IRS MODE) -->
     <!-- ========================================== -->
     <div id="app-irs" class="hidden flex-col w-full min-h-[70vh] animate-pop-in relative flex-1 gap-6">
       
       <!-- 角色選擇畫面 -->
       <div id="irs-role-select" class="flex-1 flex flex-col items-center justify-center space-y-8 bg-slate-900/60 rounded-[2rem] border border-white/10 backdrop-blur-sm shadow-xl p-8">
         <div class="text-center space-y-2">
-          <h2 class="text-3xl font-black bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">IRS 即時反饋系統</h2>
+          <h2 class="text-3xl font-black bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">即問即答 系統</h2>
           <p class="text-slate-400">免伺服器 WebRTC P2P 連線技術</p>
         </div>
         <div class="flex flex-col md:flex-row gap-6 w-full max-w-2xl">
@@ -668,6 +668,9 @@
              </button>
              <button onclick="sendIRSQuestion('OX')" class="w-full py-4 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold shadow-lg shadow-cyan-500/30 transition-all flex items-center justify-center gap-2">
                是非題 (O, X)
+             </button>
+             <button onclick="sendIRSQuestion('VOTE')" class="w-full py-4 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold shadow-lg shadow-purple-500/30 transition-all flex items-center justify-center gap-2">
+               <i data-lucide="bar-chart-2" class="w-5 h-5"></i> 班級投票 (贊成/反對/棄權)
              </button>
              <button onclick="sendIRSQuestion('BUZZER')" class="w-full py-4 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold shadow-lg shadow-amber-500/30 transition-all flex items-center justify-center gap-2">
                <i data-lucide="bell-ring" class="w-5 h-5"></i> 搶答模式
@@ -2046,7 +2049,7 @@
     });
 
     // ----------------------------------------------------------------------
-    // 模組 6: IRS即時反饋 (IRS MODE - WebRTC via PeerJS)
+    // 模組 6: 即問即答 (IRS MODE - WebRTC via PeerJS)
     // ----------------------------------------------------------------------
     const irsState = {
       peer: null,
@@ -2055,7 +2058,7 @@
       connections: {}, // peerId => connection (Teacher side)
       hostConn: null, // connection to host (Student side)
       studentsInfo: {}, // peerId => { name: string, hasAnswered: boolean, answer: string }
-      currentQ: null, // 'ABCD' | 'OX' | 'BUZZER' | null
+      currentQ: null, // 'ABCD' | 'OX' | 'BUZZER' | 'VOTE' | null
       buzzerList: [], // Track buzzer order
       studentName: ''
     };
@@ -2252,7 +2255,11 @@
          irsEls.answerStatus.textContent = `作答進度: ${answeredCount} / ${totalStudents}`;
          irsEls.chartPlaceholder.classList.add('hidden');
          
-         const opts = irsState.currentQ === 'ABCD' ? ['A', 'B', 'C', 'D'] : ['O', 'X'];
+         let opts = [];
+         if (irsState.currentQ === 'ABCD') opts = ['A', 'B', 'C', 'D'];
+         else if (irsState.currentQ === 'OX') opts = ['O', 'X'];
+         else if (irsState.currentQ === 'VOTE') opts = ['贊成', '反對', '棄權'];
+
          const counts = {};
          opts.forEach(o => counts[o] = 0);
          
@@ -2265,18 +2272,21 @@
          const colors = {
             'A': 'from-indigo-500 to-purple-500', 'B': 'from-emerald-500 to-teal-500',
             'C': 'from-amber-500 to-orange-500', 'D': 'from-rose-500 to-pink-500',
-            'O': 'from-emerald-500 to-teal-500', 'X': 'from-rose-500 to-pink-500'
+            'O': 'from-emerald-500 to-teal-500', 'X': 'from-rose-500 to-pink-500',
+            '贊成': 'from-emerald-500 to-teal-500', '反對': 'from-rose-500 to-pink-500', '棄權': 'from-slate-500 to-slate-700'
          };
 
          irsEls.chartArea.innerHTML = opts.map(opt => {
             const hPercent = (counts[opt] / maxCount) * 100;
+            // 動態調整文字大小以適應中文字
+            const textClass = opt.length > 1 ? 'text-lg' : 'text-xl';
             return `
               <div class="flex flex-col items-center flex-1 h-full justify-end gap-2 group">
                  <span class="text-sm font-bold text-white opacity-0 group-hover:opacity-100 transition-opacity absolute -mt-6 z-10 bg-slate-800 px-2 py-1 rounded shadow">${counts[opt]}人</span>
                  <div class="w-full max-w-[4rem] rounded-t-xl bg-gradient-to-t ${colors[opt]} transition-all duration-500 min-h-[4px] relative shadow-[0_0_15px_rgba(255,255,255,0.1)]" style="height: ${hPercent}%">
                     <div class="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity rounded-t-xl"></div>
                  </div>
-                 <span class="font-black text-xl text-slate-300">${opt}</span>
+                 <span class="font-black ${textClass} text-slate-300 whitespace-nowrap">${opt}</span>
               </div>
             `;
          }).join('');
@@ -2383,14 +2393,18 @@
                <button onclick="submitIRSAnswer('C')" class="py-8 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 hover:opacity-80 active:scale-95 text-white font-black text-4xl shadow-lg transition-all border border-white/20">C</button>
                <button onclick="submitIRSAnswer('D')" class="py-8 rounded-2xl bg-gradient-to-br from-rose-500 to-pink-600 hover:opacity-80 active:scale-95 text-white font-black text-4xl shadow-lg transition-all border border-white/20">D</button>
              `;
-          } else {
+          } else if (data.qType === 'OX') {
              optsHTML = `
                <button onclick="submitIRSAnswer('O')" class="py-12 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 hover:opacity-80 active:scale-95 text-white font-black text-6xl shadow-lg transition-all border border-white/20">O</button>
                <button onclick="submitIRSAnswer('X')" class="py-12 rounded-2xl bg-gradient-to-br from-rose-500 to-pink-600 hover:opacity-80 active:scale-95 text-white font-black text-6xl shadow-lg transition-all border border-white/20">X</button>
              `;
-          }
-          
-          if (data.qType === 'BUZZER') {
+          } else if (data.qType === 'VOTE') {
+             optsHTML = `
+               <button onclick="submitIRSAnswer('贊成')" class="py-10 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 hover:opacity-80 active:scale-95 text-white font-black text-3xl shadow-lg transition-all border border-white/20">贊成</button>
+               <button onclick="submitIRSAnswer('反對')" class="py-10 rounded-2xl bg-gradient-to-br from-rose-500 to-pink-600 hover:opacity-80 active:scale-95 text-white font-black text-3xl shadow-lg transition-all border border-white/20">反對</button>
+               <button onclick="submitIRSAnswer('棄權')" class="col-span-2 py-6 rounded-2xl bg-gradient-to-br from-slate-600 to-slate-800 hover:opacity-80 active:scale-95 text-white font-black text-2xl shadow-lg transition-all border border-white/20 tracking-widest">棄權</button>
+             `;
+          } else if (data.qType === 'BUZZER') {
              // 學生端的超大搶答按鈕
              optsHTML = `
                <button onclick="submitIRSAnswer('BUZZ')" class="col-span-2 py-16 rounded-[2.5rem] bg-gradient-to-br from-rose-500 via-red-500 to-rose-700 hover:opacity-90 active:scale-95 text-white shadow-[0_0_40px_rgba(225,29,72,0.5)] transition-all border-4 border-rose-300/50 flex flex-col items-center justify-center gap-4 group mt-4">
@@ -2421,7 +2435,8 @@
           if (val === 'BUZZ') {
              irsEls.studentWaiting.innerHTML = `<div class="p-6 rounded-full bg-rose-500/20 inline-block mb-4 border border-rose-500/30"><i data-lucide="bell-ring" class="w-12 h-12 text-rose-400 animate-pulse mx-auto"></i></div><p class="text-xl font-bold text-slate-300">已送出搶答！<br>請看前方名次...</p>`;
           } else {
-             irsEls.studentWaiting.innerHTML = `<div class="p-4 rounded-full bg-emerald-500/20 inline-block mb-4"><span class="text-4xl font-black text-emerald-400">${val}</span></div><p class="text-xl font-bold text-slate-300">已送出答案！<br>等待老師公佈結果...</p>`;
+             const displayVal = val.length > 1 ? `<span class="text-2xl">${val}</span>` : `<span class="text-4xl">${val}</span>`;
+             irsEls.studentWaiting.innerHTML = `<div class="p-4 rounded-full bg-emerald-500/20 inline-block mb-4 font-black text-emerald-400">${displayVal}</div><p class="text-xl font-bold text-slate-300">已送出答案！<br>等待老師公佈結果...</p>`;
           }
           
           lucide.createIcons();
