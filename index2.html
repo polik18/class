@@ -2142,7 +2142,8 @@
 
     window.copyIRSRoomId = () => {
        if(!irsState.roomId) return;
-       navigator.clipboard.writeText(irsState.roomId).then(() => {
+       
+       const showSuccessUI = () => {
           const idEl = irsEls.roomId;
           const orig = idEl.textContent;
           idEl.textContent = "已複製！";
@@ -2151,7 +2152,40 @@
             idEl.textContent = orig;
             idEl.classList.remove('text-emerald-400');
           }, 1500);
-       });
+       };
+
+       // Fallback for iframe environments where navigator.clipboard is blocked
+       const fallbackCopyTextToClipboard = (text) => {
+         const textArea = document.createElement("textarea");
+         textArea.value = text;
+         // Avoid scrolling to bottom
+         textArea.style.top = "0";
+         textArea.style.left = "0";
+         textArea.style.position = "fixed";
+         document.body.appendChild(textArea);
+         textArea.focus();
+         textArea.select();
+         try {
+           document.execCommand('copy');
+           showSuccessUI();
+         } catch (err) {
+           console.error('Fallback: Oops, unable to copy', err);
+           alert("複製失敗，請手動選取複製");
+         }
+         document.body.removeChild(textArea);
+       };
+
+       // Try modern API first, catch and fallback
+       if (navigator.clipboard && navigator.clipboard.writeText) {
+         navigator.clipboard.writeText(irsState.roomId).then(() => {
+            showSuccessUI();
+         }).catch(err => {
+            console.warn("Clipboard API blocked, using fallback", err);
+            fallbackCopyTextToClipboard(irsState.roomId);
+         });
+       } else {
+         fallbackCopyTextToClipboard(irsState.roomId);
+       }
     };
 
     const handleTeacherReceive = (peerId, data, conn) => {
