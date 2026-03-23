@@ -27,7 +27,7 @@
           },
           keyframes: {
             popIn: {
-              '0%': { transform: 'scale(0.95) translateY(10px)', opacity: '0' },
+              '0%': { transform: 'scale(0.8) translateY(20px)', opacity: '0' },
               '100%': { transform: 'scale(1) translateY(0)', opacity: '1' },
             },
             pulseGlow: {
@@ -110,29 +110,41 @@
       </div>
     </div>
 
-    <!-- 主功能切換導覽列 -->
-    <div class="flex bg-slate-950/60 p-1.5 rounded-2xl border border-white/10 shadow-inner w-full md:w-auto overflow-x-auto no-scrollbar">
-      <button onclick="switchAppMode('draw')" id="nav-draw" class="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-indigo-600 text-white font-bold transition-all shadow-md whitespace-nowrap">
-        <i data-lucide="users" class="w-4 h-4"></i> 抽籤機
-      </button>
-      <button onclick="switchAppMode('clock')" id="nav-clock" class="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-white/5 font-bold transition-all whitespace-nowrap">
-        <i data-lucide="clock" class="w-4 h-4"></i> 考試大鐘
-      </button>
-      <button onclick="switchAppMode('timer')" id="nav-timer" class="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-white/5 font-bold transition-all relative whitespace-nowrap">
-        <i data-lucide="timer" class="w-4 h-4"></i> 小組計時
-        <!-- 計時器運行中小紅點指示 -->
-        <span id="timer-running-dot" class="hidden absolute top-2 right-4 w-2 h-2 rounded-full bg-red-500 animate-ping"></span>
-        <span id="timer-running-dot-static" class="hidden absolute top-2 right-4 w-2 h-2 rounded-full bg-red-500"></span>
-      </button>
-      <button onclick="switchAppMode('score')" id="nav-score" class="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-white/5 font-bold transition-all whitespace-nowrap">
-        <i data-lucide="award" class="w-4 h-4"></i> 計分板
-      </button>
-      <button onclick="switchAppMode('board')" id="nav-board" class="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-white/5 font-bold transition-all whitespace-nowrap">
-        <i data-lucide="edit-3" class="w-4 h-4"></i> 互動白板
-      </button>
-      <button onclick="switchAppMode('irs')" id="nav-irs" class="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-white/5 font-bold transition-all whitespace-nowrap">
-        <i data-lucide="radio" class="w-4 h-4"></i> 即問即答
-      </button>
+    <!-- 主功能切換導覽列 (加入動態左右滑動提示) -->
+    <div class="relative w-full md:w-auto flex items-center">
+      <!-- 左右滑動提示 (左) -->
+      <div id="nav-scroll-left" class="absolute left-0 top-0 bottom-0 w-10 bg-gradient-to-r from-slate-950 via-slate-950/90 to-transparent flex items-center justify-start pl-1 z-10 pointer-events-none opacity-0 transition-opacity duration-300 rounded-l-2xl md:hidden">
+          <i data-lucide="chevron-left" class="w-5 h-5 text-white/80 animate-pulse"></i>
+      </div>
+      
+      <div id="main-nav-container" class="flex bg-slate-950/60 p-1.5 rounded-2xl border border-white/10 shadow-inner w-full md:w-auto overflow-x-auto no-scrollbar relative">
+        <button onclick="switchAppMode('draw')" id="nav-draw" class="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-indigo-600 text-white font-bold transition-all shadow-md whitespace-nowrap">
+          <i data-lucide="users" class="w-4 h-4"></i> 抽籤機
+        </button>
+        <button onclick="switchAppMode('clock')" id="nav-clock" class="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-white/5 font-bold transition-all whitespace-nowrap">
+          <i data-lucide="clock" class="w-4 h-4"></i> 考試大鐘
+        </button>
+        <button onclick="switchAppMode('timer')" id="nav-timer" class="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-white/5 font-bold transition-all relative whitespace-nowrap">
+          <i data-lucide="timer" class="w-4 h-4"></i> 小組計時
+          <!-- 計時器運行中小紅點指示 -->
+          <span id="timer-running-dot" class="hidden absolute top-2 right-4 w-2 h-2 rounded-full bg-red-500 animate-ping"></span>
+          <span id="timer-running-dot-static" class="hidden absolute top-2 right-4 w-2 h-2 rounded-full bg-red-500"></span>
+        </button>
+        <button onclick="switchAppMode('score')" id="nav-score" class="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-white/5 font-bold transition-all whitespace-nowrap">
+          <i data-lucide="award" class="w-4 h-4"></i> 計分板
+        </button>
+        <button onclick="switchAppMode('board')" id="nav-board" class="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-white/5 font-bold transition-all whitespace-nowrap">
+          <i data-lucide="edit-3" class="w-4 h-4"></i> 互動白板
+        </button>
+        <button onclick="switchAppMode('irs')" id="nav-irs" class="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-white/5 font-bold transition-all whitespace-nowrap">
+          <i data-lucide="radio" class="w-4 h-4"></i> 即問即答
+        </button>
+      </div>
+
+      <!-- 左右滑動提示 (右) -->
+      <div id="nav-scroll-right" class="absolute right-0 top-0 bottom-0 w-10 bg-gradient-to-l from-slate-950 via-slate-950/90 to-transparent flex items-center justify-end pr-1 z-10 pointer-events-none opacity-0 transition-opacity duration-300 rounded-r-2xl md:hidden">
+          <i data-lucide="chevron-right" class="w-5 h-5 text-white/80 animate-pulse"></i>
+      </div>
     </div>
 
     <button id="mute-btn" class="p-3 rounded-full bg-white/5 hover:bg-white/20 transition-all duration-300 border border-white/10 hover:scale-110 hidden md:block shrink-0">
@@ -301,19 +313,19 @@
     <div id="app-clock" class="hidden flex-col items-center justify-center min-h-[75vh] w-full animate-pop-in relative flex-1">
       <div class="absolute inset-0 bg-indigo-900/10 rounded-[3rem] border border-white/5 backdrop-blur-sm -z-10 shadow-2xl"></div>
       
-      <div class="text-center space-y-8 p-10">
+      <div class="text-center space-y-4 sm:space-y-8 p-4 sm:p-10 w-full overflow-hidden flex flex-col items-center">
         <!-- 日期顯示 -->
-        <div id="clock-date" class="text-3xl md:text-5xl font-medium text-indigo-300/80 tracking-widest drop-shadow-md">
+        <div id="clock-date" class="text-[clamp(1.5rem,4vw,3.5rem)] font-medium text-indigo-300/80 tracking-widest drop-shadow-md">
           載入日期中...
         </div>
         
         <!-- 時間顯示 -->
-        <div id="clock-time" class="text-[6rem] sm:text-[10rem] md:text-[14rem] font-black font-mono leading-none tracking-tight bg-gradient-to-b from-white via-indigo-100 to-indigo-500 bg-clip-text text-transparent drop-shadow-[0_0_40px_rgba(99,102,241,0.6)]">
+        <div id="clock-time" class="text-[clamp(4rem,min(18vw,30vh),25rem)] font-black font-mono leading-none tracking-tight bg-gradient-to-b from-white via-indigo-100 to-indigo-500 bg-clip-text text-transparent drop-shadow-[0_0_40px_rgba(99,102,241,0.6)] w-full">
           00:00:00
         </div>
         
         <!-- 秒數進度條(視覺點綴) -->
-        <div class="w-full max-w-2xl mx-auto h-2 bg-slate-800 rounded-full overflow-hidden mt-8 shadow-inner border border-white/5">
+        <div class="w-full max-w-2xl mx-auto h-2 bg-slate-800 rounded-full overflow-hidden mt-4 sm:mt-8 shadow-inner border border-white/5 flex-shrink-0">
           <div id="clock-seconds-bar" class="h-full bg-gradient-to-r from-indigo-500 to-purple-500 transition-all duration-1000 ease-linear shadow-[0_0_10px_rgba(99,102,241,0.8)]" style="width: 0%"></div>
         </div>
       </div>
@@ -321,7 +333,7 @@
 
 
     <!-- ========================================== -->
-    <!-- 模組 3: 小組計時器 (TIMER MODE) - 全新設計版面 -->
+    <!-- 模組 3: 小組計時器 (TIMER MODE) -->
     <!-- ========================================== -->
     <div id="app-timer" class="hidden grid-cols-1 lg:grid-cols-12 gap-8 items-center min-h-[75vh] w-full animate-pop-in relative flex-1">
       
@@ -642,9 +654,12 @@
             <h3 class="text-2xl font-bold text-slate-800 mb-2">掃描加入課堂</h3>
             <p class="text-slate-500 mb-6 text-sm">請學生使用手機相機掃描</p>
             <div id="qrcode-container" class="bg-white p-4 rounded-xl shadow-inner border border-slate-100 flex justify-center items-center min-h-[256px] min-w-[256px]"></div>
-            <div class="mt-6 text-center">
+            <div class="mt-6 text-center w-full">
               <p class="text-xs text-slate-400 mb-1">或手動輸入代碼</p>
-              <p id="qr-modal-room-id" class="text-3xl font-mono font-black text-indigo-600 tracking-widest"></p>
+              <p id="qr-modal-room-id" class="text-3xl font-mono font-black text-indigo-600 tracking-widest mb-4"></p>
+              <button onclick="copyIRSLink()" class="w-full py-3 rounded-xl bg-indigo-50/50 hover:bg-indigo-100 text-indigo-700 font-bold transition-all flex items-center justify-center gap-2 shadow-sm">
+                <i data-lucide="link" class="w-5 h-5"></i> 複製邀請連結，直接發給學生
+              </button>
             </div>
             <button onclick="hideIRSQR()" class="absolute top-4 right-4 text-slate-400 hover:text-rose-500 transition-colors"><i data-lucide="x" class="w-6 h-6"></i></button>
          </div>
@@ -687,49 +702,122 @@
       <div id="irs-teacher-view" class="hidden flex-1 flex-col lg:flex-row gap-6">
         <!-- 左側：控制面板 -->
         <div class="lg:w-1/3 flex flex-col gap-6">
-          <div class="bg-slate-900/60 rounded-3xl border border-white/10 backdrop-blur-sm shadow-xl p-6 space-y-4">
-            <div class="flex justify-between items-center">
-              <h3 class="font-bold text-emerald-400 flex items-center gap-2"><i data-lucide="radio" class="w-5 h-5"></i> 教室資訊</h3>
+          <!-- 教室資訊 (折疊面板) -->
+          <div class="bg-slate-900/60 rounded-3xl border border-white/10 backdrop-blur-sm shadow-xl overflow-hidden transition-all duration-300 flex-shrink-0">
+            <!-- 面板標題列 (點擊折疊/展開) -->
+            <button onclick="toggleIRSInfoPanel()" class="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors group">
               <div class="flex items-center gap-3">
-                 <button onclick="showIRSInfo()" class="text-slate-400 hover:text-cyan-400 transition-colors p-1 rounded-full hover:bg-white/5"><i data-lucide="help-circle" class="w-4 h-4"></i></button>
-                 <button onclick="leaveIRS()" class="text-xs text-slate-400 hover:text-rose-400 transition-colors px-2 py-1 rounded hover:bg-white/5">結束課堂</button>
+                <div class="p-2 bg-emerald-500/20 rounded-xl border border-emerald-500/30 group-hover:scale-110 transition-transform">
+                  <i data-lucide="radio" class="w-5 h-5 text-emerald-400"></i>
+                </div>
+                <div class="text-left">
+                  <h3 class="font-bold text-white tracking-wide text-sm md:text-base">教室資訊</h3>
+                  <!-- 關鍵資訊摘要 -->
+                  <p class="text-xs text-slate-400 mt-0.5 flex items-center gap-2">
+                    <span>代碼: <span id="irs-room-id-mini" class="text-indigo-300 font-mono font-bold">連線中...</span></span>
+                    <span class="w-1 h-1 rounded-full bg-slate-600"></span>
+                    <span>人數: <span id="irs-student-count-mini" class="text-emerald-400 font-bold">0</span></span>
+                  </p>
+                </div>
               </div>
-            </div>
-            <div class="bg-slate-950/80 p-4 rounded-xl border border-white/5 text-center relative group cursor-pointer" onclick="copyIRSRoomId()">
-              <p class="text-xs text-slate-500 mb-1">請學生輸入此代碼</p>
-              <div id="irs-room-id" class="text-3xl font-mono font-black text-white tracking-widest break-all">連線中...</div>
-              <div class="absolute inset-0 bg-indigo-500/20 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl flex items-center justify-center backdrop-blur-sm">
-                 <span class="text-white font-bold flex items-center gap-2"><i data-lucide="copy" class="w-4 h-4"></i> 點擊複製</span>
-              </div>
-            </div>
-            <button onclick="showIRSQR()" class="w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-cyan-400 font-bold transition-all flex items-center justify-center gap-2 border border-white/10 shadow-sm mt-2">
-               <i data-lucide="qr-code" class="w-5 h-5"></i> 顯示 QRCode 邀請碼
+              <i data-lucide="chevron-down" id="irs-info-panel-icon" class="w-5 h-5 text-slate-400 transition-transform duration-300"></i>
             </button>
-            <div class="flex items-center justify-between text-sm mt-4">
-              <span class="text-slate-400">在線學生數</span>
-              <span id="irs-student-count" class="font-bold text-emerald-400 bg-emerald-500/20 px-2.5 py-0.5 rounded-full">0</span>
+            
+            <!-- 面板內容 -->
+            <div id="irs-info-panel-content" class="hidden border-t border-white/5 p-4 space-y-4">
+              <div class="bg-slate-950/80 p-4 rounded-xl border border-white/5 text-center relative group cursor-pointer" onclick="copyIRSRoomId()" title="點擊複製代碼">
+                <p class="text-xs text-slate-500 mb-1">請學生輸入此代碼</p>
+                <div id="irs-room-id" class="text-3xl font-mono font-black text-white tracking-widest break-all">連線中...</div>
+                <div class="absolute inset-0 bg-indigo-500/20 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl flex items-center justify-center backdrop-blur-sm">
+                   <span class="text-white font-bold flex items-center gap-2"><i data-lucide="copy" class="w-4 h-4"></i> 點擊複製代碼</span>
+                </div>
+              </div>
+              <div class="grid grid-cols-2 gap-2 mt-2">
+                 <button onclick="copyIRSLink()" class="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold transition-all flex items-center justify-center gap-2 shadow-sm text-sm">
+                   <i data-lucide="link" class="w-4 h-4"></i> 複製連結
+                 </button>
+                 <button onclick="showIRSQR()" class="w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-cyan-400 font-bold transition-all flex items-center justify-center gap-2 border border-white/10 shadow-sm text-sm">
+                   <i data-lucide="qr-code" class="w-4 h-4"></i> 顯示 QRCode
+                 </button>
+              </div>
+              <div class="flex items-center justify-between text-sm mt-2 border-t border-white/5 pt-3">
+                <span class="text-slate-400">在線學生數</span>
+                <span id="irs-student-count" class="font-bold text-emerald-400 bg-emerald-500/20 px-2.5 py-0.5 rounded-full">0</span>
+              </div>
             </div>
           </div>
 
-          <div class="bg-slate-900/60 rounded-3xl border border-white/10 backdrop-blur-sm shadow-xl p-6 flex-1 flex flex-col gap-4">
-             <h3 class="font-bold text-emerald-400 flex items-center gap-2 mb-1"><i data-lucide="send" class="w-5 h-5"></i> 發佈題目</h3>
-             <div class="grid grid-cols-2 gap-3 flex-1">
-                 <button onclick="sendIRSQuestion('ABCD')" class="p-3 rounded-xl bg-gradient-to-br from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white font-bold shadow-md hover:shadow-indigo-500/40 transition-all flex flex-col items-center justify-center gap-2 text-sm border border-white/10">
-                   <i data-lucide="list" class="w-5 h-5"></i> 單選 (A-D)
+          <div class="bg-slate-900/60 rounded-3xl border border-white/10 backdrop-blur-sm shadow-xl p-6 flex-1 flex flex-col gap-4 relative">
+             <h3 class="font-bold text-emerald-400 flex items-center gap-2 mb-1"><i data-lucide="send" class="w-5 h-5"></i> 課堂互動</h3>
+             
+             <!-- 待命狀態：發佈題目啟動器 -->
+             <div id="irs-q-launcher" class="flex flex-col flex-1 relative gap-3">
+                 <!-- 1. 測驗題型 (下拉面板) -->
+                 <div class="relative w-full z-20">
+                     <button onclick="toggleIRSQuestionPanel()" class="w-full py-3.5 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white font-bold transition-all flex items-center justify-between px-6 border border-white/10 shadow-sm group">
+                       <span class="flex items-center gap-3"><i data-lucide="file-question" class="w-5 h-5 text-emerald-400 group-hover:scale-110 transition-transform"></i> 發佈測驗題目</span>
+                       <i data-lucide="chevron-down" id="irs-q-panel-icon" class="w-5 h-5 text-slate-400 transition-transform duration-300"></i>
+                     </button>
+
+                     <!-- 展開的題型選項面板 -->
+                     <div id="irs-q-panel" class="hidden absolute top-full left-0 right-0 mt-2 bg-slate-800/95 backdrop-blur-xl p-4 rounded-2xl border border-white/10 shadow-[0_10px_40px_rgba(0,0,0,0.5)] animate-pop-in flex-col gap-3">
+                         <div class="flex justify-between items-center mb-1 px-1">
+                             <span class="text-sm font-bold text-slate-300">請選擇測驗題型</span>
+                             <button onclick="toggleIRSQuestionPanel()" class="text-slate-400 hover:text-rose-400 transition-colors"><i data-lucide="x" class="w-5 h-5"></i></button>
+                         </div>
+                         <div class="grid grid-cols-2 gap-3">
+                             <button onclick="sendIRSQuestion('ABCD')" class="py-4 rounded-xl bg-gradient-to-br from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white font-bold shadow-md hover:shadow-indigo-500/40 transition-all flex flex-col items-center justify-center gap-2 text-sm border border-white/10">
+                               <i data-lucide="list" class="w-6 h-6 mb-1"></i> 單選 (A-D)
+                             </button>
+                             <button onclick="sendIRSQuestion('OX')" class="py-4 rounded-xl bg-gradient-to-br from-cyan-600 to-cyan-700 hover:from-cyan-500 hover:to-cyan-600 text-white font-bold shadow-md hover:shadow-cyan-500/40 transition-all flex flex-col items-center justify-center gap-2 text-sm border border-white/10">
+                               <i data-lucide="check-circle" class="w-6 h-6 mb-1"></i> 是非 (O/X)
+                             </button>
+                         </div>
+                     </div>
+                 </div>
+
+                 <!-- 2. 投票表決 (獨立按鈕) -->
+                 <button onclick="sendIRSQuestion('VOTE')" class="w-full py-3.5 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white font-bold transition-all flex items-center justify-between px-6 border border-white/10 shadow-sm group z-10">
+                     <span class="flex items-center gap-3"><i data-lucide="bar-chart-2" class="w-5 h-5 text-purple-400 group-hover:scale-110 transition-transform"></i> 發起投票表決</span>
+                     <i data-lucide="play" class="w-4 h-4 text-slate-500 group-hover:text-purple-400 transition-colors"></i>
                  </button>
-                 <button onclick="sendIRSQuestion('OX')" class="p-3 rounded-xl bg-gradient-to-br from-cyan-600 to-cyan-700 hover:from-cyan-500 hover:to-cyan-600 text-white font-bold shadow-md hover:shadow-cyan-500/40 transition-all flex flex-col items-center justify-center gap-2 text-sm border border-white/10">
-                   <i data-lucide="check-circle" class="w-5 h-5"></i> 是非 (O/X)
+
+                 <!-- 3. 搶答模式 (獨立按鈕) -->
+                 <button onclick="sendIRSQuestion('BUZZER')" class="w-full py-3.5 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white font-bold transition-all flex items-center justify-between px-6 border border-white/10 shadow-sm group z-10">
+                     <span class="flex items-center gap-3"><i data-lucide="bell-ring" class="w-5 h-5 text-amber-400 group-hover:scale-110 transition-transform"></i> 啟持搶答模式</span>
+                     <i data-lucide="play" class="w-4 h-4 text-slate-500 group-hover:text-amber-400 transition-colors"></i>
                  </button>
-                 <button onclick="sendIRSQuestion('VOTE')" class="p-3 rounded-xl bg-gradient-to-br from-purple-600 to-purple-700 hover:from-purple-500 hover:to-purple-600 text-white font-bold shadow-md hover:shadow-purple-500/40 transition-all flex flex-col items-center justify-center gap-2 text-sm border border-white/10">
-                   <i data-lucide="bar-chart-2" class="w-5 h-5"></i> 班級投票
-                 </button>
-                 <button onclick="sendIRSQuestion('BUZZER')" class="p-3 rounded-xl bg-gradient-to-br from-amber-600 to-amber-700 hover:from-amber-500 hover:to-amber-600 text-white font-bold shadow-md hover:shadow-amber-500/40 transition-all flex flex-col items-center justify-center gap-2 text-sm border border-white/10">
-                   <i data-lucide="bell-ring" class="w-5 h-5"></i> 搶答模式
+                 
+                 <!-- 待命狀態下的裝飾 -->
+                 <div class="flex-1 flex flex-col items-center justify-center text-slate-500 opacity-40 mt-2 pointer-events-none">
+                     <i data-lucide="inbox" class="w-10 h-10 mb-2"></i>
+                     <span class="text-xs">等待發佈任務...</span>
+                 </div>
+             </div>
+
+             <!-- 進行狀態：停止作答按鈕 -->
+             <div id="irs-q-active" class="hidden flex-col flex-1 animate-pop-in">
+                 <div class="flex-1 flex flex-col items-center justify-center bg-slate-950/50 rounded-2xl border border-emerald-500/20 mb-4 relative overflow-hidden">
+                     <div class="absolute inset-0 bg-emerald-500/5 animate-pulse"></div>
+                     <div class="p-3 bg-emerald-500/20 rounded-full mb-3 relative z-10">
+                         <i data-lucide="radio" class="w-8 h-8 text-emerald-400 animate-pulse"></i>
+                     </div>
+                     <h4 class="text-white font-bold text-lg relative z-10">作答收集中</h4>
+                     <p class="text-sm text-emerald-300 font-medium mt-1 relative z-10" id="irs-active-q-type">單選題 (A, B, C, D)</p>
+                 </div>
+                 <button onclick="stopIRSQuestion()" class="w-full py-4 mt-auto rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-400 font-bold border border-rose-500/30 transition-all flex items-center justify-center gap-2 shadow-sm">
+                   <i data-lucide="square" class="w-5 h-5 fill-current"></i> 停止作答並結算
                  </button>
              </div>
-             <button onclick="stopIRSQuestion()" class="w-full py-3.5 mt-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 font-bold border border-rose-500/30 transition-all flex items-center justify-center gap-2 shadow-sm">
-               <i data-lucide="square" class="w-4 h-4 fill-current"></i> 停止作答
+          </div>
+          
+          <!-- 開放式問答 (獨立專區) -->
+          <div id="irs-text-launcher-card" class="bg-slate-900/60 rounded-3xl border border-white/10 backdrop-blur-sm shadow-xl p-6 flex flex-col gap-4 relative flex-shrink-0">
+             <h3 class="font-bold text-fuchsia-400 flex items-center gap-2 mb-1"><i data-lucide="message-square" class="w-5 h-5"></i> 開放式問答</h3>
+             <button onclick="sendIRSQuestion('TEXT')" class="w-full py-4 rounded-2xl bg-gradient-to-br from-fuchsia-600 to-purple-600 hover:from-fuchsia-500 hover:to-purple-500 text-white font-bold transition-all flex items-center justify-center gap-3 shadow-[0_0_20px_rgba(192,38,211,0.3)] group active:scale-95 border border-white/10">
+                <i data-lucide="send" class="w-6 h-6 group-hover:scale-110 transition-transform"></i> 發起文字雲問答
              </button>
+             <p class="text-xs text-slate-400 text-center mt-1">學生自由輸入，相同答案將自動加權放大</p>
           </div>
         </div>
         
@@ -737,7 +825,13 @@
         <div class="lg:w-2/3 bg-slate-900/60 rounded-3xl border border-white/10 backdrop-blur-sm shadow-xl p-6 flex flex-col gap-6">
            <div class="flex justify-between items-center">
               <h3 class="font-bold text-white text-xl">作答統計</h3>
-              <span id="irs-answer-status" class="text-sm font-medium text-slate-400">等待發佈題目...</span>
+              <div class="flex items-center gap-2">
+                 <!-- 導出下載按鈕 -->
+                 <button id="irs-download-btn" onclick="exportIRSResults()" class="hidden items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all shadow-sm active:scale-95">
+                    <i data-lucide="download" class="w-3.5 h-3.5"></i> 下載結果
+                 </button>
+                 <span id="irs-answer-status" class="text-sm font-medium text-slate-400">等待發佈題目...</span>
+              </div>
            </div>
            
            <!-- 圖表區 -->
@@ -786,9 +880,9 @@
 
       <!-- 學生端：答題畫面 -->
       <div id="irs-student-view" class="hidden flex-1 flex flex-col">
-        <div class="bg-slate-900/60 rounded-[2rem] border border-white/10 backdrop-blur-sm shadow-xl p-6 flex flex-col flex-1 gap-6">
+        <div class="bg-slate-900/60 rounded-[2rem] border border-white/10 backdrop-blur-sm shadow-xl p-6 flex flex-col flex-1 gap-6 relative overflow-hidden">
            <!-- 頂部狀態 -->
-           <div class="flex justify-between items-center bg-slate-950/50 p-4 rounded-xl border border-white/5 shadow-inner">
+           <div class="flex justify-between items-center bg-slate-950/50 p-4 rounded-xl border border-white/5 shadow-inner relative z-10">
              <div class="flex items-center gap-3">
                <div class="w-10 h-10 rounded-full bg-cyan-500/20 flex items-center justify-center">
                  <i data-lucide="user" class="w-5 h-5 text-cyan-400"></i>
@@ -804,15 +898,15 @@
            </div>
 
            <!-- 答題區域 -->
-           <div class="flex-1 flex flex-col items-center justify-center relative">
+           <div class="flex-1 flex flex-col items-center justify-center relative z-10 w-full h-full">
               <!-- 等待畫面 -->
-              <div id="irs-student-waiting" class="text-center space-y-4 animate-pulse">
+              <div id="irs-student-waiting" class="text-center space-y-4 animate-pulse w-full">
                 <i data-lucide="radio" class="w-16 h-16 text-slate-600 mx-auto"></i>
                 <p class="text-xl font-bold text-slate-400">請看老師畫面<br>等待發佈題目...</p>
               </div>
 
               <!-- 選擇題按鈕畫面 -->
-              <div id="irs-student-options" class="hidden w-full max-w-lg grid grid-cols-2 gap-4">
+              <div id="irs-student-options" class="hidden w-full h-full max-w-lg grid grid-cols-2 gap-4 items-center justify-center">
                  <!-- JS 動態生成 -->
               </div>
            </div>
@@ -822,6 +916,12 @@
     </div>
 
   </main>
+
+  <!-- 全域上下滑動提示 (手機版專用) -->
+  <div id="global-scroll-hint" class="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center gap-1 pointer-events-none transition-opacity duration-500 opacity-0 md:hidden drop-shadow-lg">
+      <span class="text-[10px] tracking-widest font-bold bg-indigo-600/90 text-white px-3 py-1 rounded-full border border-indigo-400/50 shadow-lg shadow-indigo-500/30">下滑查看更多</span>
+      <i data-lucide="chevrons-down" class="w-5 h-5 text-indigo-400 animate-bounce"></i>
+  </div>
 
   <!-- 頁尾作者資訊與免責聲明 -->
   <footer class="py-6 text-center z-40 relative flex flex-col items-center justify-center mt-auto gap-3">
@@ -836,6 +936,64 @@
     // ----------------------------------------------------------------------
     // 系統初始化與通用函數
     lucide.createIcons();
+
+    // ----------------------------------------------------------------------
+    // 滾動提示邏輯 (左右與上下)
+    const scrollHintEls = {
+        navContainer: document.getElementById('main-nav-container'),
+        navLeft: document.getElementById('nav-scroll-left'),
+        navRight: document.getElementById('nav-scroll-right'),
+        globalScroll: document.getElementById('global-scroll-hint')
+    };
+
+    const updateNavScrollHints = () => {
+        if (!scrollHintEls.navContainer || !scrollHintEls.navLeft || !scrollHintEls.navRight) return;
+        const { scrollLeft, scrollWidth, clientWidth } = scrollHintEls.navContainer;
+        
+        // 是否可以向左滾
+        if (scrollLeft > 5) {
+            scrollHintEls.navLeft.classList.replace('opacity-0', 'opacity-100');
+        } else {
+            scrollHintEls.navLeft.classList.replace('opacity-100', 'opacity-0');
+        }
+        
+        // 是否可以向右滾 (容許一些誤差)
+        if (Math.ceil(scrollLeft + clientWidth) < scrollWidth - 5) {
+            scrollHintEls.navRight.classList.replace('opacity-0', 'opacity-100');
+        } else {
+            scrollHintEls.navRight.classList.replace('opacity-100', 'opacity-0');
+        }
+    };
+
+    const updateGlobalScrollHint = () => {
+        if (!scrollHintEls.globalScroll) return;
+        // 檢查是否需要上下滾動 (網頁總高度大於視窗高度)
+        const { scrollY, innerHeight } = window;
+        const scrollHeight = document.documentElement.scrollHeight;
+        
+        // 如果可以滾動，且還沒滾動超過 20px
+        if (scrollHeight > innerHeight + 50 && scrollY < 20) {
+            scrollHintEls.globalScroll.classList.replace('opacity-0', 'opacity-100');
+        } else {
+            scrollHintEls.globalScroll.classList.replace('opacity-100', 'opacity-0');
+        }
+    };
+
+    // 綁定滾動事件
+    if (scrollHintEls.navContainer) {
+        scrollHintEls.navContainer.addEventListener('scroll', updateNavScrollHints);
+    }
+    window.addEventListener('scroll', updateGlobalScrollHint);
+    window.addEventListener('resize', () => {
+        updateNavScrollHints();
+        updateGlobalScrollHint();
+    });
+
+    // 初始偵測 (延遲確保 DOM 渲染完畢)
+    setTimeout(() => {
+        updateNavScrollHints();
+        updateGlobalScrollHint();
+    }, 800);
 
     // 應用程式全域狀態
     const appState = {
@@ -927,6 +1085,12 @@
             // 切換到白板時，稍微延遲確保容器佔滿空間後再調整畫布大小
             setTimeout(resizeCanvas, 50);
           }
+          
+          // 切換畫面後，動態更新所有的滾動提示
+          setTimeout(() => {
+              updateNavScrollHints();
+              updateGlobalScrollHint();
+          }, 300);
         } else {
           btn.classList.remove(...activeClass);
           btn.classList.add(...inactiveClass);
@@ -1424,7 +1588,7 @@
       timerEls.toggleBtn.classList.replace('bg-indigo-600', 'bg-amber-500');
       timerEls.toggleBtn.classList.replace('hover:bg-indigo-500', 'hover:bg-amber-400');
       timerEls.toggleBtn.classList.replace('shadow-[0_0_20px_rgba(99,102,241,0.4)]', 'shadow-[0_0_20px_rgba(245,158,11,0.4)]');
-      timerEls.toggleBtn.classList.replace('hover:shadow-[0_0_30px_rgba(99,102,241,0.6)]', 'hover:shadow-[0_0_30px_rgba(245,158,11,0.6)]');
+      timerEls.toggleBtn.classList.replace('hover:shadow-[0_0_30px_rgba(245,158,11,0.6)]', 'hover:shadow-[0_0_30px_rgba(99,102,241,0.6)]');
       timerEls.toggleIcon.setAttribute('data-lucide', 'pause');
       timerEls.toggleText.textContent = "暫停計時";
       
@@ -1523,7 +1687,7 @@
       bar: document.getElementById('noise-bar'),
       thresholdMarker: document.getElementById('noise-threshold-marker'),
       thresholdVal: document.getElementById('noise-threshold-val'),
-      thresholdSlider: document.getElementById('noise-threshold-slider'),
+      slider: document.getElementById('noise-threshold-slider'),
       
       autoDeductToggle: document.getElementById('noise-auto-deduct-toggle'),
       autoDeductKnob: document.getElementById('noise-auto-deduct-knob'),
@@ -1882,11 +2046,13 @@
     });
 
     // 設定：門檻調整
-    noiseEls.thresholdSlider.addEventListener('input', (e) => {
-      noiseState.threshold = parseInt(e.target.value);
-      noiseEls.thresholdVal.textContent = `${noiseState.threshold}%`;
-      noiseEls.thresholdMarker.style.left = `${noiseState.threshold}%`;
-    });
+    if(noiseEls.slider) {
+       noiseEls.slider.addEventListener('input', (e) => {
+         noiseState.threshold = parseInt(e.target.value);
+         noiseEls.thresholdVal.textContent = `${noiseState.threshold}%`;
+         noiseEls.thresholdMarker.style.left = `${noiseState.threshold}%`;
+       });
+    }
 
     // 設定：自訂扣分數
     noiseEls.deductPtsInput.addEventListener('input', (e) => {
@@ -2159,7 +2325,7 @@
       connections: {}, // peerId => connection (Teacher side)
       hostConn: null, // connection to host (Student side)
       studentsInfo: {}, // peerId => { name: string, hasAnswered: boolean, answer: string }
-      currentQ: null, // 'ABCD' | 'OX' | 'BUZZER' | 'VOTE' | null
+      currentQ: null, // 'ABCD' | 'OX' | 'BUZZER' | 'VOTE' | 'TEXT' | null
       buzzerList: [], // Track buzzer order
       studentName: ''
     };
@@ -2170,7 +2336,11 @@
       studentLogin: document.getElementById('irs-student-login'),
       studentView: document.getElementById('irs-student-view'),
       roomId: document.getElementById('irs-room-id'),
+      roomIdMini: document.getElementById('irs-room-id-mini'),
       studentCount: document.getElementById('irs-student-count'),
+      studentCountMini: document.getElementById('irs-student-count-mini'),
+      infoPanelIcon: document.getElementById('irs-info-panel-icon'),
+      infoPanelContent: document.getElementById('irs-info-panel-content'),
       chartArea: document.getElementById('irs-chart-area'),
       chartPlaceholder: document.getElementById('irs-chart-placeholder'),
       studentList: document.getElementById('irs-student-list'),
@@ -2181,7 +2351,14 @@
       loginError: document.getElementById('irs-login-error'),
       myName: document.getElementById('irs-my-name'),
       studentWaiting: document.getElementById('irs-student-waiting'),
-      studentOptions: document.getElementById('irs-student-options')
+      studentOptions: document.getElementById('irs-student-options'),
+      qLauncher: document.getElementById('irs-q-launcher'),
+      qPanel: document.getElementById('irs-q-panel'),
+      qPanelIcon: document.getElementById('irs-q-panel-icon'),
+      qActive: document.getElementById('irs-q-active'),
+      activeQType: document.getElementById('irs-active-q-type'),
+      textLauncherCard: document.getElementById('irs-text-launcher-card'),
+      downloadBtn: document.getElementById('irs-download-btn')
     };
 
     // 共用：清理 IRS 狀態
@@ -2197,6 +2374,15 @@
       irsState.studentsInfo = {};
       irsState.currentQ = null;
       irsState.buzzerList = [];
+      
+      // 復原老師面板 UI 狀態
+      if (irsEls.qActive && !irsEls.qActive.classList.contains('hidden')) {
+          irsEls.qActive.classList.add('hidden');
+          irsEls.qActive.classList.remove('flex');
+          irsEls.qLauncher.classList.remove('hidden');
+          irsEls.qLauncher.classList.add('flex');
+          if (irsEls.textLauncherCard) irsEls.textLauncherCard.classList.remove('hidden');
+      }
     };
 
     // 共用：離開 IRS
@@ -2220,6 +2406,7 @@
       irsEls.roleSelect.classList.add('hidden');
       irsEls.teacherView.classList.replace('hidden', 'flex');
       irsEls.roomId.textContent = "建立中...";
+      irsEls.roomIdMini.textContent = "建立中...";
       
       const newRoomId = generateRoomId();
       irsState.peer = new Peer(newRoomId, { debug: 2 });
@@ -2228,6 +2415,7 @@
         irsState.roomId = id;
         irsState.role = 'teacher';
         irsEls.roomId.textContent = id;
+        irsEls.roomIdMini.textContent = id;
         updateTeacherUI();
       });
 
@@ -2247,17 +2435,101 @@
       });
     };
 
+    window.copyIRSLink = () => {
+       if(!irsState.roomId) return;
+       
+       const baseUrl = window.location.href.split('?')[0];
+       const joinUrl = `${baseUrl}?room=${irsState.roomId}`;
+       
+       const showSuccessUI = () => {
+          if (audioCtx.state === 'suspended') audioCtx.resume();
+          playScoreSound('add');
+          
+          // 在 QRCode 視窗內的按鈕顯示成功提示
+          const modalBtn = document.querySelector('#irs-qr-modal button i[data-lucide="link"]')?.parentNode;
+          if (modalBtn) {
+              const origText = modalBtn.innerHTML;
+              modalBtn.innerHTML = `<i data-lucide="check" class="w-5 h-5"></i> 網址已複製！請貼上至群組`;
+              modalBtn.classList.replace('bg-indigo-50/50', 'bg-emerald-100');
+              modalBtn.classList.replace('text-indigo-700', 'text-emerald-700');
+              lucide.createIcons();
+              setTimeout(() => {
+                  modalBtn.innerHTML = origText;
+                  modalBtn.classList.replace('bg-emerald-100', 'bg-indigo-50/50');
+                  modalBtn.classList.replace('text-emerald-700', 'text-indigo-700');
+                  lucide.createIcons();
+              }, 2000);
+          }
+          
+          // 在老師控制面板內的按鈕顯示成功提示
+          const panelBtn = document.querySelector('#irs-teacher-view button i[data-lucide="link"]')?.parentNode;
+          if (panelBtn) {
+              const origText = panelBtn.innerHTML;
+              panelBtn.innerHTML = `<i data-lucide="check" class="w-4 h-4"></i> 已複製連結`;
+              panelBtn.classList.replace('bg-indigo-600', 'bg-emerald-500');
+              panelBtn.classList.replace('hover:bg-indigo-500', 'hover:bg-emerald-400');
+              lucide.createIcons();
+              setTimeout(() => {
+                  panelBtn.innerHTML = origText;
+                  panelBtn.classList.replace('bg-emerald-500', 'bg-indigo-600');
+                  panelBtn.classList.replace('hover:bg-emerald-400', 'hover:bg-indigo-500');
+                  lucide.createIcons();
+              }, 2000);
+          }
+       };
+
+       // Fallback for clipboard blocking
+       const fallbackCopyTextToClipboard = (text) => {
+         const textArea = document.createElement("textarea");
+         textArea.value = text;
+         textArea.style.top = "0";
+         textArea.style.left = "0";
+         textArea.style.position = "fixed";
+         document.body.appendChild(textArea);
+         textArea.focus();
+         textArea.select();
+         try {
+           document.execCommand('copy');
+           showSuccessUI();
+         } catch (err) {
+           console.error('Fallback: Oops, unable to copy', err);
+           alert("複製失敗，請手動選取複製網址: " + joinUrl);
+         }
+         document.body.removeChild(textArea);
+       };
+
+       if (navigator.clipboard && navigator.clipboard.writeText) {
+         navigator.clipboard.writeText(joinUrl).then(() => {
+            showSuccessUI();
+         }).catch(err => {
+            fallbackCopyTextToClipboard(joinUrl);
+         });
+       } else {
+         fallbackCopyTextToClipboard(joinUrl);
+       }
+    };
+
     window.copyIRSRoomId = () => {
        if(!irsState.roomId) return;
        
        const showSuccessUI = () => {
+          // 加入音效提示
+          if (audioCtx.state === 'suspended') audioCtx.resume();
+          playScoreSound('add');
+
           const idEl = irsEls.roomId;
+          const idMiniEl = irsEls.roomIdMini;
           const orig = idEl.textContent;
+          const origMini = idMiniEl.textContent;
           idEl.textContent = "已複製！";
+          idMiniEl.textContent = "已複製！";
           idEl.classList.add('text-emerald-400');
+          idMiniEl.classList.replace('text-indigo-300', 'text-emerald-400');
           setTimeout(() => {
             idEl.textContent = orig;
+            idMiniEl.textContent = origMini;
             idEl.classList.remove('text-emerald-400');
+            idMiniEl.classList.replace('text-emerald-400', 'text-indigo-300');
           }, 1500);
        };
 
@@ -2295,6 +2567,45 @@
        }
     };
 
+    // 下載作答結果 CSV
+    window.exportIRSResults = () => {
+        const students = Object.values(irsState.studentsInfo);
+        if (students.length === 0) {
+            alert("目前沒有學生連線或數據可供下載。");
+            return;
+        }
+
+        // CSV 表頭 (加上 BOM 解決 Excel 中文亂碼問題)
+        let csvContent = "\ufeff";
+        csvContent += "學生姓名,作答內容,狀態\n";
+
+        students.forEach(s => {
+            const safeName = s.name.replace(/"/g, '""');
+            let ans = s.answer || "";
+            if (irsState.currentQ === 'BUZZER' && s.hasAnswered) {
+                const rank = irsState.buzzerList.indexOf(Object.keys(irsState.studentsInfo).find(key => irsState.studentsInfo[key] === s)) + 1;
+                ans = `第 ${rank} 位搶答`;
+            }
+            const safeAns = String(ans).replace(/"/g, '""');
+            const status = s.hasAnswered ? "已答" : "未答";
+            csvContent += `"${safeName}","${safeAns}","${status}"\n`;
+        });
+
+        // 建立 Blob 並觸發下載
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        const dateStr = new Date().toISOString().slice(0, 10);
+        const typeStr = irsState.currentQ || "互動";
+        
+        link.setAttribute("href", url);
+        link.setAttribute("download", `智慧助手_IRS結果_${typeStr}_${irsState.roomId}_${dateStr}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
     const handleTeacherReceive = (peerId, data, conn) => {
       if (data.type === 'join') {
         irsState.connections[peerId] = conn;
@@ -2315,6 +2626,10 @@
                    irsState.buzzerList.push(peerId);
                    if (audioCtx.state === 'suspended') audioCtx.resume();
                    playScoreSound('add'); 
+               } else if (irsState.currentQ === 'TEXT') {
+                   // 文字作答送出提示音
+                   if (audioCtx.state === 'suspended') audioCtx.resume();
+                   playScoreSound('add'); 
                }
                updateTeacherUI();
            }
@@ -2326,6 +2641,16 @@
       // 學生人數
       const totalStudents = Object.keys(irsState.studentsInfo).length;
       irsEls.studentCount.textContent = totalStudents;
+      irsEls.studentCountMini.textContent = totalStudents;
+
+      // 控制下載按鈕顯示 (有題目且有人連線時顯示)
+      if (irsEls.downloadBtn) {
+          if (totalStudents > 0 && irsState.currentQ) {
+              irsEls.downloadBtn.classList.replace('hidden', 'flex');
+          } else {
+              irsEls.downloadBtn.classList.replace('flex', 'hidden');
+          }
+      }
 
       // 名單與作答狀態
       let answeredCount = 0;
@@ -2354,6 +2679,56 @@
                         <div class="font-bold text-xl flex-1 tracking-wide">${st ? st.name : '未知'}</div>
                     </div>`;
                 }).join('') + `</div>`;
+         }
+      } else if (irsState.currentQ === 'TEXT') {
+         // ===== 開放式問答：動態文字雲渲染 =====
+         irsEls.answerStatus.textContent = `作答進度: ${answeredCount} / ${totalStudents}`;
+         irsEls.chartPlaceholder.classList.add('hidden');
+         
+         const counts = {};
+         Object.values(irsState.studentsInfo).forEach(s => {
+            if (s.hasAnswered && s.answer) {
+               const text = String(s.answer).trim();
+               if (text) counts[text] = (counts[text] || 0) + 1;
+            }
+         });
+
+         if (Object.keys(counts).length === 0) {
+            irsEls.chartArea.innerHTML = '<div class="absolute inset-0 flex items-center justify-center text-slate-500 font-bold tracking-widest animate-pulse">等待學生送出文字...</div>';
+         } else {
+            let maxFreq = Math.max(...Object.values(counts), 1);
+            
+            // 將結果依照頻率排序，讓高頻率的文字更容易被看到
+            const sortedEntries = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+
+            let wordsHTML = sortedEntries.map(([text, freq], index) => {
+               // 計算加權倍率 (文字大小：介於 1rem ~ 3.5rem)
+               const scaleRatio = maxFreq > 1 ? (freq - 1) / (maxFreq - 1) : 0; 
+               const fontSize = 1 + (scaleRatio * 2.5); 
+               
+               const colors = [
+                  'from-fuchsia-500/30 to-purple-600/30 border-fuchsia-400/50 text-fuchsia-100 shadow-[0_0_15px_rgba(217,70,239,0.3)]',
+                  'from-cyan-500/30 to-blue-600/30 border-cyan-400/50 text-cyan-100 shadow-[0_0_15px_rgba(6,182,212,0.3)]',
+                  'from-emerald-500/30 to-teal-600/30 border-emerald-400/50 text-emerald-100 shadow-[0_0_15px_rgba(16,185,129,0.3)]',
+                  'from-amber-500/30 to-orange-600/30 border-amber-400/50 text-amber-100 shadow-[0_0_15px_rgba(245,158,11,0.3)]',
+                  'from-rose-500/30 to-pink-600/30 border-rose-400/50 text-rose-100 shadow-[0_0_15px_rgba(225,29,72,0.3)]'
+               ];
+               const bgClass = colors[index % colors.length];
+               const delay = Math.random() * 0.3; // 隨機進場延遲
+               const floatDur = 3 + Math.random() * 3; // 隨機漂浮速度 (3~6秒)
+
+               return `
+                  <div class="animate-pop-in inline-block m-2" style="animation-delay: ${delay}s">
+                      <div class="px-5 py-3 rounded-3xl bg-gradient-to-br ${bgClass} backdrop-blur-sm border relative group transition-transform duration-500 ease-out hover:scale-110 flex items-center justify-center" 
+                           style="font-size: ${fontSize}rem; animation: float ${floatDur}s ease-in-out infinite alternate;">
+                          <span class="font-black tracking-wide drop-shadow-md break-all leading-tight max-w-sm text-center">${text}</span>
+                          ${freq > 1 ? `<div class="absolute -top-3 -right-3 bg-white text-slate-900 text-sm font-black w-8 h-8 rounded-full flex items-center justify-center shadow-[0_0_15px_rgba(255,255,255,0.8)] border-2 border-slate-900 z-10 animate-bounce-soft">x${freq}</div>` : ''}
+                      </div>
+                  </div>
+               `;
+            }).join('');
+            
+            irsEls.chartArea.innerHTML = `<div class="w-full h-full flex flex-wrap content-start justify-center overflow-y-auto no-scrollbar p-2 gap-2 relative z-10">` + wordsHTML + `</div>`;
          }
       } else if (irsState.currentQ) {
          irsEls.answerStatus.textContent = `作答進度: ${answeredCount} / ${totalStudents}`;
@@ -2401,6 +2776,32 @@
       }
     };
 
+    window.toggleIRSInfoPanel = () => {
+        const panel = irsEls.infoPanelContent;
+        const icon = irsEls.infoPanelIcon;
+        if (panel.classList.contains('hidden')) {
+            panel.classList.remove('hidden');
+            icon.classList.add('rotate-180');
+        } else {
+            panel.classList.add('hidden');
+            icon.classList.remove('rotate-180');
+        }
+    };
+
+    window.toggleIRSQuestionPanel = () => {
+        const panel = irsEls.qPanel;
+        const icon = irsEls.qPanelIcon;
+        if (panel.classList.contains('hidden')) {
+            panel.classList.remove('hidden');
+            panel.classList.add('flex');
+            icon.classList.add('rotate-180');
+        } else {
+            panel.classList.add('hidden');
+            panel.classList.remove('flex');
+            icon.classList.remove('rotate-180');
+        }
+    };
+
     window.sendIRSQuestion = (type) => {
       irsState.currentQ = type;
       irsState.buzzerList = []; // 發佈新題目時清空搶答榜單
@@ -2413,6 +2814,29 @@
       Object.values(irsState.connections).forEach(conn => {
          conn.send({ type: 'question', qType: type });
       });
+      
+      // 更新老師控制面板 UI (切換至進行中狀態)
+      if (irsEls.qLauncher) {
+          irsEls.qLauncher.classList.add('hidden');
+          irsEls.qLauncher.classList.remove('flex');
+          irsEls.qPanel.classList.add('hidden');
+          irsEls.qPanel.classList.remove('flex');
+          irsEls.qPanelIcon.classList.remove('rotate-180');
+          if (irsEls.textLauncherCard) irsEls.textLauncherCard.classList.add('hidden');
+          
+          irsEls.qActive.classList.remove('hidden');
+          irsEls.qActive.classList.add('flex');
+          
+          const typeNames = {
+              'ABCD': '單選 (A, B, C, D)',
+              'OX': '是非 (O, X)',
+              'VOTE': '投票表決',
+              'BUZZER': '搶答模式',
+              'TEXT': '開放式問答 (文字輸入)'
+          };
+          irsEls.activeQType.textContent = typeNames[type] || '進行中';
+      }
+
       updateTeacherUI();
     };
 
@@ -2421,6 +2845,17 @@
       Object.values(irsState.connections).forEach(conn => {
          conn.send({ type: 'stop' });
       });
+      
+      // 更新老師控制面板 UI (恢復至待命狀態)
+      if (irsEls.qActive) {
+          irsEls.qActive.classList.add('hidden');
+          irsEls.qActive.classList.remove('flex');
+          
+          irsEls.qLauncher.classList.remove('hidden');
+          irsEls.qLauncher.classList.add('flex');
+          if (irsEls.textLauncherCard) irsEls.textLauncherCard.classList.remove('hidden');
+      }
+
       updateTeacherUI();
     };
 
@@ -2481,6 +2916,18 @@
       });
     };
 
+    // 專門處理文字送出的函式
+    window.submitIRSTextAnswer = () => {
+        const inputEl = document.getElementById('irs-text-input');
+        if (!inputEl) return;
+        const val = inputEl.value.trim();
+        if (!val) {
+            alert("請先輸入文字再送出喔！");
+            return;
+        }
+        submitIRSAnswer(val);
+    };
+
     const handleStudentReceive = (data) => {
        if (data.type === 'question') {
           if (audioCtx.state === 'suspended') audioCtx.resume();
@@ -2509,15 +2956,39 @@
                <button onclick="submitIRSAnswer('棄權')" class="col-span-2 py-6 rounded-2xl bg-gradient-to-br from-slate-600 to-slate-800 hover:opacity-80 active:scale-95 text-white font-black text-2xl shadow-lg transition-all border border-white/20 tracking-widest">棄權</button>
              `;
           } else if (data.qType === 'BUZZER') {
-             // 學生端的超大搶答按鈕
+             // 強化後的搶答按鈕介面，加上全螢幕紅色閃爍警報與巨型立體按鈕
              optsHTML = `
-               <button onclick="submitIRSAnswer('BUZZ')" class="col-span-2 py-16 rounded-[2.5rem] bg-gradient-to-br from-rose-500 via-red-500 to-rose-700 hover:opacity-90 active:scale-95 text-white shadow-[0_0_40px_rgba(225,29,72,0.5)] transition-all border-4 border-rose-300/50 flex flex-col items-center justify-center gap-4 group mt-4">
-                  <i data-lucide="bell-ring" class="w-24 h-24 group-hover:animate-ping-slow drop-shadow-md"></i>
-                  <span class="font-black text-6xl tracking-widest drop-shadow-md">搶答</span>
-               </button>
+               <div class="absolute inset-0 bg-rose-600/10 animate-[pulse_1s_infinite] pointer-events-none rounded-[2rem]"></div>
+               <div class="flex flex-col items-center justify-center w-full h-full gap-8 relative z-20">
+                   <div class="text-rose-400 font-black text-3xl md:text-4xl tracking-widest flex items-center gap-3 drop-shadow-[0_0_15px_rgba(225,29,72,0.8)] bg-slate-900/50 px-6 py-2 rounded-full border border-rose-500/30">
+                     <i data-lucide="zap" class="w-8 h-8 animate-bounce"></i> 準備搶答 <i data-lucide="zap" class="w-8 h-8 animate-bounce"></i>
+                   </div>
+                   <button onclick="submitIRSAnswer('BUZZ')" class="w-[75vw] max-w-[280px] aspect-square rounded-full bg-gradient-to-b from-rose-500 to-red-700 hover:from-rose-400 hover:to-red-600 active:scale-90 text-white shadow-[0_0_80px_rgba(225,29,72,0.8)] transition-all border-[10px] border-rose-300/50 flex flex-col items-center justify-center gap-2 group">
+                      <i data-lucide="bell-ring" class="w-20 h-20 md:w-24 md:h-24 group-hover:animate-ping-slow drop-shadow-lg"></i>
+                      <span class="font-black text-5xl md:text-6xl tracking-widest drop-shadow-lg">按！</span>
+                   </button>
+               </div>
+             `;
+          } else if (data.qType === 'TEXT') {
+             optsHTML = `
+               <div class="col-span-2 flex flex-col gap-4 w-full h-full justify-center">
+                   <textarea id="irs-text-input" rows="4" class="w-full bg-slate-900 border border-fuchsia-500/30 rounded-2xl p-4 text-xl text-white focus:outline-none focus:border-fuchsia-500 transition-colors shadow-inner resize-none placeholder-slate-500" placeholder="請自由輸入你的答案..."></textarea>
+                   <button onclick="submitIRSTextAnswer()" class="w-full py-5 rounded-2xl bg-gradient-to-br from-fuchsia-600 to-purple-600 hover:opacity-90 active:scale-95 text-white font-black text-2xl shadow-[0_0_30px_rgba(192,38,211,0.3)] transition-all border border-white/20 flex items-center justify-center gap-2">
+                      <i data-lucide="send" class="w-6 h-6"></i> 送出答案
+                   </button>
+               </div>
              `;
           }
           
+          // 若是搶答或開放問答，移除 grid 設定讓按鈕能完美置中並佔滿區域
+          if (data.qType === 'BUZZER' || data.qType === 'TEXT') {
+             irsEls.studentOptions.classList.remove('grid', 'grid-cols-2');
+             irsEls.studentOptions.classList.add('flex', 'flex-col');
+          } else {
+             irsEls.studentOptions.classList.add('grid', 'grid-cols-2');
+             irsEls.studentOptions.classList.remove('flex', 'flex-col');
+          }
+
           irsEls.studentOptions.innerHTML = optsHTML;
           lucide.createIcons({ root: irsEls.studentOptions });
        } else if (data.type === 'stop') {
@@ -2539,8 +3010,12 @@
           if (val === 'BUZZ') {
              irsEls.studentWaiting.innerHTML = `<div class="p-6 rounded-full bg-rose-500/20 inline-block mb-4 border border-rose-500/30"><i data-lucide="bell-ring" class="w-12 h-12 text-rose-400 animate-pulse mx-auto"></i></div><p class="text-xl font-bold text-slate-300">已送出搶答！<br>請看前方名次...</p>`;
           } else {
-             const displayVal = val.length > 1 ? `<span class="text-2xl">${val}</span>` : `<span class="text-4xl">${val}</span>`;
-             irsEls.studentWaiting.innerHTML = `<div class="p-4 rounded-full bg-emerald-500/20 inline-block mb-4 font-black text-emerald-400">${displayVal}</div><p class="text-xl font-bold text-slate-300">已送出答案！<br>等待老師公佈結果...</p>`;
+             // 防止文字過長破版
+             const safeVal = String(val);
+             const displayStr = safeVal.length > 10 ? safeVal.substring(0, 10) + '...' : safeVal;
+             const textSize = safeVal.length > 4 ? 'text-2xl' : 'text-4xl';
+             
+             irsEls.studentWaiting.innerHTML = `<div class="px-6 py-4 rounded-3xl bg-emerald-500/20 inline-block mb-4 font-black text-emerald-400 max-w-[90%] border border-emerald-500/30 shadow-inner"><span class="${textSize} break-all">${displayStr}</span></div><p class="text-xl font-bold text-slate-300">已送出答案！<br>等待老師公佈結果...</p>`;
           }
           
           lucide.createIcons();
