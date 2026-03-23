@@ -579,7 +579,7 @@
     <!-- ========================================== -->
     <!-- 模組 5: 互動白板 (BOARD MODE) -->
     <!-- ========================================== -->
-    <div id="app-board" class="hidden flex-col w-full min-h-[70vh] animate-pop-in relative flex-1 bg-slate-900/60 rounded-[2rem] border border-white/10 backdrop-blur-sm shadow-xl overflow-hidden">
+    <div id="app-board" class="hidden flex-col w-full h-full animate-pop-in relative flex-1 bg-slate-900/60 rounded-[2rem] border border-white/10 backdrop-blur-sm shadow-xl overflow-hidden">
       <!-- 白板工具列 -->
       <div class="flex flex-wrap items-center justify-between p-4 bg-slate-950/80 border-b border-white/10 gap-4 z-10 shadow-md">
         <!-- 顏色選擇 -->
@@ -784,7 +784,7 @@
 
                  <!-- 3. 搶答模式 (獨立按鈕) -->
                  <button onclick="sendIRSQuestion('BUZZER')" class="w-full py-3.5 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white font-bold transition-all flex items-center justify-between px-6 border border-white/10 shadow-sm group z-10">
-                     <span class="flex items-center gap-3"><i data-lucide="bell-ring" class="w-5 h-5 text-amber-400 group-hover:scale-110 transition-transform"></i> 啟持搶答模式</span>
+                     <span class="flex items-center gap-3"><i data-lucide="bell-ring" class="w-5 h-5 text-amber-400 group-hover:scale-110 transition-transform"></i> 啟動搶答模式</span>
                      <i data-lucide="play" class="w-4 h-4 text-slate-500 group-hover:text-amber-400 transition-colors"></i>
                  </button>
                  
@@ -934,6 +934,22 @@
 
   <script>
     // ----------------------------------------------------------------------
+    // 安全防護機制：XSS 跨站腳本過濾 (新增)
+    // 防止學生在開放問答或暱稱輸入惡意 HTML 語法
+    const escapeHTML = (str) => {
+        if (typeof str !== 'string') return str;
+        return str.replace(/[&<>'"]/g, 
+            tag => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                "'": '&#39;',
+                '"': '&quot;'
+            }[tag] || tag)
+        );
+    };
+
+    // ----------------------------------------------------------------------
     // 系統初始化與通用函數
     lucide.createIcons();
 
@@ -1082,8 +1098,10 @@
           if (m === 'clock') updateClock(); 
           if (m === 'timer') updateTimerDisplay();
           if (m === 'board') {
-            // 切換到白板時，稍微延遲確保容器佔滿空間後再調整畫布大小
-            setTimeout(resizeCanvas, 50);
+            // 切換到白板時，確保容器佔滿空間後再調整畫布大小，加入緩衝避免報錯
+            requestAnimationFrame(() => {
+                resizeCanvas();
+            });
           }
           
           // 切換畫面後，動態更新所有的滾動提示
@@ -1302,14 +1320,16 @@
       if (drawState.uniqueDraw && drawState.drawnNumbers.length > 0) {
         drawEls.historyContainer.classList.remove('hidden');
         drawEls.historyCount.textContent = `已抽出結果 (${drawState.drawnNumbers.length})`;
-        drawEls.historyList.innerHTML = drawState.drawnNumbers.map(num => 
-          `<button data-val="${num}" title="點擊將 [${num}] 加回籤筒" class="group relative px-3 py-1 min-w-[3rem] bg-slate-800 hover:bg-indigo-600 transition-all cursor-pointer text-slate-300 rounded-lg text-sm border border-slate-700 hover:border-indigo-400 font-medium shadow-sm overflow-hidden flex justify-center items-center">
-            <span class="group-hover:opacity-0 transition-opacity">${num}</span>
+        // 加入 XSS 防護
+        drawEls.historyList.innerHTML = drawState.drawnNumbers.map(num => {
+          const safeNum = escapeHTML(num);
+          return `<button data-val="${safeNum}" title="點擊將 [${safeNum}] 加回籤筒" class="group relative px-3 py-1 min-w-[3rem] bg-slate-800 hover:bg-indigo-600 transition-all cursor-pointer text-slate-300 rounded-lg text-sm border border-slate-700 hover:border-indigo-400 font-medium shadow-sm overflow-hidden flex justify-center items-center">
+            <span class="group-hover:opacity-0 transition-opacity">${safeNum}</span>
             <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-indigo-600">
               <i data-lucide="rotate-ccw" class="w-4 h-4 text-white"></i>
             </div>
           </button>`
-        ).join('');
+        }).join('');
         lucide.createIcons({ root: drawEls.historyList });
       } else drawEls.historyContainer.classList.add('hidden');
     };
@@ -1336,10 +1356,11 @@
       let elapsed = 0;
       drawInterval = setInterval(() => {
         const preview = shuffle(drawState.availableList).slice(0, drawState.drawCount);
+        // 加入 XSS 防護
         drawEls.rollingView.innerHTML = preview.map(name => `
           <div class="px-8 py-6 bg-gradient-to-br from-indigo-600 to-purple-700 border border-white/20 rounded-2xl text-4xl md:text-5xl font-black text-white shadow-[0_0_40px_rgba(99,102,241,0.6)] backdrop-blur-md" 
                style="transform: scale(${0.95 + Math.random() * 0.1}) translateY(${(Math.random() - 0.5) * 10}px); filter: blur(${Math.random() * 1.5}px);">
-            ${name}
+            ${escapeHTML(name)}
           </div>
         `).join('');
         playTick(); elapsed += 80;
@@ -1355,12 +1376,13 @@
       drawEls.rollingView.classList.add('hidden');
       drawEls.resultView.classList.remove('hidden');
 
+      // 加入 XSS 防護
       drawEls.winnersContainer.innerHTML = finalWinners.map((name, idx) => `
         <div class="animate-pop-in relative group" style="animation-delay: ${idx * 0.1}s">
           <div class="absolute inset-0 bg-gradient-to-r from-amber-300 to-orange-500 rounded-2xl blur-xl opacity-40 group-hover:opacity-100 transition-opacity"></div>
           <div class="relative px-12 py-10 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 border border-amber-400/50 rounded-2xl flex flex-col items-center gap-4 hover:scale-110 hover:-translate-y-4 transition-all animate-float shadow-2xl overflow-hidden">
             <i data-lucide="trophy" class="w-12 h-12 text-amber-400 drop-shadow-[0_0_15px_rgba(251,191,36,0.8)]"></i>
-            <span class="text-4xl md:text-6xl font-black bg-gradient-to-b from-yellow-200 via-amber-400 to-orange-500 bg-clip-text text-transparent drop-shadow-md break-all">${name}</span>
+            <span class="text-4xl md:text-6xl font-black bg-gradient-to-b from-yellow-200 via-amber-400 to-orange-500 bg-clip-text text-transparent drop-shadow-md break-all">${escapeHTML(name)}</span>
           </div>
         </div>
       `).join('');
@@ -1588,7 +1610,7 @@
       timerEls.toggleBtn.classList.replace('bg-indigo-600', 'bg-amber-500');
       timerEls.toggleBtn.classList.replace('hover:bg-indigo-500', 'hover:bg-amber-400');
       timerEls.toggleBtn.classList.replace('shadow-[0_0_20px_rgba(99,102,241,0.4)]', 'shadow-[0_0_20px_rgba(245,158,11,0.4)]');
-      timerEls.toggleBtn.classList.replace('hover:shadow-[0_0_30px_rgba(245,158,11,0.6)]', 'hover:shadow-[0_0_30px_rgba(99,102,241,0.6)]');
+      timerEls.toggleBtn.classList.replace('hover:shadow-[0_0_30px_rgba(99,102,241,0.6)]', 'hover:shadow-[0_0_30px_rgba(245,158,11,0.6)]');
       timerEls.toggleIcon.setAttribute('data-lucide', 'pause');
       timerEls.toggleText.textContent = "暫停計時";
       
@@ -1687,7 +1709,7 @@
       bar: document.getElementById('noise-bar'),
       thresholdMarker: document.getElementById('noise-threshold-marker'),
       thresholdVal: document.getElementById('noise-threshold-val'),
-      slider: document.getElementById('noise-threshold-slider'),
+      thresholdSlider: document.getElementById('noise-threshold-slider'),
       
       autoDeductToggle: document.getElementById('noise-auto-deduct-toggle'),
       autoDeductKnob: document.getElementById('noise-auto-deduct-knob'),
@@ -1740,6 +1762,7 @@
     };
 
     const renderScoreboard = () => {
+      // 加入 XSS 防護 (在 input 的 value 中轉義)
       scoreEls.grid.innerHTML = scoreState.teams.map((team, index) => {
         const colors = [
           'from-indigo-500/20 to-purple-500/20 border-indigo-500/30 text-indigo-300',
@@ -1750,10 +1773,11 @@
           'from-fuchsia-500/20 to-purple-500/20 border-fuchsia-500/30 text-fuchsia-300'
         ];
         const colorClass = colors[index % colors.length];
+        const safeTeamName = escapeHTML(team.name);
         
         return `
           <div class="bg-gradient-to-br ${colorClass} border rounded-3xl p-5 flex flex-col items-center gap-4 relative group shadow-lg backdrop-blur-sm transition-transform hover:-translate-y-1">
-            <input type="text" data-id="${team.id}" value="${team.name}" class="team-name-input w-full bg-transparent border-b border-transparent focus:border-white/30 text-center text-xl font-bold text-white focus:outline-none transition-colors px-2 py-1 placeholder-white/30" placeholder="輸入隊名">
+            <input type="text" data-id="${team.id}" value="${safeTeamName}" class="team-name-input w-full bg-transparent border-b border-transparent focus:border-white/30 text-center text-xl font-bold text-white focus:outline-none transition-colors px-2 py-1 placeholder-white/30" placeholder="輸入隊名">
             <div class="text-6xl md:text-7xl font-black font-mono tracking-tighter drop-shadow-md relative py-2 w-full text-center score-display transition-transform duration-200" data-id="${team.id}">
               ${team.score}
             </div>
@@ -1825,7 +1849,7 @@
         const team = scoreState.teams.find(t => t.id === id);
         if (team) {
           team.name = e.target.value.trim() || `第 ${id} 組`;
-          e.target.value = team.name;
+          e.target.value = team.name; // 這裡不轉義是因為我們直接更新 input value，DOM 會處理
         }
       }
     });
@@ -2040,14 +2064,14 @@
 
           updateNoiseLevel();
         } catch (err) {
-          alert("無法存取麥克風，請確認瀏覽器權限設定。");
+          alert("無法存取麥克風，請確認瀏覽器權限設定或是否於 HTTPS 環境下執行。");
         }
       }
     });
 
     // 設定：門檻調整
-    if(noiseEls.slider) {
-       noiseEls.slider.addEventListener('input', (e) => {
+    if(noiseEls.thresholdSlider) {
+       noiseEls.thresholdSlider.addEventListener('input', (e) => {
          noiseState.threshold = parseInt(e.target.value);
          noiseEls.thresholdVal.textContent = `${noiseState.threshold}%`;
          noiseEls.thresholdMarker.style.left = `${noiseState.threshold}%`;
@@ -2158,16 +2182,36 @@
       }
     };
 
-    window.addEventListener('resize', resizeCanvas);
+    // 引入 ResizeObserver 自動監聽容器大小變化，確保無縫適應螢幕
+    // 加上 requestAnimationFrame 避免 ResizeObserver loop limit exceeded 錯誤
+    const boardResizeObserver = new ResizeObserver(() => {
+       if (appState.currentMode === 'board') {
+           requestAnimationFrame(() => {
+               resizeCanvas();
+           });
+       }
+    });
+    boardResizeObserver.observe(boardEls.container);
 
-    // 取得指標在 Canvas 內的相對位置
+    window.addEventListener('resize', () => {
+        requestAnimationFrame(() => {
+            resizeCanvas();
+        });
+    });
+
+    // 取得指標在 Canvas 內的相對位置 (加入縮放校正解決落差)
     const getPointerPos = (e) => {
       const rect = boardEls.canvas.getBoundingClientRect();
       const clientX = e.touches ? e.touches[0].clientX : e.clientX;
       const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      
+      // 計算縮放比例，解決鼠標與畫筆的落差問題
+      const scaleX = boardEls.canvas.width / rect.width;
+      const scaleY = boardEls.canvas.height / rect.height;
+      
       return {
-        x: clientX - rect.left,
-        y: clientY - rect.top
+        x: (clientX - rect.left) * scaleX,
+        y: (clientY - rect.top) * scaleY
       };
     };
 
@@ -2580,12 +2624,17 @@
         csvContent += "學生姓名,作答內容,狀態\n";
 
         students.forEach(s => {
+            // 在 CSV 匯出中，名字和答案也要安全處理雙引號
             const safeName = s.name.replace(/"/g, '""');
             let ans = s.answer || "";
+            
             if (irsState.currentQ === 'BUZZER' && s.hasAnswered) {
-                const rank = irsState.buzzerList.indexOf(Object.keys(irsState.studentsInfo).find(key => irsState.studentsInfo[key] === s)) + 1;
-                ans = `第 ${rank} 位搶答`;
+                // 尋找此人在搶答列表中的順位
+                const peerId = Object.keys(irsState.studentsInfo).find(key => irsState.studentsInfo[key] === s);
+                const rank = irsState.buzzerList.indexOf(peerId) + 1;
+                ans = rank > 0 ? `第 ${rank} 位搶答` : "已答";
             }
+            
             const safeAns = String(ans).replace(/"/g, '""');
             const status = s.hasAnswered ? "已答" : "未答";
             csvContent += `"${safeName}","${safeAns}","${status}"\n`;
@@ -2646,9 +2695,11 @@
       // 控制下載按鈕顯示 (有題目且有人連線時顯示)
       if (irsEls.downloadBtn) {
           if (totalStudents > 0 && irsState.currentQ) {
-              irsEls.downloadBtn.classList.replace('hidden', 'flex');
+              irsEls.downloadBtn.classList.remove('hidden');
+              irsEls.downloadBtn.classList.add('flex');
           } else {
-              irsEls.downloadBtn.classList.replace('flex', 'hidden');
+              irsEls.downloadBtn.classList.add('hidden');
+              irsEls.downloadBtn.classList.remove('flex');
           }
       }
 
@@ -2657,7 +2708,7 @@
       irsEls.studentList.innerHTML = Object.values(irsState.studentsInfo).map(student => {
         if(student.hasAnswered) answeredCount++;
         const bgClass = student.hasAnswered ? 'bg-emerald-500/20 border-emerald-500/30 text-emerald-300' : 'bg-slate-800 border-white/10 text-slate-400';
-        return `<span class="px-3 py-1 text-sm rounded-full border ${bgClass} font-medium shadow-sm transition-colors">${student.name}</span>`;
+        return `<span class="px-3 py-1 text-sm rounded-full border ${bgClass} font-medium shadow-sm transition-colors">${escapeHTML(student.name)}</span>`;
       }).join('');
 
       // 繪製結果圖表
@@ -2676,7 +2727,7 @@
                     const bgClass = index === 0 ? 'bg-gradient-to-r from-amber-500/20 to-orange-500/10 border-amber-500/50 text-amber-300 scale-105 shadow-[0_0_15px_rgba(245,158,11,0.2)]' : 'bg-slate-800/80 border-white/10 text-slate-300';
                     return `<div class="flex items-center gap-4 p-3 rounded-xl border ${bgClass} transition-all w-full max-w-md">
                         <div class="text-3xl w-8 text-center drop-shadow-md">${medal}</div>
-                        <div class="font-bold text-xl flex-1 tracking-wide">${st ? st.name : '未知'}</div>
+                        <div class="font-bold text-xl flex-1 tracking-wide">${st ? escapeHTML(st.name) : '未知'}</div>
                     </div>`;
                 }).join('') + `</div>`;
          }
@@ -2721,7 +2772,7 @@
                   <div class="animate-pop-in inline-block m-2" style="animation-delay: ${delay}s">
                       <div class="px-5 py-3 rounded-3xl bg-gradient-to-br ${bgClass} backdrop-blur-sm border relative group transition-transform duration-500 ease-out hover:scale-110 flex items-center justify-center" 
                            style="font-size: ${fontSize}rem; animation: float ${floatDur}s ease-in-out infinite alternate;">
-                          <span class="font-black tracking-wide drop-shadow-md break-all leading-tight max-w-sm text-center">${text}</span>
+                          <span class="font-black tracking-wide drop-shadow-md break-all leading-tight max-w-sm text-center">${escapeHTML(text)}</span>
                           ${freq > 1 ? `<div class="absolute -top-3 -right-3 bg-white text-slate-900 text-sm font-black w-8 h-8 rounded-full flex items-center justify-center shadow-[0_0_15px_rgba(255,255,255,0.8)] border-2 border-slate-900 z-10 animate-bounce-soft">x${freq}</div>` : ''}
                       </div>
                   </div>
@@ -2958,8 +3009,8 @@
           } else if (data.qType === 'BUZZER') {
              // 強化後的搶答按鈕介面，加上全螢幕紅色閃爍警報與巨型立體按鈕
              optsHTML = `
-               <div class="absolute inset-0 bg-rose-600/10 animate-[pulse_1s_infinite] pointer-events-none rounded-[2rem]"></div>
-               <div class="flex flex-col items-center justify-center w-full h-full gap-8 relative z-20">
+               <div class="absolute inset-0 bg-rose-600/10 animate-[pulse_1s_infinite] pointer-events-none rounded-[2rem] z-0"></div>
+               <div class="flex flex-col items-center justify-center w-full h-full gap-8 relative z-10">
                    <div class="text-rose-400 font-black text-3xl md:text-4xl tracking-widest flex items-center gap-3 drop-shadow-[0_0_15px_rgba(225,29,72,0.8)] bg-slate-900/50 px-6 py-2 rounded-full border border-rose-500/30">
                      <i data-lucide="zap" class="w-8 h-8 animate-bounce"></i> 準備搶答 <i data-lucide="zap" class="w-8 h-8 animate-bounce"></i>
                    </div>
@@ -2971,7 +3022,7 @@
              `;
           } else if (data.qType === 'TEXT') {
              optsHTML = `
-               <div class="col-span-2 flex flex-col gap-4 w-full h-full justify-center">
+               <div class="col-span-2 flex flex-col gap-4 w-full h-full justify-center relative z-10">
                    <textarea id="irs-text-input" rows="4" class="w-full bg-slate-900 border border-fuchsia-500/30 rounded-2xl p-4 text-xl text-white focus:outline-none focus:border-fuchsia-500 transition-colors shadow-inner resize-none placeholder-slate-500" placeholder="請自由輸入你的答案..."></textarea>
                    <button onclick="submitIRSTextAnswer()" class="w-full py-5 rounded-2xl bg-gradient-to-br from-fuchsia-600 to-purple-600 hover:opacity-90 active:scale-95 text-white font-black text-2xl shadow-[0_0_30px_rgba(192,38,211,0.3)] transition-all border border-white/20 flex items-center justify-center gap-2">
                       <i data-lucide="send" class="w-6 h-6"></i> 送出答案
@@ -3011,7 +3062,7 @@
              irsEls.studentWaiting.innerHTML = `<div class="p-6 rounded-full bg-rose-500/20 inline-block mb-4 border border-rose-500/30"><i data-lucide="bell-ring" class="w-12 h-12 text-rose-400 animate-pulse mx-auto"></i></div><p class="text-xl font-bold text-slate-300">已送出搶答！<br>請看前方名次...</p>`;
           } else {
              // 防止文字過長破版
-             const safeVal = String(val);
+             const safeVal = escapeHTML(String(val));
              const displayStr = safeVal.length > 10 ? safeVal.substring(0, 10) + '...' : safeVal;
              const textSize = safeVal.length > 4 ? 'text-2xl' : 'text-4xl';
              
