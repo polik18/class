@@ -60,6 +60,8 @@
   <script src="https://unpkg.com/lucide@latest"></script>
   <!-- 引入 PeerJS (WebRTC) 用於 即問即答 系統 -->
   <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+  <!-- 引入 QRCode.js 用於生成掃描加入條碼 -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
   <style>
     /* 隱藏捲軸但保留功能 */
@@ -632,6 +634,21 @@
             <button onclick="hideIRSInfo()" class="w-full mt-8 py-3.5 rounded-xl bg-slate-800 hover:bg-cyan-600 text-white font-bold transition-all border border-white/10 hover:border-cyan-400 shadow-lg cursor-pointer">我瞭解了</button>
          </div>
       </div>
+
+      <!-- QRCode Modal (預設隱藏) -->
+      <div id="irs-qr-modal" class="hidden fixed inset-0 z-[70] flex items-center justify-center p-4">
+         <div class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm" onclick="hideIRSQR()"></div>
+         <div class="relative bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl flex flex-col items-center animate-pop-in">
+            <h3 class="text-2xl font-bold text-slate-800 mb-2">掃描加入課堂</h3>
+            <p class="text-slate-500 mb-6 text-sm">請學生使用手機相機掃描</p>
+            <div id="qrcode-container" class="bg-white p-4 rounded-xl shadow-inner border border-slate-100 flex justify-center items-center min-h-[256px] min-w-[256px]"></div>
+            <div class="mt-6 text-center">
+              <p class="text-xs text-slate-400 mb-1">或手動輸入代碼</p>
+              <p id="qr-modal-room-id" class="text-3xl font-mono font-black text-indigo-600 tracking-widest"></p>
+            </div>
+            <button onclick="hideIRSQR()" class="absolute top-4 right-4 text-slate-400 hover:text-rose-500 transition-colors"><i data-lucide="x" class="w-6 h-6"></i></button>
+         </div>
+      </div>
       
       <!-- 角色選擇畫面 -->
       <div id="irs-role-select" class="flex-1 flex flex-col items-center justify-center space-y-8 bg-slate-900/60 rounded-[2rem] border border-white/10 backdrop-blur-sm shadow-xl p-8">
@@ -685,7 +702,10 @@
                  <span class="text-white font-bold flex items-center gap-2"><i data-lucide="copy" class="w-4 h-4"></i> 點擊複製</span>
               </div>
             </div>
-            <div class="flex items-center justify-between text-sm">
+            <button onclick="showIRSQR()" class="w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-cyan-400 font-bold transition-all flex items-center justify-center gap-2 border border-white/10 shadow-sm mt-2">
+               <i data-lucide="qr-code" class="w-5 h-5"></i> 顯示 QRCode 邀請碼
+            </button>
+            <div class="flex items-center justify-between text-sm mt-4">
               <span class="text-slate-400">在線學生數</span>
               <span id="irs-student-count" class="font-bold text-emerald-400 bg-emerald-500/20 px-2.5 py-0.5 rounded-full">0</span>
             </div>
@@ -744,7 +764,7 @@
         <div class="bg-slate-900/80 p-8 rounded-[2rem] border border-white/10 backdrop-blur-md shadow-2xl w-full max-w-md space-y-6">
           <div class="text-center">
             <h2 class="text-2xl font-bold text-cyan-400">加入互動課堂</h2>
-            <p class="text-sm text-slate-400 mt-1">請輸入老師提供的代碼</p>
+            <p class="text-sm text-slate-400 mt-1">請輸入老師提供的代碼，或掃描條碼</p>
           </div>
           <div class="space-y-4">
             <div>
@@ -2075,11 +2095,6 @@
       boardCtx.clearRect(0, 0, boardEls.canvas.width, boardEls.canvas.height);
     });
 
-    // 初始載入時設定一次畫布大小
-    window.addEventListener('load', () => {
-        if(appState.currentMode === 'board') resizeCanvas();
-    });
-
     // ----------------------------------------------------------------------
     // 模組 6: 即問即答 (IRS MODE - WebRTC via PeerJS)
     // ----------------------------------------------------------------------
@@ -2095,6 +2110,43 @@
     
     window.hideIRSInfo = () => {
         const modal = document.getElementById('irs-info-modal');
+        if (modal) {
+            modal.classList.add('hidden');
+        }
+    };
+
+    let qrCodeInstance = null;
+
+    // 全域方法，用於產生並顯示 QR Code
+    window.showIRSQR = () => {
+        if (!irsState.roomId) return;
+        const modal = document.getElementById('irs-qr-modal');
+        const container = document.getElementById('qrcode-container');
+        document.getElementById('qr-modal-room-id').textContent = irsState.roomId;
+
+        // 產生帶有 room 參數的網址
+        const baseUrl = window.location.href.split('?')[0];
+        const joinUrl = `${baseUrl}?room=${irsState.roomId}`;
+
+        if (!qrCodeInstance) {
+            qrCodeInstance = new QRCode(container, {
+                text: joinUrl,
+                width: 256,
+                height: 256,
+                colorDark : "#000000",
+                colorLight : "#ffffff",
+                correctLevel : QRCode.CorrectLevel.M
+            });
+        } else {
+            qrCodeInstance.clear();
+            qrCodeInstance.makeCode(joinUrl);
+        }
+
+        modal.classList.remove('hidden');
+    };
+
+    window.hideIRSQR = () => {
+        const modal = document.getElementById('irs-qr-modal');
         if (modal) {
             modal.classList.add('hidden');
         }
@@ -2154,6 +2206,9 @@
       irsEls.teacherView.classList.add('hidden');
       irsEls.studentLogin.classList.add('hidden');
       irsEls.studentView.classList.add('hidden');
+      // 清除網址列上的 room 參數，避免重新整理後又自動進入學生端
+      const newUrl = window.location.href.split('?')[0];
+      window.history.replaceState({}, document.title, newUrl);
     };
 
     // ===== 老師端邏輯 =====
@@ -2491,6 +2546,27 @@
           lucide.createIcons();
        }
     };
+
+    // 初始載入時設定一次畫布大小與解析網址參數
+    window.addEventListener('load', () => {
+        if(appState.currentMode === 'board') resizeCanvas();
+
+        // 偵測網址是否帶有 room 參數，供學生掃碼後自動進入即問即答
+        const urlParams = new URLSearchParams(window.location.search);
+        const roomParam = urlParams.get('room');
+        if (roomParam) {
+            // 自動切換至即問即答模組
+            switchAppMode('irs');
+            // 自動開啟學生登入畫面
+            showIRSStudentLogin();
+            // 自動填入代碼
+            irsEls.joinId.value = roomParam;
+            // 延遲聚焦到姓名輸入框，提升使用者體驗
+            setTimeout(() => {
+                irsEls.joinName.focus();
+            }, 500);
+        }
+    });
 
   </script>
 </body>
