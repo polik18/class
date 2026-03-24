@@ -94,15 +94,66 @@
   <!-- 彩帶畫布 -->
   <canvas id="confetti-canvas" class="fixed inset-0 pointer-events-none z-50"></canvas>
 
+  <!-- 全域 Toast 提示 -->
+  <div id="global-toast" class="fixed top-24 left-1/2 -translate-x-1/2 z-[100] transition-all duration-500 opacity-0 pointer-events-none transform -translate-y-4">
+     <div id="global-toast-content" class="bg-slate-800 text-white px-6 py-3 rounded-full shadow-2xl border flex items-center gap-3 font-bold text-sm backdrop-blur-md">
+     </div>
+  </div>
+
+  <!-- Pro 版本升級新手導覽 Modal -->
+  <div id="welcome-guide-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm" onclick="closeWelcomeGuide()"></div>
+    <div class="relative bg-slate-900 border border-yellow-500/30 rounded-3xl p-6 md:p-8 max-w-md w-full shadow-[0_0_40px_rgba(251,191,36,0.2)] animate-pop-in">
+       <div class="absolute -top-6 left-1/2 -translate-x-1/2 w-14 h-14 bg-gradient-to-br from-yellow-400 to-amber-600 rounded-full flex items-center justify-center shadow-lg shadow-yellow-500/50 border-4 border-slate-900 animate-bounce">
+          <i data-lucide="crown" class="w-7 h-7 text-white"></i>
+       </div>
+       <h3 class="text-2xl font-black text-white mt-5 mb-1 text-center flex items-center justify-center gap-1.5">
+          課堂助手 <span class="text-amber-400 text-sm md:text-base uppercase tracking-widest relative -top-2 drop-shadow-[0_0_8px_rgba(251,191,36,0.6)]" style="-webkit-text-fill-color: #fbbf24;">Pro</span>
+       </h3>
+       <p class="text-center text-amber-400 font-bold mb-6 text-sm">全新聯動進階功能上線！</p>
+       
+       <div class="space-y-4 text-slate-300 text-sm">
+          <div class="flex gap-3 items-start bg-slate-800/50 p-3 rounded-xl border border-white/5">
+             <div class="p-2 bg-emerald-500/20 rounded-lg text-emerald-400 shrink-0"><i data-lucide="git-merge" class="w-5 h-5"></i></div>
+             <div>
+                <strong class="text-emerald-300 block mb-0.5">跨模組連動 (抽籤 ➔ 計分)</strong>
+                <p class="text-xs text-slate-400 leading-relaxed">在「抽籤機」完成全班分組後，名單與組別會自動無縫同步至「計分板」！</p>
+             </div>
+          </div>
+          
+          <div class="flex gap-3 items-start bg-slate-800/50 p-3 rounded-xl border border-white/5">
+             <div class="p-2 bg-indigo-500/20 rounded-lg text-indigo-400 shrink-0"><i data-lucide="user-plus" class="w-5 h-5"></i></div>
+             <div>
+                <strong class="text-indigo-300 block mb-0.5">個人與小組雙軌計分</strong>
+                <p class="text-xs text-slate-400 leading-relaxed">計分板不僅能對小組計分，還能針對每位組員獨立計分，個人得分會自動匯入小組總分。</p>
+             </div>
+          </div>
+          
+          <div class="flex gap-3 items-start bg-slate-800/50 p-3 rounded-xl border border-white/5">
+             <div class="p-2 bg-fuchsia-500/20 rounded-lg text-fuchsia-400 shrink-0"><i data-lucide="smartphone" class="w-5 h-5"></i></div>
+             <div>
+                <strong class="text-fuchsia-300 block mb-0.5">IRS 學生自加與性別分組</strong>
+                <p class="text-xs text-slate-400 leading-relaxed">學生於即問即答登入時，名單自動帶入抽籤機，並支援按性別混合/分開等進階演算法。</p>
+             </div>
+          </div>
+       </div>
+       
+       <button onclick="closeWelcomeGuide()" class="w-full mt-8 py-3.5 rounded-xl bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-400 hover:to-amber-500 text-slate-900 font-black text-lg transition-all shadow-lg shadow-yellow-500/30 active:scale-95">開始體驗 Pro 版</button>
+    </div>
+  </div>
+
   <!-- 頂部導覽列 -->
   <header class="p-4 md:p-6 flex flex-col md:flex-row justify-between items-center gap-4 border-b border-white/10 bg-slate-900/50 backdrop-blur-md sticky top-0 z-40 shadow-lg shadow-black/20">
     <div class="flex items-center gap-3">
-      <div class="p-2 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl shadow-lg shadow-indigo-500/30 animate-float shrink-0">
-        <i data-lucide="sparkles" class="w-6 h-6 text-white"></i>
+      <!-- 更換為金黃色跳動皇冠 -->
+      <div class="p-2 bg-gradient-to-br from-yellow-400 to-amber-600 rounded-xl shadow-lg shadow-yellow-500/30 shrink-0">
+        <i data-lucide="crown" class="w-6 h-6 text-white animate-bounce"></i>
       </div>
       <div class="flex flex-col">
-        <h1 class="text-2xl md:text-3xl font-black bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent drop-shadow-sm whitespace-nowrap leading-tight">
-          智慧課堂助手
+        <!-- 名稱改為 課堂助手 Pro -->
+        <h1 class="text-2xl md:text-3xl font-black whitespace-nowrap leading-tight flex items-center gap-1">
+          <span class="bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent drop-shadow-sm">課堂助手</span>
+          <span class="bg-gradient-to-b from-yellow-300 to-amber-500 bg-clip-text text-transparent text-sm md:text-lg uppercase tracking-widest relative -top-2 md:-top-3 drop-shadow-[0_2px_4px_rgba(245,158,11,0.5)]">Pro</span>
         </h1>
         <div id="header-time" class="text-sm font-mono text-slate-400 flex items-center gap-1.5 mt-0.5">
           <i data-lucide="clock" class="w-3.5 h-3.5"></i> <span>00:00:00</span>
@@ -199,13 +250,22 @@
         </div>
 
         <!-- 姓名模式專屬設定 -->
-        <div id="name-settings" class="space-y-6 hidden animate-pop-in" style="animation-duration: 0.3s">
+        <div id="name-settings" class="space-y-6 hidden animate-pop-in relative z-20" style="animation-duration: 0.3s">
           <div class="space-y-2">
             <label class="flex justify-between text-sm font-medium text-slate-400">
-              <span>名單輸入</span>
+              <span class="flex items-center gap-2">名單輸入 
+                <div tabindex="0" class="group relative text-emerald-400 text-[10px] bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20 flex items-center gap-1 hidden md:flex cursor-help outline-none focus:outline-none">
+                  <i data-lucide="radio" class="w-3 h-3"></i> 學生自加 <i data-lucide="help-circle" class="w-3 h-3 ml-0.5"></i>
+                  <!-- 解釋視窗 -->
+                  <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-3 bg-slate-800/95 backdrop-blur-md text-slate-200 text-xs leading-relaxed rounded-xl shadow-2xl border border-emerald-500/30 opacity-0 invisible group-hover:opacity-100 group-hover:visible group-focus:opacity-100 group-focus:visible transition-all duration-300 pointer-events-none z-50 font-normal text-left whitespace-normal">
+                    <strong class="text-emerald-300 block mb-1">名單自動連動功能</strong>
+                    當學生透過【即問即答】系統連線進入教室時，他們的名字與性別會自動加入此名單。不需手動輸入即可直接對全班進行抽籤或男女分組！
+                  </div>
+                </div>
+              </span>
               <span class="text-xs text-slate-500">換行、逗號或頓號分隔</span>
             </label>
-            <textarea id="name-input" rows="5" placeholder="例如：&#10;王小明&#10;陳大山&#10;林美麗" class="w-full bg-slate-950/50 border border-white/10 rounded-xl p-3 text-lg font-medium text-indigo-300 focus:outline-none focus:border-indigo-500/50 resize-none shadow-inner no-scrollbar"></textarea>
+            <textarea id="name-input" rows="5" placeholder="例如：&#10;王小明&#10;陳大山&#10;林美麗(女)" class="w-full bg-slate-950/50 border border-white/10 rounded-xl p-3 text-lg font-medium text-indigo-300 focus:outline-none focus:border-indigo-500/50 resize-none shadow-inner no-scrollbar"></textarea>
           </div>
         </div>
 
@@ -219,11 +279,59 @@
             <span class="text-indigo-400 font-bold" id="pool-info">共 50 個選項</span>
           </div>
 
-          <div class="space-y-2">
-            <label class="text-sm font-medium text-slate-400">抽出數量</label>
-            <div class="flex items-center bg-slate-950/50 border border-white/10 rounded-xl p-2 shadow-inner">
-              <i data-lucide="users" class="w-5 h-5 ml-2 text-slate-500"></i>
-              <input type="number" id="draw-count" value="1" min="1" class="w-full bg-transparent border-none text-xl text-center font-bold focus:outline-none text-indigo-300">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <!-- 單抽設定 -->
+            <div class="space-y-2 p-3 bg-indigo-500/5 border border-indigo-500/20 rounded-xl relative">
+              <div tabindex="0" class="absolute top-0 right-0 p-1.5 bg-indigo-500/20 rounded-bl-lg rounded-tr-xl group cursor-help z-20 outline-none focus:outline-none">
+                <i data-lucide="user" class="w-3 h-3 text-indigo-400"></i>
+                <!-- 解釋視窗 -->
+                <div class="absolute bottom-full right-0 sm:right-auto sm:left-1/2 sm:-translate-x-1/2 mb-2 w-52 p-3 bg-slate-800/95 backdrop-blur-md text-slate-200 text-xs leading-relaxed rounded-xl shadow-2xl border border-indigo-500/30 opacity-0 invisible group-hover:opacity-100 group-hover:visible group-focus:opacity-100 group-focus:visible transition-all duration-300 pointer-events-none z-50 font-normal text-left">
+                  <strong class="text-indigo-300 block mb-1">單抽數量</strong>
+                  設定每次按下「單次抽籤」時，要同時抽出幾個結果。
+                </div>
+              </div>
+              <label class="text-[11px] font-bold text-indigo-400">單抽數量</label>
+              <div class="flex items-center bg-slate-950/80 border border-white/10 rounded-lg p-2 shadow-inner">
+                <input type="number" id="draw-count" value="1" min="1" class="w-full bg-transparent border-none text-xl text-center font-bold focus:outline-none text-indigo-300">
+              </div>
+            </div>
+            <!-- 分組設定 -->
+            <div class="space-y-2 p-3 bg-emerald-500/5 border border-emerald-500/20 rounded-xl relative">
+              <div tabindex="0" class="absolute top-0 right-0 p-1.5 bg-emerald-500/20 rounded-bl-lg rounded-tr-xl group cursor-help z-20 outline-none focus:outline-none">
+                <i data-lucide="users" class="w-3 h-3 text-emerald-400"></i>
+                <!-- 解釋視窗 -->
+                <div class="absolute bottom-full right-0 sm:right-auto sm:left-1/2 sm:-translate-x-1/2 mb-2 w-52 p-3 bg-slate-800/95 backdrop-blur-md text-slate-200 text-xs leading-relaxed rounded-xl shadow-2xl border border-emerald-500/30 opacity-0 invisible group-hover:opacity-100 group-hover:visible group-focus:opacity-100 group-focus:visible transition-all duration-300 pointer-events-none z-50 font-normal text-left">
+                  <strong class="text-emerald-300 block mb-1">每組人數</strong>
+                  設定執行「隨機分組」時，每個小組預設要分配多少人。系統會自動幫您計算總組數。
+                </div>
+              </div>
+              <label class="text-[11px] font-bold text-emerald-400">每組人數</label>
+              <div class="flex items-center bg-slate-950/80 border border-white/10 rounded-lg p-2 shadow-inner">
+                <input type="number" id="group-size" value="4" min="1" class="w-full bg-transparent border-none text-xl text-center font-bold focus:outline-none text-emerald-300">
+              </div>
+            </div>
+            <!-- 分組規則 -->
+            <div class="space-y-2 p-3 bg-fuchsia-500/5 border border-fuchsia-500/20 rounded-xl relative">
+              <div tabindex="0" class="absolute top-0 right-0 p-1.5 bg-fuchsia-500/20 rounded-bl-lg rounded-tr-xl group cursor-help z-20 outline-none focus:outline-none">
+                <i data-lucide="git-merge" class="w-3 h-3 text-fuchsia-400"></i>
+                <!-- 解釋視窗 -->
+                <div class="absolute bottom-full right-0 mb-2 w-56 p-3 bg-slate-800/95 backdrop-blur-md text-slate-200 text-xs leading-relaxed rounded-xl shadow-2xl border border-fuchsia-500/30 opacity-0 invisible group-hover:opacity-100 group-hover:visible group-focus:opacity-100 group-focus:visible transition-all duration-300 pointer-events-none z-50 font-normal text-left">
+                  <strong class="text-fuchsia-300 block mb-1.5">男女分組規則</strong>
+                  <ul class="space-y-1">
+                     <li><span class="text-slate-400">【隨機】</span>無視性別，純粹打亂。</li>
+                     <li><span class="text-slate-400">【混合】</span>將男女均勻平均分配到各組。</li>
+                     <li><span class="text-slate-400">【男女】</span>男生純一組、女生純一組，不混搭。</li>
+                  </ul>
+                </div>
+              </div>
+              <label class="text-[11px] font-bold text-fuchsia-400">男女分組</label>
+              <div class="flex items-center bg-slate-950/80 border border-white/10 rounded-lg p-1.5 shadow-inner h-[44px]">
+                <select id="group-rule" class="w-full bg-transparent border-none text-sm text-center font-bold focus:outline-none text-fuchsia-300 appearance-none cursor-pointer px-1">
+                  <option value="random" class="bg-slate-900">隨機</option>
+                  <option value="mixed" class="bg-slate-900">混合</option>
+                  <option value="separated" class="bg-slate-900">男女</option>
+                </select>
+              </div>
             </div>
           </div>
         </div>
@@ -259,16 +367,23 @@
         <div id="error-msg" class="hidden p-3 bg-red-500/20 border border-red-500/30 rounded-lg text-red-400 text-sm text-center"></div>
 
         <!-- 操作按鈕 -->
-        <div class="pt-2 flex gap-3">
-          <button id="draw-btn" class="flex-1 group relative py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2 transition-all duration-300 overflow-hidden bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-500/30 hover:shadow-indigo-500/50 animate-glow">
-            <span id="draw-btn-content" class="flex items-center justify-center gap-2">
-              <i data-lucide="play" class="w-5 h-5 fill-current"></i> 開始抽籤
+        <div class="pt-4 grid grid-cols-2 gap-3">
+          <button id="draw-btn" class="group relative py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2 transition-all duration-300 overflow-hidden bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-500/30 hover:shadow-indigo-500/50 animate-glow">
+            <span id="draw-btn-content" class="flex items-center justify-center gap-2 relative z-10 pointer-events-none">
+              <i data-lucide="play" class="w-5 h-5 fill-current"></i> 單次抽籤
             </span>
-            <div id="draw-btn-fx" class="absolute inset-0 -translate-x-full group-hover:animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-white/20 to-transparent" style="transform-origin: left"></div>
+            <div id="draw-btn-fx" class="absolute inset-0 -translate-x-full group-hover:animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none" style="transform-origin: left"></div>
           </button>
           
-          <button id="reset-btn" class="p-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors border border-white/5 disabled:opacity-50 disabled:cursor-not-allowed" title="重置" disabled>
-            <i data-lucide="rotate-ccw" class="w-6 h-6"></i>
+          <button id="group-btn" class="group relative py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2 transition-all duration-300 overflow-hidden bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-500/30 hover:shadow-emerald-500/50">
+             <span id="group-btn-content" class="flex items-center justify-center gap-2 relative z-10 pointer-events-none">
+                <i data-lucide="layout-grid" class="w-5 h-5 fill-current"></i> 隨機分組
+             </span>
+             <div id="group-btn-fx" class="absolute inset-0 -translate-x-full group-hover:animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none" style="transform-origin: left"></div>
+          </button>
+
+          <button id="reset-btn" class="col-span-2 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors border border-white/5 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2" title="重置籤筒與紀錄" disabled>
+            <i data-lucide="rotate-ccw" class="w-5 h-5 pointer-events-none"></i> 重新開始 / 重置紀錄
           </button>
         </div>
       </div>
@@ -295,8 +410,8 @@
 
           <!-- 結果公佈狀態 -->
           <div id="result-view" class="hidden w-full flex flex-col items-center">
-            <div class="inline-block mb-10 px-8 py-3 rounded-full bg-gradient-to-r from-amber-500/10 via-orange-500/20 to-amber-500/10 border border-amber-500/30 animate-bounce-soft shadow-[0_0_30px_rgba(245,158,11,0.2)]">
-              <span class="text-amber-400 font-bold tracking-widest text-lg">🎉 恭喜以下得獎者 🎉</span>
+            <div id="result-title-container" class="inline-flex items-center justify-center flex-wrap gap-4 mb-10 px-8 py-3 rounded-full bg-gradient-to-r from-amber-500/10 via-orange-500/20 to-amber-500/10 border border-amber-500/30 animate-bounce-soft shadow-[0_0_30px_rgba(245,158,11,0.2)]">
+              <span id="result-title-text" class="text-amber-400 font-bold tracking-widest text-lg">🎉 恭喜以下得獎者 🎉</span>
             </div>
             <div id="winners-container" class="flex flex-wrap justify-center gap-6 w-full max-w-4xl">
               <!-- 得獎者卡片會插在這裡 -->
@@ -305,7 +420,6 @@
         </div>
       </div>
     </div>
-
 
     <!-- ========================================== -->
     <!-- 模組 2: 考試大鐘 (CLOCK MODE) -->
@@ -397,7 +511,7 @@
               <span id="timer-toggle-text">開始計時</span>
             </button>
             <button id="timer-reset-btn" class="group p-4 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-2xl transition-all duration-300 border border-white/10 hover:border-slate-500 shadow-md" title="重置時間">
-              <i data-lucide="rotate-ccw" class="w-6 h-6 group-hover:-rotate-90 transition-transform duration-500"></i>
+              <i data-lucide="rotate-ccw" class="w-6 h-6 group-hover:-rotate-90 transition-transform duration-500 pointer-events-none"></i>
             </button>
           </div>
         </div>
@@ -456,21 +570,21 @@
             <i data-lucide="award" class="w-6 h-6 text-amber-400"></i>
           </div>
           <div>
-            <h2 class="text-xl font-bold text-white tracking-wide">課堂計分板</h2>
-            <p class="text-xs text-slate-400 mt-1">點擊組別名稱可修改，最高支援 12 組</p>
+            <h2 class="text-xl font-bold text-white tracking-wide">課堂計分板 <span class="bg-indigo-500/20 text-indigo-300 text-xs px-2 py-0.5 rounded border border-indigo-500/30 ml-2">支援個人/小組雙軌計分</span></h2>
+            <p class="text-xs text-slate-400 mt-1">點擊名稱可修改，分組名單會由「抽籤機」自動同步過來</p>
           </div>
         </div>
         
         <div class="flex items-center gap-3 w-full md:w-auto overflow-x-auto no-scrollbar pb-1 md:pb-0">
           <button id="score-add-btn" class="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-sm font-bold transition-all shadow-lg whitespace-nowrap">
-            <i data-lucide="plus" class="w-4 h-4"></i> 新增組別
+            <i data-lucide="plus" class="w-4 h-4 pointer-events-none"></i> 新增組別
           </button>
           <button id="score-remove-btn" class="flex items-center gap-2 px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-sm font-bold transition-all border border-white/5 whitespace-nowrap">
-            <i data-lucide="minus" class="w-4 h-4"></i> 減少組別
+            <i data-lucide="minus" class="w-4 h-4 pointer-events-none"></i> 減少組別
           </button>
           <div class="w-px h-8 bg-white/10 mx-1 hidden md:block"></div>
           <button id="score-reset-btn" class="flex items-center gap-2 px-4 py-2.5 bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/30 rounded-xl text-sm font-bold transition-all whitespace-nowrap">
-            <i data-lucide="rotate-ccw" class="w-4 h-4"></i> 分數歸零
+            <i data-lucide="rotate-ccw" class="w-4 h-4 pointer-events-none"></i> 分數歸零
           </button>
         </div>
       </div>
@@ -571,7 +685,7 @@
       </div>
 
       <!-- 計分卡片網格 -->
-      <div id="score-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6 flex-1 auto-rows-max pb-10">
+      <div id="score-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6 flex-1 auto-rows-max pb-10">
         <!-- 卡片由 JS 動態生成 -->
       </div>
     </div>
@@ -692,7 +806,7 @@
             </div>
             <div class="text-center relative z-10">
               <h3 class="text-xl font-bold text-white mb-1">我是學生</h3>
-              <p class="text-sm text-slate-400">輸入代碼，加入課堂互動</p>
+              <p class="text-sm text-slate-400">輸入代碼，加入課堂互動與抽籤</p>
             </div>
           </button>
         </div>
@@ -858,7 +972,7 @@
         <div class="bg-slate-900/80 p-8 rounded-[2rem] border border-white/10 backdrop-blur-md shadow-2xl w-full max-w-md space-y-6">
           <div class="text-center">
             <h2 class="text-2xl font-bold text-cyan-400">加入互動課堂</h2>
-            <p class="text-sm text-slate-400 mt-1">請輸入老師提供的代碼，或掃描條碼</p>
+            <p class="text-sm text-slate-400 mt-1">請輸入老師提供的代碼，參與互動與抽籤</p>
           </div>
           <div class="space-y-4">
             <div>
@@ -869,11 +983,25 @@
                <label class="block text-sm font-medium text-slate-400 mb-1">你的名字 (暱稱)</label>
                <input type="text" id="irs-join-name" class="w-full bg-slate-950 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-cyan-500 transition-colors" placeholder="輸入姓名">
             </div>
+            <div>
+               <label class="block text-sm font-medium text-slate-400 mb-2">你的性別 (分組用)</label>
+               <div class="flex gap-6 bg-slate-950 border border-white/10 rounded-xl px-4 py-3 shadow-inner">
+                  <label class="flex items-center gap-2 text-white cursor-pointer flex-1 justify-center transition-all hover:scale-105">
+                     <input type="radio" name="irs-gender" value="男" checked class="w-4 h-4 text-cyan-500 focus:ring-cyan-500 bg-slate-800 border-white/20"> 
+                     <span class="font-bold text-cyan-400">男生 <i data-lucide="mars" class="w-4 h-4 inline"></i></span>
+                  </label>
+                  <div class="w-px bg-white/10"></div>
+                  <label class="flex items-center gap-2 text-white cursor-pointer flex-1 justify-center transition-all hover:scale-105">
+                     <input type="radio" name="irs-gender" value="女" class="w-4 h-4 text-rose-500 focus:ring-rose-500 bg-slate-800 border-white/20"> 
+                     <span class="font-bold text-rose-400">女生 <i data-lucide="venus" class="w-4 h-4 inline"></i></span>
+                  </label>
+               </div>
+            </div>
           </div>
           <div id="irs-login-error" class="hidden text-rose-400 text-sm text-center font-bold"></div>
           <div class="flex gap-3 pt-2">
-            <button onclick="leaveIRS()" class="px-6 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition-all font-bold">返回</button>
-            <button onclick="joinIRS()" id="irs-join-btn" class="flex-1 py-3 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold shadow-lg shadow-cyan-500/30 transition-all flex justify-center items-center">連線加入</button>
+            <button onclick="leaveIRS()" class="px-6 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition-all font-bold shadow-md active:scale-95">返回</button>
+            <button onclick="joinIRS()" id="irs-join-btn" class="flex-1 py-3 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold shadow-lg shadow-cyan-500/30 transition-all flex justify-center items-center active:scale-95">連線加入</button>
           </div>
         </div>
       </div>
@@ -934,7 +1062,7 @@
 
   <script>
     // ----------------------------------------------------------------------
-    // 安全防護機制：XSS 跨站腳本過濾 (新增)
+    // 安全防護機制：XSS 跨站腳本過濾
     // 防止學生在開放問答或暱稱輸入惡意 HTML 語法
     const escapeHTML = (str) => {
         if (typeof str !== 'string') return str;
@@ -949,9 +1077,66 @@
         );
     };
 
+    // 負責將含有 (男) 或 (女) 的文字，轉換為帶有圖示的 HTML
+    const renderName = (name, isLarge = false) => {
+        let clean = escapeHTML(name);
+        let icon = '';
+        if (clean.endsWith('(男)')) {
+            clean = clean.slice(0, -3);
+            icon = isLarge 
+                ? `<i data-lucide="mars" class="w-8 h-8 text-cyan-400 inline ml-1 align-baseline drop-shadow-sm pointer-events-none"></i>` 
+                : `<i data-lucide="mars" class="w-3.5 h-3.5 text-cyan-400 inline ml-0.5 mb-0.5 pointer-events-none"></i>`;
+        } else if (clean.endsWith('(女)')) {
+            clean = clean.slice(0, -3);
+            icon = isLarge 
+                ? `<i data-lucide="venus" class="w-8 h-8 text-rose-400 inline ml-1 align-baseline drop-shadow-sm pointer-events-none"></i>` 
+                : `<i data-lucide="venus" class="w-3.5 h-3.5 text-rose-400 inline ml-0.5 mb-0.5 pointer-events-none"></i>`;
+        }
+        return `${clean}${icon}`;
+    };
+
+    // 全域 Toast 提示
+    window.showToast = (msg, color = 'indigo') => {
+        const toast = document.getElementById('global-toast');
+        const content = document.getElementById('global-toast-content');
+        
+        const colors = {
+           'emerald': 'border-emerald-500/50 shadow-emerald-500/20 text-emerald-100',
+           'indigo': 'border-indigo-500/50 shadow-indigo-500/20 text-indigo-100',
+           'amber': 'border-amber-500/50 shadow-amber-500/20 text-amber-100'
+        };
+        
+        content.className = `bg-slate-800/90 px-6 py-3 rounded-full shadow-2xl border flex items-center gap-3 font-bold text-sm backdrop-blur-md ${colors[color] || colors['indigo']}`;
+        content.innerHTML = msg;
+        
+        toast.classList.remove('opacity-0', '-translate-y-4');
+        toast.classList.add('opacity-100', 'translate-y-0');
+        
+        setTimeout(() => {
+            toast.classList.add('opacity-0', '-translate-y-4');
+            toast.classList.remove('opacity-100', 'translate-y-0');
+        }, 4000);
+    };
+
     // ----------------------------------------------------------------------
     // 系統初始化與通用函數
     lucide.createIcons();
+
+    // 初始化時顯示 Pro 版導覽視窗
+    window.addEventListener('load', () => {
+        const welcomeModal = document.getElementById('welcome-guide-modal');
+        if (welcomeModal && !localStorage.getItem('classroom_assistant_pro_seen')) {
+            welcomeModal.classList.remove('hidden');
+        }
+    });
+
+    window.closeWelcomeGuide = () => {
+        const welcomeModal = document.getElementById('welcome-guide-modal');
+        if (welcomeModal) {
+            welcomeModal.classList.add('hidden');
+            localStorage.setItem('classroom_assistant_pro_seen', 'true');
+        }
+    };
 
     // ----------------------------------------------------------------------
     // 滾動提示邏輯 (左右與上下)
@@ -1126,7 +1311,8 @@
       startNum: 1, endNum: 50, drawCount: 1,
       excludeText: "", nameText: "",
       isDrawing: false, uniqueDraw: true,
-      drawnNumbers: [], availableList: []
+      drawnNumbers: [], availableList: [],
+      currentGroups: [] // 儲存當前分組與組長狀態
     };
 
     const drawEls = {
@@ -1138,6 +1324,8 @@
       startNum: document.getElementById('start-num'),
       endNum: document.getElementById('end-num'),
       drawCount: document.getElementById('draw-count'),
+      groupSize: document.getElementById('group-size'),
+      groupRule: document.getElementById('group-rule'),
       excludeInput: document.getElementById('exclude-input'),
       poolInfo: document.getElementById('pool-info'),
       uniqueToggle: document.getElementById('unique-toggle'),
@@ -1149,10 +1337,15 @@
       drawBtn: document.getElementById('draw-btn'),
       drawBtnContent: document.getElementById('draw-btn-content'),
       drawBtnFx: document.getElementById('draw-btn-fx'),
+      groupBtn: document.getElementById('group-btn'),
+      groupBtnContent: document.getElementById('group-btn-content'),
+      groupBtnFx: document.getElementById('group-btn-fx'),
       resetBtn: document.getElementById('reset-btn'),
       standbyView: document.getElementById('standby-view'),
       rollingView: document.getElementById('rolling-view'),
       resultView: document.getElementById('result-view'),
+      resultTitleContainer: document.getElementById('result-title-container'),
+      resultTitleText: document.getElementById('result-title-text'),
       winnersContainer: document.getElementById('winners-container'),
       canvas: document.getElementById('confetti-canvas')
     };
@@ -1280,7 +1473,7 @@
       
       drawState.availableList = drawState.uniqueDraw ? itemsList.filter(n => !drawState.drawnNumbers.includes(n)) : itemsList;
 
-      const typeStr = drawState.mode === 'number' ? '個號碼' : '個人';
+      const typeStr = drawState.mode === 'number' ? '個號碼' : '人';
       let infoText = `共 ${itemsList.length} ${typeStr}`;
       if (drawState.uniqueDraw && drawState.drawnNumbers.length > 0) infoText = `剩餘 ${drawState.availableList.length} / ${infoText}`;
       drawEls.poolInfo.textContent = infoText;
@@ -1293,16 +1486,21 @@
     };
 
     const validateInputs = () => {
-      let isValid = true;
-      if (drawState.mode === 'number' && drawState.startNum > drawState.endNum) {
-        showError("起始編號不能大於結束編號！"); isValid = false;
-      } else if (drawState.availableList.length === 0 && !drawState.isDrawing) {
-        showError(drawState.mode === 'number' ? "沒有可抽的號碼了！" : "名單為空或已抽完！"); isValid = false;
-      } else if (drawState.drawCount < 1 || drawState.drawCount > drawState.availableList.length) {
-        showError(`抽出數量必須介於 1 到 ${drawState.availableList.length} 之間！`); isValid = false;
-      } else showError("");
+      let hasGlobalError = false;
+      let hasDrawCountError = false;
 
-      if (!isValid || drawState.isDrawing) {
+      if (drawState.mode === 'number' && drawState.startNum > drawState.endNum) {
+        showError("起始編號不能大於結束編號！"); hasGlobalError = true;
+      } else if (drawState.availableList.length === 0 && !drawState.isDrawing) {
+        showError(drawState.mode === 'number' ? "沒有可抽的號碼了！" : "名單為空或已抽完！"); hasGlobalError = true;
+      } else if (drawState.drawCount < 1 || drawState.drawCount > drawState.availableList.length) {
+        showError(`單次抽出數量必須介於 1 到 ${drawState.availableList.length} 之間！`); hasDrawCountError = true;
+      } else {
+        showError("");
+      }
+
+      // 單抽按鈕狀態
+      if (hasGlobalError || hasDrawCountError || drawState.isDrawing) {
         drawEls.drawBtn.classList.replace('bg-indigo-600', 'bg-slate-800');
         drawEls.drawBtn.classList.remove('hover:bg-indigo-500', 'text-white', 'shadow-lg', 'animate-glow');
         drawEls.drawBtn.classList.add('text-slate-500', 'cursor-not-allowed');
@@ -1313,6 +1511,20 @@
         drawEls.drawBtn.classList.remove('text-slate-500', 'cursor-not-allowed');
         drawEls.drawBtn.disabled = false; drawEls.drawBtnFx.classList.remove('hidden');
       }
+
+      // 分組按鈕狀態 (分組只需要總人數 >= 2 即可，不受單抽數量影響)
+      if (hasGlobalError || drawState.isDrawing || drawState.availableList.length < 2) {
+        drawEls.groupBtn.classList.replace('bg-emerald-600', 'bg-slate-800');
+        drawEls.groupBtn.classList.remove('hover:bg-emerald-500', 'text-white', 'shadow-lg');
+        drawEls.groupBtn.classList.add('text-slate-500', 'cursor-not-allowed');
+        drawEls.groupBtn.disabled = true; drawEls.groupBtnFx.classList.add('hidden');
+      } else {
+        drawEls.groupBtn.classList.replace('bg-slate-800', 'bg-emerald-600');
+        drawEls.groupBtn.classList.add('hover:bg-emerald-500', 'text-white', 'shadow-lg');
+        drawEls.groupBtn.classList.remove('text-slate-500', 'cursor-not-allowed');
+        drawEls.groupBtn.disabled = false; drawEls.groupBtnFx.classList.remove('hidden');
+      }
+
       drawEls.resetBtn.disabled = drawState.isDrawing || (drawState.drawnNumbers.length === 0 && drawEls.resultView.classList.contains('hidden'));
     };
 
@@ -1320,13 +1532,13 @@
       if (drawState.uniqueDraw && drawState.drawnNumbers.length > 0) {
         drawEls.historyContainer.classList.remove('hidden');
         drawEls.historyCount.textContent = `已抽出結果 (${drawState.drawnNumbers.length})`;
-        // 加入 XSS 防護
+        
         drawEls.historyList.innerHTML = drawState.drawnNumbers.map(num => {
           const safeNum = escapeHTML(num);
           return `<button data-val="${safeNum}" title="點擊將 [${safeNum}] 加回籤筒" class="group relative px-3 py-1 min-w-[3rem] bg-slate-800 hover:bg-indigo-600 transition-all cursor-pointer text-slate-300 rounded-lg text-sm border border-slate-700 hover:border-indigo-400 font-medium shadow-sm overflow-hidden flex justify-center items-center">
-            <span class="group-hover:opacity-0 transition-opacity">${safeNum}</span>
+            <span class="group-hover:opacity-0 transition-opacity">${renderName(safeNum, false)}</span>
             <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-indigo-600">
-              <i data-lucide="rotate-ccw" class="w-4 h-4 text-white"></i>
+              <i data-lucide="rotate-ccw" class="w-4 h-4 text-white pointer-events-none"></i>
             </div>
           </button>`
         }).join('');
@@ -1336,6 +1548,7 @@
 
     const fullReset = () => {
       drawState.drawnNumbers = [];
+      drawState.currentGroups = []; // 清空分組資料
       drawEls.standbyView.classList.remove('hidden');
       drawEls.rollingView.classList.add('hidden');
       drawEls.resultView.classList.add('hidden');
@@ -1350,17 +1563,17 @@
       drawEls.standbyView.classList.add('hidden');
       drawEls.resultView.classList.add('hidden');
       drawEls.rollingView.classList.remove('hidden');
-      drawEls.drawBtnContent.innerHTML = `<div class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-[spin_1s_linear_infinite]"></div> 抽籤中...`;
+      drawEls.drawBtnContent.innerHTML = `<div class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-[spin_1s_linear_infinite] pointer-events-none"></div> 抽籤中...`;
       validateInputs(); 
 
       let elapsed = 0;
       drawInterval = setInterval(() => {
         const preview = shuffle(drawState.availableList).slice(0, drawState.drawCount);
-        // 加入 XSS 防護
+        
         drawEls.rollingView.innerHTML = preview.map(name => `
           <div class="px-8 py-6 bg-gradient-to-br from-indigo-600 to-purple-700 border border-white/20 rounded-2xl text-4xl md:text-5xl font-black text-white shadow-[0_0_40px_rgba(99,102,241,0.6)] backdrop-blur-md" 
                style="transform: scale(${0.95 + Math.random() * 0.1}) translateY(${(Math.random() - 0.5) * 10}px); filter: blur(${Math.random() * 1.5}px);">
-            ${escapeHTML(name)}
+            ${renderName(name, true)}
           </div>
         `).join('');
         playTick(); elapsed += 80;
@@ -1376,20 +1589,220 @@
       drawEls.rollingView.classList.add('hidden');
       drawEls.resultView.classList.remove('hidden');
 
-      // 加入 XSS 防護
+      // 恢復單抽的版面與標題
+      drawEls.winnersContainer.className = "flex flex-wrap justify-center gap-6 w-full max-w-4xl";
+      if (drawEls.resultTitleText) drawEls.resultTitleText.textContent = '🎉 恭喜以下得獎者 🎉';
+      
+      // 移除全班抽組長按鈕 (如果有的話)
+      const groupLeaderBtn = document.getElementById('draw-all-leaders-btn');
+      if (groupLeaderBtn) groupLeaderBtn.remove();
+
       drawEls.winnersContainer.innerHTML = finalWinners.map((name, idx) => `
         <div class="animate-pop-in relative group" style="animation-delay: ${idx * 0.1}s">
           <div class="absolute inset-0 bg-gradient-to-r from-amber-300 to-orange-500 rounded-2xl blur-xl opacity-40 group-hover:opacity-100 transition-opacity"></div>
           <div class="relative px-12 py-10 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 border border-amber-400/50 rounded-2xl flex flex-col items-center gap-4 hover:scale-110 hover:-translate-y-4 transition-all animate-float shadow-2xl overflow-hidden">
             <i data-lucide="trophy" class="w-12 h-12 text-amber-400 drop-shadow-[0_0_15px_rgba(251,191,36,0.8)]"></i>
-            <span class="text-4xl md:text-6xl font-black bg-gradient-to-b from-yellow-200 via-amber-400 to-orange-500 bg-clip-text text-transparent drop-shadow-md break-all">${escapeHTML(name)}</span>
+            <span class="text-4xl md:text-6xl font-black bg-gradient-to-b from-yellow-200 via-amber-400 to-orange-500 bg-clip-text text-transparent drop-shadow-md break-all">${renderName(name, true)}</span>
           </div>
         </div>
       `).join('');
       
-      drawEls.drawBtnContent.innerHTML = `<i data-lucide="play" class="w-5 h-5 fill-current"></i> 開始抽籤`;
+      drawEls.drawBtnContent.innerHTML = `<i data-lucide="play" class="w-5 h-5 fill-current pointer-events-none"></i> 單次抽籤`;
       lucide.createIcons(); playWin(); triggerConfetti();
       updateAvailableList(); renderHistory(); validateInputs();
+    };
+
+    // 分組邏輯
+    const startGroupDraw = () => {
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      drawState.isDrawing = true; updateAvailableList();
+      
+      drawEls.standbyView.classList.add('hidden');
+      drawEls.resultView.classList.add('hidden');
+      drawEls.rollingView.classList.remove('hidden');
+      drawEls.groupBtnContent.innerHTML = `<div class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-[spin_1s_linear_infinite] pointer-events-none"></div> 分組中...`;
+      validateInputs(); 
+
+      // 分組過場動畫 (時間較短)
+      let elapsed = 0;
+      drawInterval = setInterval(() => {
+        const preview = shuffle(drawState.availableList).slice(0, 4);
+        drawEls.rollingView.innerHTML = preview.map(name => `
+          <div class="px-6 py-4 bg-gradient-to-br from-emerald-600 to-teal-700 border border-white/20 rounded-2xl text-2xl md:text-3xl font-black text-white shadow-[0_0_30px_rgba(16,185,129,0.5)] backdrop-blur-md" 
+               style="transform: scale(${0.95 + Math.random() * 0.1}) translateY(${(Math.random() - 0.5) * 10}px); filter: blur(${Math.random() * 1.5}px);">
+            ${renderName(name, false)}
+          </div>
+        `).join('');
+        playTick(); elapsed += 80;
+        if (elapsed >= 1500) { clearInterval(drawInterval); finishGroupDraw(); }
+      }, 80);
+    };
+
+    const finishGroupDraw = () => {
+      const gSize = parseInt(drawEls.groupSize.value) || 4;
+      const rule = drawEls.groupRule ? drawEls.groupRule.value : 'random';
+      let shuffled = shuffle(drawState.availableList);
+      
+      let groups = [];
+
+      // 執行分組演算法
+      if (rule === 'random') {
+          for (let i = 0; i < shuffled.length; i += gSize) {
+              groups.push(shuffled.slice(i, i + gSize));
+          }
+      } else {
+          // 男女混合 or 男女分開
+          let males = [];
+          let females = [];
+          let unknowns = [];
+
+          shuffled.forEach(name => {
+              if (name.endsWith('(男)')) males.push(name);
+              else if (name.endsWith('(女)')) females.push(name);
+              else unknowns.push(name);
+          });
+
+          if (rule === 'separated') {
+              // 男女分開：男生滿人一組，女生滿人一組
+              let allSeparated = [];
+              [males, females, unknowns].forEach(list => {
+                  for (let i = 0; i < list.length; i += gSize) {
+                      allSeparated.push(list.slice(i, i + gSize));
+                  }
+              });
+              groups = allSeparated;
+          } else if (rule === 'mixed') {
+              // 男女混合：計算總組數，像發牌一樣平均分配
+              const numGroups = Math.ceil(shuffled.length / gSize);
+              groups = Array.from({length: numGroups}, () => []);
+              
+              let groupIdx = 0;
+              // 為了均衡，先排女生，再排男生，最後排未知
+              [females, males, unknowns].forEach(list => {
+                  list.forEach(member => {
+                      let attempts = 0;
+                      while(groups[groupIdx].length >= gSize && attempts < numGroups) {
+                          groupIdx = (groupIdx + 1) % numGroups;
+                          attempts++;
+                      }
+                      groups[groupIdx].push(member);
+                      groupIdx = (groupIdx + 1) % numGroups;
+                  });
+              });
+              // 過濾掉可能的空組
+              groups = groups.filter(g => g.length > 0);
+          }
+      }
+
+      if (drawState.uniqueDraw) drawState.drawnNumbers = [...drawState.drawnNumbers, ...shuffled];
+
+      drawState.isDrawing = false;
+      drawEls.rollingView.classList.add('hidden');
+      drawEls.resultView.classList.remove('hidden');
+
+      // 初始化分組狀態
+      drawState.currentGroups = groups.map(g => ({
+          members: g,
+          leader: null,
+          pastLeaders: []
+      }));
+
+      // 切換為分組用的格線版面
+      drawEls.winnersContainer.className = "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 w-full max-w-6xl";
+      if (drawEls.resultTitleText) drawEls.resultTitleText.textContent = `🎉 全班隨機分組結果 (共 ${groups.length} 組) 🎉`;
+
+      // 確保「一鍵全班抽組長」按鈕存在
+      let groupLeaderBtn = document.getElementById('draw-all-leaders-btn');
+      if (!groupLeaderBtn) {
+          groupLeaderBtn = document.createElement('button');
+          groupLeaderBtn.id = 'draw-all-leaders-btn';
+          groupLeaderBtn.className = "px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-900 rounded-full text-sm font-bold shadow-md transition-all shadow-amber-500/30 flex items-center gap-1.5 shrink-0 active:scale-95";
+          groupLeaderBtn.innerHTML = `<i data-lucide="crown" class="w-4 h-4 pointer-events-none"></i> 一鍵抽各組組長`;
+          groupLeaderBtn.onclick = drawAllLeaders;
+          drawEls.resultTitleContainer.appendChild(groupLeaderBtn);
+      }
+
+      renderGroups();
+      
+      drawEls.groupBtnContent.innerHTML = `<i data-lucide="layout-grid" class="w-5 h-5 fill-current pointer-events-none"></i> 隨機分組`;
+      lucide.createIcons(); playWin(); triggerConfetti();
+      updateAvailableList(); renderHistory(); validateInputs();
+
+      // 自動同步到計分板
+      scoreState.teams = drawState.currentGroups.map((g, idx) => ({
+          id: idx + 1,
+          name: `第 ${idx + 1} 組`,
+          score: 0,
+          members: g.members.map(m => ({ name: m, score: 0 }))
+      }));
+      renderScoreboard();
+      
+      // 顯示連動提示
+      showToast('<i data-lucide="check-circle" class="w-5 h-5 text-emerald-400"></i> 分組完成！名單已自動同步至【計分板】', 'emerald');
+    };
+
+    // 渲染分組畫面 (包含組長 UI)
+    const renderGroups = () => {
+      drawEls.winnersContainer.innerHTML = drawState.currentGroups.map((g, idx) => `
+        <div class="animate-pop-in relative group" style="animation-delay: ${idx * 0.05}s">
+          <div class="absolute inset-0 bg-gradient-to-br from-emerald-400/20 to-teal-500/10 rounded-2xl blur opacity-50 group-hover:opacity-100 transition-opacity"></div>
+          <div class="relative p-5 bg-slate-900 border border-emerald-500/30 rounded-2xl flex flex-col gap-3 shadow-xl hover:-translate-y-1 transition-transform h-full">
+            <div class="flex items-center gap-2 border-b border-white/10 pb-2">
+               <i data-lucide="users" class="w-5 h-5 text-emerald-400"></i>
+               <h4 class="text-emerald-300 font-bold text-lg tracking-wide">第 ${idx + 1} 組</h4>
+               <span class="ml-auto text-xs text-slate-400 bg-slate-800 px-2 py-0.5 rounded-full border border-white/5 mr-2">${g.members.length} 人</span>
+               <button onclick="drawGroupLeader(${idx})" class="text-xs bg-amber-500/20 hover:bg-amber-500/40 text-amber-300 border border-amber-500/30 px-2.5 py-1 rounded-lg flex items-center gap-1 transition-colors shrink-0 shadow-sm" title="不重複抽組長">
+                  <i data-lucide="crown" class="w-3 h-3 pointer-events-none"></i> ${g.leader ? '換組長' : '抽組長'}
+               </button>
+            </div>
+            <div class="flex flex-wrap gap-2">
+              ${g.members.map(name => {
+                  const isLeader = name === g.leader;
+                  const bgClass = isLeader ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-[0_0_10px_rgba(245,158,11,0.4)] border-amber-400 scale-105 z-10' : 'bg-slate-800 text-slate-200 border border-white/5';
+                  // 組長皇冠圖示 (保留性別圖示)
+                  const leaderIcon = isLeader ? '<i data-lucide="crown" class="w-3.5 h-3.5 mr-1 inline pointer-events-none"></i>' : '';
+                  return `<span class="${bgClass} px-3 py-1.5 rounded-lg text-sm font-medium shadow-sm transition-all flex items-center relative">${leaderIcon}${renderName(name, false)}</span>`;
+              }).join('')}
+            </div>
+          </div>
+        </div>
+      `).join('');
+      lucide.createIcons({ root: drawEls.winnersContainer });
+    };
+
+    // 抽單一組別的組長 (不重複機制)
+    window.drawGroupLeader = (index) => {
+        const group = drawState.currentGroups[index];
+        if (!group || group.members.length === 0) return;
+
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        playTick();
+
+        // 找出還沒當過組長的成員
+        let eligible = group.members.filter(m => !group.pastLeaders.includes(m));
+        
+        // 如果大家都當過了，就重置名單（保留當前組長，避免連抽同一個人）
+        if (eligible.length === 0) {
+            group.pastLeaders = group.leader ? [group.leader] : [];
+            eligible = group.members.filter(m => !group.pastLeaders.includes(m));
+            // 防呆：如果這組只有 1 個人，還是只能抽他
+            if (eligible.length === 0) eligible = group.members;
+        }
+
+        // 隨機抽出一名新組長
+        const newLeader = eligible[Math.floor(Math.random() * eligible.length)];
+        group.leader = newLeader;
+        group.pastLeaders.push(newLeader);
+
+        renderGroups();
+    };
+
+    // 一鍵抽全班各組組長
+    window.drawAllLeaders = () => {
+        drawState.currentGroups.forEach((_, idx) => {
+            window.drawGroupLeader(idx);
+        });
+        triggerConfetti();
     };
 
     // 綁定事件
@@ -1410,11 +1823,13 @@
 
     drawEls.modeNumberBtn.addEventListener('click', () => switchDrawMode('number'));
     drawEls.modeNameBtn.addEventListener('click', () => switchDrawMode('name'));
-    drawEls.startNum.addEventListener('input', () => { drawState.startNum = parseInt(drawEls.startNum.value)||0; fullReset(); });
-    drawEls.endNum.addEventListener('input', () => { drawState.endNum = parseInt(drawEls.endNum.value)||0; fullReset(); });
+    drawEls.startNum.addEventListener('input', () => { drawState.startNum = parseInt(drawEls.startNum.value)||0; updateAvailableList(); });
+    drawEls.endNum.addEventListener('input', () => { drawState.endNum = parseInt(drawEls.endNum.value)||0; updateAvailableList(); });
     drawEls.drawCount.addEventListener('input', () => { drawState.drawCount = parseInt(drawEls.drawCount.value)||1; validateInputs(); });
-    drawEls.excludeInput.addEventListener('input', (e) => { drawState.excludeText = e.target.value; fullReset(); });
-    drawEls.nameInput.addEventListener('input', (e) => { drawState.nameText = e.target.value; fullReset(); });
+    drawEls.groupSize.addEventListener('input', validateInputs); // 只驗證不重置
+    if(drawEls.groupRule) drawEls.groupRule.addEventListener('change', validateInputs); // 變更規則不重置
+    drawEls.excludeInput.addEventListener('input', (e) => { drawState.excludeText = e.target.value; updateAvailableList(); });
+    drawEls.nameInput.addEventListener('input', (e) => { drawState.nameText = e.target.value; updateAvailableList(); });
     
     drawEls.uniqueToggle.addEventListener('click', () => {
       if (drawState.isDrawing) return;
@@ -1437,6 +1852,7 @@
     });
 
     drawEls.drawBtn.addEventListener('click', () => { if (!drawEls.drawBtn.disabled) startDraw(); });
+    drawEls.groupBtn.addEventListener('click', () => { if (!drawEls.groupBtn.disabled) startGroupDraw(); });
     drawEls.resetBtn.addEventListener('click', () => { if (!drawEls.resetBtn.disabled) fullReset(); });
     updateAvailableList();
 
@@ -1656,12 +2072,13 @@
     // ----------------------------------------------------------------------
     // 模組 4: 課堂計分板 (SCORE MODE) 與 噪音偵測
     // ----------------------------------------------------------------------
+    // 升級：scoreState 支援記錄組內成員
     const scoreState = {
       teams: [
-        { id: 1, name: "第一組", score: 0 },
-        { id: 2, name: "第二組", score: 0 },
-        { id: 3, name: "第三組", score: 0 },
-        { id: 4, name: "第四組", score: 0 }
+        { id: 1, name: "第一組", score: 0, members: [] },
+        { id: 2, name: "第二組", score: 0, members: [] },
+        { id: 3, name: "第三組", score: 0, members: [] },
+        { id: 4, name: "第四組", score: 0, members: [] }
       ],
       maxTeams: 12
     };
@@ -1776,16 +2193,33 @@
         const safeTeamName = escapeHTML(team.name);
         
         return `
-          <div class="bg-gradient-to-br ${colorClass} border rounded-3xl p-5 flex flex-col items-center gap-4 relative group shadow-lg backdrop-blur-sm transition-transform hover:-translate-y-1">
+          <div class="bg-gradient-to-br ${colorClass} border rounded-3xl p-5 flex flex-col items-center gap-3 relative group shadow-lg backdrop-blur-sm transition-transform hover:-translate-y-1 h-full">
             <input type="text" data-id="${team.id}" value="${safeTeamName}" class="team-name-input w-full bg-transparent border-b border-transparent focus:border-white/30 text-center text-xl font-bold text-white focus:outline-none transition-colors px-2 py-1 placeholder-white/30" placeholder="輸入隊名">
-            <div class="text-6xl md:text-7xl font-black font-mono tracking-tighter drop-shadow-md relative py-2 w-full text-center score-display transition-transform duration-200" data-id="${team.id}">
+            <div class="text-5xl md:text-6xl font-black font-mono tracking-tighter drop-shadow-md relative py-2 w-full text-center score-display transition-transform duration-200" data-id="${team.id}">
               ${team.score}
             </div>
+            
+            <!-- 個人分數區塊 -->
+            ${team.members && team.members.length > 0 ? `
+            <div class="w-full flex flex-col gap-1.5 mt-2 mb-2 max-h-32 overflow-y-auto no-scrollbar border-t border-white/10 pt-3">
+              ${team.members.map((m, mIdx) => `
+                <div class="flex items-center justify-between bg-slate-950/30 px-2 py-1.5 rounded-lg border border-white/5">
+                  <span class="text-sm text-slate-200 truncate pr-2 w-full text-left" title="${escapeHTML(m.name)}">${renderName(m.name, false)}</span>
+                  <div class="flex items-center gap-1 shrink-0">
+                    <button data-action="sub-member" data-team-id="${team.id}" data-member-idx="${mIdx}" class="text-slate-400 hover:text-rose-400 p-1 active:scale-90"><i data-lucide="minus-circle" class="w-4 h-4 pointer-events-none"></i></button>
+                    <span class="font-mono text-sm w-5 text-center font-bold member-score-display" data-team-id="${team.id}" data-member-idx="${mIdx}">${m.score}</span>
+                    <button data-action="add-member" data-team-id="${team.id}" data-member-idx="${mIdx}" class="text-slate-400 hover:text-emerald-400 p-1 active:scale-90"><i data-lucide="plus-circle" class="w-4 h-4 pointer-events-none"></i></button>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+            ` : `<div class="flex-1"></div>`}
+
             <div class="flex items-center justify-center gap-2 w-full mt-auto pt-2">
-              <button data-action="sub" data-id="${team.id}" class="w-12 h-12 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-slate-300 hover:text-white transition-all active:scale-95">
-                <i data-lucide="minus" class="w-6 h-6"></i>
+              <button data-action="sub" data-team-id="${team.id}" class="w-12 h-10 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-slate-300 hover:text-white transition-all active:scale-95">
+                <i data-lucide="minus" class="w-5 h-5 pointer-events-none"></i>
               </button>
-              <button data-action="add" data-id="${team.id}" class="flex-1 h-12 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/20 flex items-center justify-center text-white font-bold text-xl transition-all active:scale-95 shadow-inner">
+              <button data-action="add" data-team-id="${team.id}" class="flex-1 h-10 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 flex items-center justify-center text-white font-bold text-lg transition-all active:scale-95 shadow-inner">
                 + 1
               </button>
             </div>
@@ -1800,7 +2234,31 @@
       scoreEls.removeBtn.style.opacity = scoreEls.removeBtn.disabled ? '0.5' : '1';
     };
 
-    // 支援傳入不同顏色來區分加減分的動畫
+    const updateTeamScoreUI = (id, score, type) => {
+      const scoreDisplay = document.querySelector(`.score-display[data-id="${id}"]`);
+      if (scoreDisplay) {
+        scoreDisplay.textContent = score;
+        const colorClass = type === 'add' ? 'text-emerald-400' : 'text-rose-400';
+        scoreDisplay.classList.add('scale-125', colorClass);
+        setTimeout(() => {
+          scoreDisplay.classList.remove('scale-125', colorClass);
+        }, 200);
+      }
+    };
+
+    const updateMemberScoreUI = (teamId, memberIdx, score, type) => {
+      const scoreDisplay = document.querySelector(`.member-score-display[data-team-id="${teamId}"][data-member-idx="${memberIdx}"]`);
+      if (scoreDisplay) {
+        scoreDisplay.textContent = score;
+        const colorClass = type === 'add' ? 'text-emerald-400' : 'text-rose-400';
+        scoreDisplay.classList.add('scale-125', colorClass);
+        setTimeout(() => {
+          scoreDisplay.classList.remove('scale-125', colorClass);
+        }, 200);
+      }
+    };
+
+    // 支援傳入不同顏色來區分加減分的動畫 (用於噪音自動扣分)
     const animateScoreUpdate = (type) => {
       const colorClass = type === 'add' ? 'text-emerald-400' : 'text-rose-400';
       scoreState.teams.forEach(team => {
@@ -1820,25 +2278,31 @@
       if (!btn) return;
       
       const action = btn.getAttribute('data-action');
-      const id = parseInt(btn.getAttribute('data-id'));
+      const id = parseInt(btn.getAttribute('data-team-id'));
+      const memberIdx = btn.getAttribute('data-member-idx');
       const team = scoreState.teams.find(t => t.id === id);
       
       if (team) {
         if (action === 'add') {
           team.score += 1;
           playScoreSound('add');
+          updateTeamScoreUI(id, team.score, 'add');
         } else if (action === 'sub') {
           team.score -= 1;
           playScoreSound('sub');
-        }
-        
-        const scoreDisplay = document.querySelector(`.score-display[data-id="${id}"]`);
-        if (scoreDisplay) {
-          scoreDisplay.textContent = team.score;
-          scoreDisplay.classList.add('scale-125', 'text-white');
-          setTimeout(() => {
-            scoreDisplay.classList.remove('scale-125', 'text-white');
-          }, 200);
+          updateTeamScoreUI(id, team.score, 'sub');
+        } else if (action === 'add-member' && memberIdx !== null) {
+          team.members[memberIdx].score += 1;
+          team.score += 1; // 預設個人加分也會幫小組加分
+          playScoreSound('add');
+          updateMemberScoreUI(id, memberIdx, team.members[memberIdx].score, 'add');
+          updateTeamScoreUI(id, team.score, 'add');
+        } else if (action === 'sub-member' && memberIdx !== null) {
+          team.members[memberIdx].score -= 1;
+          team.score -= 1; // 預設個人扣分也會幫小組扣分
+          playScoreSound('sub');
+          updateMemberScoreUI(id, memberIdx, team.members[memberIdx].score, 'sub');
+          updateTeamScoreUI(id, team.score, 'sub');
         }
       }
     });
@@ -1858,7 +2322,7 @@
     scoreEls.addBtn.addEventListener('click', () => {
       if (scoreState.teams.length < scoreState.maxTeams) {
         const nextId = (scoreState.teams[scoreState.teams.length - 1]?.id || 0) + 1;
-        scoreState.teams.push({ id: nextId, name: `第 ${scoreState.teams.length + 1} 組`, score: 0 });
+        scoreState.teams.push({ id: nextId, name: `第 ${scoreState.teams.length + 1} 組`, score: 0, members: [] });
         renderScoreboard();
       }
     });
@@ -1872,19 +2336,22 @@
 
     scoreEls.resetBtn.addEventListener('click', () => {
       if (scoreEls.resetBtn.dataset.confirm === 'true') {
-        scoreState.teams.forEach(t => t.score = 0);
+        scoreState.teams.forEach(t => {
+            t.score = 0;
+            if(t.members) t.members.forEach(m => m.score = 0);
+        });
         renderScoreboard();
         scoreEls.resetBtn.dataset.confirm = 'false';
-        scoreEls.resetBtn.innerHTML = `<i data-lucide="rotate-ccw" class="w-4 h-4"></i> 分數歸零`;
+        scoreEls.resetBtn.innerHTML = `<i data-lucide="rotate-ccw" class="w-4 h-4 pointer-events-none"></i> 分數歸零`;
         lucide.createIcons();
       } else {
         scoreEls.resetBtn.dataset.confirm = 'true';
-        scoreEls.resetBtn.innerHTML = `<i data-lucide="alert-triangle" class="w-4 h-4"></i> 再次點擊確認`;
+        scoreEls.resetBtn.innerHTML = `<i data-lucide="alert-triangle" class="w-4 h-4 pointer-events-none"></i> 再次點擊確認`;
         lucide.createIcons();
         setTimeout(() => {
           if (scoreEls.resetBtn.dataset.confirm === 'true') {
             scoreEls.resetBtn.dataset.confirm = 'false';
-            scoreEls.resetBtn.innerHTML = `<i data-lucide="rotate-ccw" class="w-4 h-4"></i> 分數歸零`;
+            scoreEls.resetBtn.innerHTML = `<i data-lucide="rotate-ccw" class="w-4 h-4 pointer-events-none"></i> 分數歸零`;
             lucide.createIcons();
           }
         }, 3000);
@@ -2368,7 +2835,7 @@
       roomId: '',
       connections: {}, // peerId => connection (Teacher side)
       hostConn: null, // connection to host (Student side)
-      studentsInfo: {}, // peerId => { name: string, hasAnswered: boolean, answer: string }
+      studentsInfo: {}, // peerId => { name: string, gender: string, hasAnswered: boolean, answer: string }
       currentQ: null, // 'ABCD' | 'OX' | 'BUZZER' | 'VOTE' | 'TEXT' | null
       buzzerList: [], // Track buzzer order
       studentName: ''
@@ -2447,6 +2914,7 @@
     const generateRoomId = () => Math.random().toString(36).substring(2, 6).toUpperCase() + '-' + Math.random().toString(36).substring(2, 6).toUpperCase();
 
     window.initIRSTeacher = () => {
+      if (audioCtx.state === 'suspended') audioCtx.resume();
       irsEls.roleSelect.classList.add('hidden');
       irsEls.teacherView.classList.replace('hidden', 'flex');
       irsEls.roomId.textContent = "建立中...";
@@ -2621,7 +3089,7 @@
 
         // CSV 表頭 (加上 BOM 解決 Excel 中文亂碼問題)
         let csvContent = "\ufeff";
-        csvContent += "學生姓名,作答內容,狀態\n";
+        csvContent += "學生姓名,性別,作答內容,狀態\n";
 
         students.forEach(s => {
             // 在 CSV 匯出中，名字和答案也要安全處理雙引號
@@ -2637,7 +3105,7 @@
             
             const safeAns = String(ans).replace(/"/g, '""');
             const status = s.hasAnswered ? "已答" : "未答";
-            csvContent += `"${safeName}","${safeAns}","${status}"\n`;
+            csvContent += `"${safeName}","${s.gender || ''}","${safeAns}","${status}"\n`;
         });
 
         // 建立 Blob 並觸發下載
@@ -2658,8 +3126,25 @@
     const handleTeacherReceive = (peerId, data, conn) => {
       if (data.type === 'join') {
         irsState.connections[peerId] = conn;
-        irsState.studentsInfo[peerId] = { name: data.name, hasAnswered: false, answer: null };
+        irsState.studentsInfo[peerId] = { name: data.name, gender: data.gender, hasAnswered: false, answer: null };
         updateTeacherUI();
+
+        // --- 新增：自動將 IRS 學生加入抽籤機的姓名名單中 (帶有性別標記) ---
+        const formattedName = `${data.name}(${data.gender})`;
+        const currentNames = drawEls.nameInput.value.split(/[\n,，、]+/).map(n => n.trim()).filter(n => n);
+        if (!currentNames.includes(formattedName)) {
+            currentNames.push(formattedName);
+            const newText = currentNames.join('\n');
+            drawEls.nameInput.value = newText;
+            drawState.nameText = newText;
+            
+            // 如果老師當前不在抽籤動畫中，自動刷新抽籤池選項數量 (不再清除歷史紀錄)
+            if (!drawState.isDrawing) {
+                updateAvailableList();
+            }
+        }
+        // ----------------------------------------
+
         // 如果目前有題目，補發給剛加入的學生
         if (irsState.currentQ) {
            conn.send({ type: 'question', qType: irsState.currentQ });
@@ -2708,7 +3193,7 @@
       irsEls.studentList.innerHTML = Object.values(irsState.studentsInfo).map(student => {
         if(student.hasAnswered) answeredCount++;
         const bgClass = student.hasAnswered ? 'bg-emerald-500/20 border-emerald-500/30 text-emerald-300' : 'bg-slate-800 border-white/10 text-slate-400';
-        return `<span class="px-3 py-1 text-sm rounded-full border ${bgClass} font-medium shadow-sm transition-colors">${escapeHTML(student.name)}</span>`;
+        return `<span class="px-3 py-1 text-sm rounded-full border ${bgClass} font-medium shadow-sm transition-colors">${renderName(`${student.name}(${student.gender})`, false)}</span>`;
       }).join('');
 
       // 繪製結果圖表
@@ -2725,9 +3210,10 @@
                     const st = irsState.studentsInfo[id];
                     const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `<span class="text-slate-500 text-sm">${index+1}.</span>`;
                     const bgClass = index === 0 ? 'bg-gradient-to-r from-amber-500/20 to-orange-500/10 border-amber-500/50 text-amber-300 scale-105 shadow-[0_0_15px_rgba(245,158,11,0.2)]' : 'bg-slate-800/80 border-white/10 text-slate-300';
+                    const displayName = st ? renderName(`${st.name}(${st.gender})`, false) : '未知';
                     return `<div class="flex items-center gap-4 p-3 rounded-xl border ${bgClass} transition-all w-full max-w-md">
                         <div class="text-3xl w-8 text-center drop-shadow-md">${medal}</div>
-                        <div class="font-bold text-xl flex-1 tracking-wide">${st ? escapeHTML(st.name) : '未知'}</div>
+                        <div class="font-bold text-xl flex-1 tracking-wide">${displayName}</div>
                     </div>`;
                 }).join('') + `</div>`;
          }
@@ -2919,8 +3405,10 @@
     };
 
     window.joinIRS = () => {
+      if (audioCtx.state === 'suspended') audioCtx.resume();
       const joinId = irsEls.joinId.value.trim().toUpperCase();
       const joinName = irsEls.joinName.value.trim();
+      const joinGender = document.querySelector('input[name="irs-gender"]:checked')?.value || "男";
       
       if (!joinId || !joinName) {
          irsEls.loginError.textContent = "請輸入代碼與名稱！";
@@ -2939,12 +3427,13 @@
          
          conn.on('open', () => {
             irsState.hostConn = conn;
-            conn.send({ type: 'join', name: joinName });
+            conn.send({ type: 'join', name: joinName, gender: joinGender });
             
             // UI 切換
             irsEls.studentLogin.classList.add('hidden');
             irsEls.studentView.classList.replace('hidden', 'flex');
-            irsEls.myName.textContent = joinName;
+            // 學生端顯示姓名加上性別圖示
+            irsEls.myName.innerHTML = renderName(`${joinName}(${joinGender})`, false);
             
             // 恢復按鈕
             irsEls.joinBtn.innerHTML = '連線加入';
@@ -3061,10 +3550,11 @@
           if (val === 'BUZZ') {
              irsEls.studentWaiting.innerHTML = `<div class="p-6 rounded-full bg-rose-500/20 inline-block mb-4 border border-rose-500/30"><i data-lucide="bell-ring" class="w-12 h-12 text-rose-400 animate-pulse mx-auto"></i></div><p class="text-xl font-bold text-slate-300">已送出搶答！<br>請看前方名次...</p>`;
           } else {
-             // 防止文字過長破版
-             const safeVal = escapeHTML(String(val));
-             const displayStr = safeVal.length > 10 ? safeVal.substring(0, 10) + '...' : safeVal;
-             const textSize = safeVal.length > 4 ? 'text-2xl' : 'text-4xl';
+             // 防止文字過長破版 (先截斷再轉義，避免切斷 HTML Entity 導致亂碼)
+             const rawVal = String(val);
+             const rawDisplay = rawVal.length > 10 ? rawVal.substring(0, 10) + '...' : rawVal;
+             const displayStr = escapeHTML(rawDisplay);
+             const textSize = rawVal.length > 4 ? 'text-2xl' : 'text-4xl';
              
              irsEls.studentWaiting.innerHTML = `<div class="px-6 py-4 rounded-3xl bg-emerald-500/20 inline-block mb-4 font-black text-emerald-400 max-w-[90%] border border-emerald-500/30 shadow-inner"><span class="${textSize} break-all">${displayStr}</span></div><p class="text-xl font-bold text-slate-300">已送出答案！<br>等待老師公佈結果...</p>`;
           }
