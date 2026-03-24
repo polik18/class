@@ -91,6 +91,30 @@
       -moz-appearance: textfield;
     }
   </style>
+  <style>
+    /* 學生版權限控制 (Hide controls in student mode) */
+    body.is-student #draw-btn,
+    body.is-student #reset-list-btn,
+    body.is-student #timer-set-btn,
+    body.is-student #timer-add-btn,
+    body.is-student #timer-sub-btn,
+    body.is-student #timer-play-btn,
+    body.is-student #timer-reset-btn,
+    body.is-student #score-add-btn,
+    body.is-student #score-remove-btn,
+    body.is-student #score-reset-btn,
+    body.is-student #noise-toggle-btn,
+    body.is-student #noise-panel-content,
+    body.is-student button[data-action^="sub"],
+    body.is-student button[data-action^="add"],
+    body.is-student #board-toolbar,
+    body.is-student #board-clear-btn {
+      display: none !important;
+    }
+    body.is-student .team-name-input {
+      pointer-events: none !important;
+    }
+  </style>
 </head>
 <body class="min-h-screen bg-slate-950 text-slate-100 font-sans selection:bg-indigo-500/30 overflow-x-hidden relative flex flex-col m-0 p-0">
 
@@ -3899,6 +3923,7 @@
     // ===== 學生端邏輯 =====
     
     window.showIRSStudentLogin = () => {
+      document.body.classList.add('is-student');
       irsEls.teacherView.classList.add('hidden');
       irsEls.teacherView.classList.remove('flex');
       irsEls.studentLogin.classList.replace('hidden', 'flex');
@@ -4340,6 +4365,7 @@
         if (roomParam) {
             // 標記此頁面以學生模式開啟，避免 switchAppMode 或 leaveIRS 誤觸老師初始化
             window._irsIsStudentMode = true;
+            document.body.classList.add('is-student');
             // 設定標記，避免 Welcome Modal 被其他 load 事件觸發顯示
             localStorage.setItem('classroom_assistant_pro_seen', 'true');
             // 強制隱藏 Welcome Modal
