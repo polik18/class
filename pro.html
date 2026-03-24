@@ -163,10 +163,10 @@
 
     <!-- 主功能切換導覽列 (加入動態左右滑動提示) -->
     <div class="relative w-full md:w-auto flex items-center">
-      <!-- 左右滑動提示 (左) -->
-      <div id="nav-scroll-left" class="absolute left-0 top-0 bottom-0 w-10 bg-gradient-to-r from-slate-950 via-slate-950/90 to-transparent flex items-center justify-start pl-1 z-10 pointer-events-none opacity-0 transition-opacity duration-300 rounded-l-2xl md:hidden">
-          <i data-lucide="chevron-left" class="w-5 h-5 text-white/80 animate-pulse"></i>
-      </div>
+      <!-- 左右滑動提示按鈕 (左) -->
+      <button id="nav-scroll-left" onclick="scrollMainNav(-1)" class="absolute left-1 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-slate-800 border border-white/20 flex items-center justify-center z-20 opacity-0 transition-all duration-300 md:hidden shadow-[0_0_15px_rgba(0,0,0,0.8)] hover:bg-slate-700 active:scale-90 pointer-events-none hover:border-white/40">
+          <i data-lucide="chevron-left" class="w-5 h-5 text-white"></i>
+      </button>
       
       <div id="main-nav-container" class="flex bg-slate-950/60 p-1.5 rounded-2xl border border-white/10 shadow-inner w-full md:w-auto overflow-x-auto no-scrollbar relative">
         <button onclick="switchAppMode('draw')" id="nav-draw" class="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-indigo-600 text-white font-bold transition-all shadow-md whitespace-nowrap">
@@ -185,23 +185,93 @@
           <i data-lucide="award" class="w-4 h-4"></i> 計分板
         </button>
         <button onclick="switchAppMode('board')" id="nav-board" class="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-white/5 font-bold transition-all whitespace-nowrap">
-          <i data-lucide="edit-3" class="w-4 h-4"></i> 互動白板
+          <i data-lucide="edit-3" class="w-4 h-4"></i> 無限畫板
         </button>
         <button onclick="switchAppMode('irs')" id="nav-irs" class="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-white/5 font-bold transition-all whitespace-nowrap">
           <i data-lucide="radio" class="w-4 h-4"></i> 即問即答
         </button>
       </div>
 
-      <!-- 左右滑動提示 (右) -->
-      <div id="nav-scroll-right" class="absolute right-0 top-0 bottom-0 w-10 bg-gradient-to-l from-slate-950 via-slate-950/90 to-transparent flex items-center justify-end pr-1 z-10 pointer-events-none opacity-0 transition-opacity duration-300 rounded-r-2xl md:hidden">
-          <i data-lucide="chevron-right" class="w-5 h-5 text-white/80 animate-pulse"></i>
-      </div>
+      <!-- 左右滑動提示按鈕 (右) -->
+      <button id="nav-scroll-right" onclick="scrollMainNav(1)" class="absolute right-1 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-indigo-600 border border-indigo-400/50 flex items-center justify-center z-20 opacity-0 transition-all duration-300 md:hidden shadow-[0_0_15px_rgba(79,70,229,0.8)] hover:bg-indigo-500 active:scale-90 pointer-events-none hover:border-indigo-300">
+          <i data-lucide="chevron-right" class="w-5 h-5 text-white animate-pulse"></i>
+      </button>
+    </div>
+
+    <!-- 匯出與匯入功能按鈕 -->
+    <div class="flex items-center gap-2 hidden lg:flex shrink-0 mr-2 md:mr-0">
+      <button onclick="showDataModal()" class="py-2.5 px-4 rounded-xl bg-indigo-600/20 hover:bg-indigo-600 transition-all duration-300 border border-indigo-500/30 flex items-center gap-2 text-sm text-indigo-300 hover:text-white shadow-sm font-bold group" title="課堂資料管理中心">
+        <i data-lucide="package" class="w-4 h-4 group-hover:animate-bounce"></i> 資料管理
+      </button>
+      <input type="file" id="import-file-input" class="hidden" accept=".csv" onchange="importClassData(event)">
     </div>
 
     <button id="mute-btn" class="p-3 rounded-full bg-white/5 hover:bg-white/20 transition-all duration-300 border border-white/10 hover:scale-110 hidden md:block shrink-0">
       <i data-lucide="volume-2" id="mute-icon" class="w-5 h-5 text-indigo-400 transition-colors"></i>
     </button>
   </header>
+
+  <!-- 資料管理中心 (Modal) -->
+  <div id="data-manage-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm" onclick="hideDataModal()"></div>
+    <div class="relative bg-slate-900 border border-indigo-500/30 rounded-3xl p-6 md:p-8 max-w-2xl w-full shadow-[0_0_40px_rgba(99,102,241,0.2)] animate-pop-in max-h-[90vh] overflow-y-auto no-scrollbar">
+      <div class="flex justify-between items-center mb-6">
+        <h3 class="text-2xl font-bold text-indigo-400 flex items-center gap-3">
+          <i data-lucide="package" class="w-6 h-6"></i> 課堂資料管理中心
+        </h3>
+        <button onclick="hideDataModal()" class="text-slate-400 hover:text-rose-400 transition-colors p-1"><i data-lucide="x" class="w-6 h-6"></i></button>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- 匯出區塊 -->
+        <div class="bg-slate-950/50 p-6 rounded-2xl border border-white/5 flex flex-col h-full">
+          <h4 class="text-lg font-bold text-white mb-2 flex items-center gap-2"><i data-lucide="download-cloud" class="w-5 h-5 text-emerald-400"></i> 匯出備份資料</h4>
+          <p class="text-xs text-slate-400 mb-4 leading-relaxed">將您辛苦建置的資料下載為 Excel 檔保留，下次上課直接載入，無縫銜接。</p>
+          
+          <div class="space-y-3 mb-6">
+            <label class="flex items-center gap-3 cursor-pointer group">
+              <input type="checkbox" id="export-roster-cb" checked class="w-5 h-5 rounded border-white/20 bg-slate-800 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-slate-900 transition-colors cursor-pointer">
+              <span class="text-sm text-slate-300 font-medium group-hover:text-white transition-colors">包含「抽籤學生名單」</span>
+            </label>
+            <label class="flex items-center gap-3 cursor-pointer group">
+              <input type="checkbox" id="export-scores-cb" checked class="w-5 h-5 rounded border-white/20 bg-slate-800 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-slate-900 transition-colors cursor-pointer">
+              <span class="text-sm text-slate-300 font-medium group-hover:text-white transition-colors">包含「計分板小組與分數」</span>
+            </label>
+            <label class="flex items-center gap-3 cursor-pointer group">
+              <input type="checkbox" id="export-irs-cb" checked class="w-5 h-5 rounded border-white/20 bg-slate-800 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-slate-900 transition-colors cursor-pointer">
+              <span class="text-sm text-slate-300 font-medium group-hover:text-white transition-colors">包含「IRS 學生作答紀錄」</span>
+            </label>
+          </div>
+          
+          <button onclick="exportClassData()" class="mt-auto w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold transition-all flex items-center justify-center gap-2 shadow-sm active:scale-95">
+            <i data-lucide="download" class="w-4 h-4"></i> 下載所選資料 (.csv Excel檔)
+          </button>
+        </div>
+
+        <!-- 匯入區塊 -->
+        <div class="bg-slate-950/50 p-6 rounded-2xl border border-white/5 flex flex-col h-full">
+          <h4 class="text-lg font-bold text-white mb-2 flex items-center gap-2"><i data-lucide="upload-cloud" class="w-5 h-5 text-amber-400"></i> 匯入還原進度</h4>
+          <p class="text-xs text-slate-400 mb-4 leading-relaxed">上傳先前的備份檔瞬間還原。<br><span class="text-rose-400 inline-block mt-1 bg-rose-500/10 px-2 py-0.5 rounded">注意：匯入將會覆蓋當前畫面資料。</span></p>
+          
+          <div class="space-y-3 mb-6">
+            <label class="flex items-center gap-3 cursor-pointer group">
+              <input type="checkbox" id="import-roster-cb" checked class="w-5 h-5 rounded border-white/20 bg-slate-800 text-amber-500 focus:ring-amber-500 focus:ring-offset-slate-900 transition-colors cursor-pointer">
+              <span class="text-sm text-slate-300 font-medium group-hover:text-white transition-colors">覆蓋目前「抽籤學生名單」</span>
+            </label>
+            <label class="flex items-center gap-3 cursor-pointer group">
+              <input type="checkbox" id="import-scores-cb" checked class="w-5 h-5 rounded border-white/20 bg-slate-800 text-amber-500 focus:ring-amber-500 focus:ring-offset-slate-900 transition-colors cursor-pointer">
+              <span class="text-sm text-slate-300 font-medium group-hover:text-white transition-colors">覆蓋目前「小組與分數」</span>
+            </label>
+          </div>
+          
+          <button onclick="document.getElementById('import-file-input').click()" class="mt-auto w-full py-3 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold transition-all flex items-center justify-center gap-2 shadow-sm active:scale-95">
+            <i data-lucide="upload" class="w-4 h-4"></i> 選擇檔案並匯入
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
 
   <!-- 主要內容區 -->
   <main class="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 relative flex flex-col">
@@ -273,78 +343,39 @@
         <div class="h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent my-4"></div>
 
         <!-- 共用：籤筒狀態與抽出數量 -->
+        <!-- 共用：籤筒狀態與抽出數量 -->
         <div class="space-y-4">
-          <div class="flex justify-between items-center bg-slate-800/30 px-4 py-2 rounded-lg border border-white/5">
-            <span class="text-sm font-medium text-slate-400">籤筒狀態</span>
-            <span class="text-indigo-400 font-bold" id="pool-info">共 50 個選項</span>
+          <div class="flex justify-between items-center bg-slate-800/30 px-4 py-3 rounded-xl border border-white/5 shadow-inner">
+            <span class="text-sm font-medium text-slate-400">籤筒剩餘</span>
+            <span class="text-indigo-400 font-black text-lg" id="pool-info">共 50 個選項</span>
           </div>
 
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <!-- 單抽設定 -->
-            <div class="space-y-2 p-3 bg-indigo-500/5 border border-indigo-500/20 rounded-xl relative">
-              <div tabindex="0" class="absolute top-0 right-0 p-1.5 bg-indigo-500/20 rounded-bl-lg rounded-tr-xl group cursor-help z-20 outline-none focus:outline-none">
-                <i data-lucide="user" class="w-3 h-3 text-indigo-400"></i>
-                <!-- 解釋視窗 -->
-                <div class="absolute bottom-full right-0 sm:right-auto sm:left-1/2 sm:-translate-x-1/2 mb-2 w-52 p-3 bg-slate-800/95 backdrop-blur-md text-slate-200 text-xs leading-relaxed rounded-xl shadow-2xl border border-indigo-500/30 opacity-0 invisible group-hover:opacity-100 group-hover:visible group-focus:opacity-100 group-focus:visible transition-all duration-300 pointer-events-none z-50 font-normal text-left">
-                  <strong class="text-indigo-300 block mb-1">單抽數量</strong>
-                  設定每次按下「單次抽籤」時，要同時抽出幾個結果。
-                </div>
-              </div>
-              <label class="text-[11px] font-bold text-indigo-400">單抽數量</label>
+          <!-- 核心抽籤設定區 (單抽數量 + 不重複) -->
+          <div class="grid grid-cols-2 gap-4">
+            <!-- 單抽數量 -->
+            <div class="space-y-2 p-3 bg-indigo-500/10 border border-indigo-500/20 rounded-xl relative">
+              <label class="text-xs font-bold text-indigo-400 flex justify-between items-center">
+                <span>單次抽出人數</span>
+                <i data-lucide="users" class="w-3 h-3"></i>
+              </label>
               <div class="flex items-center bg-slate-950/80 border border-white/10 rounded-lg p-2 shadow-inner">
-                <input type="number" id="draw-count" value="1" min="1" class="w-full bg-transparent border-none text-xl text-center font-bold focus:outline-none text-indigo-300">
+                <input type="number" id="draw-count" value="1" min="1" class="w-full bg-transparent border-none text-2xl text-center font-black focus:outline-none text-indigo-300">
               </div>
             </div>
-            <!-- 分組設定 -->
-            <div class="space-y-2 p-3 bg-emerald-500/5 border border-emerald-500/20 rounded-xl relative">
-              <div tabindex="0" class="absolute top-0 right-0 p-1.5 bg-emerald-500/20 rounded-bl-lg rounded-tr-xl group cursor-help z-20 outline-none focus:outline-none">
-                <i data-lucide="users" class="w-3 h-3 text-emerald-400"></i>
-                <!-- 解釋視窗 -->
-                <div class="absolute bottom-full right-0 sm:right-auto sm:left-1/2 sm:-translate-x-1/2 mb-2 w-52 p-3 bg-slate-800/95 backdrop-blur-md text-slate-200 text-xs leading-relaxed rounded-xl shadow-2xl border border-emerald-500/30 opacity-0 invisible group-hover:opacity-100 group-hover:visible group-focus:opacity-100 group-focus:visible transition-all duration-300 pointer-events-none z-50 font-normal text-left">
-                  <strong class="text-emerald-300 block mb-1">每組人數</strong>
-                  設定執行「隨機分組」時，每個小組預設要分配多少人。系統會自動幫您計算總組數。
-                </div>
-              </div>
-              <label class="text-[11px] font-bold text-emerald-400">每組人數</label>
-              <div class="flex items-center bg-slate-950/80 border border-white/10 rounded-lg p-2 shadow-inner">
-                <input type="number" id="group-size" value="4" min="1" class="w-full bg-transparent border-none text-xl text-center font-bold focus:outline-none text-emerald-300">
-              </div>
-            </div>
-            <!-- 分組規則 -->
-            <div class="space-y-2 p-3 bg-fuchsia-500/5 border border-fuchsia-500/20 rounded-xl relative">
-              <div tabindex="0" class="absolute top-0 right-0 p-1.5 bg-fuchsia-500/20 rounded-bl-lg rounded-tr-xl group cursor-help z-20 outline-none focus:outline-none">
-                <i data-lucide="git-merge" class="w-3 h-3 text-fuchsia-400"></i>
-                <!-- 解釋視窗 -->
-                <div class="absolute bottom-full right-0 mb-2 w-56 p-3 bg-slate-800/95 backdrop-blur-md text-slate-200 text-xs leading-relaxed rounded-xl shadow-2xl border border-fuchsia-500/30 opacity-0 invisible group-hover:opacity-100 group-hover:visible group-focus:opacity-100 group-focus:visible transition-all duration-300 pointer-events-none z-50 font-normal text-left">
-                  <strong class="text-fuchsia-300 block mb-1.5">男女分組規則</strong>
-                  <ul class="space-y-1">
-                     <li><span class="text-slate-400">【隨機】</span>無視性別，純粹打亂。</li>
-                     <li><span class="text-slate-400">【混合】</span>將男女均勻平均分配到各組。</li>
-                     <li><span class="text-slate-400">【男女】</span>男生純一組、女生純一組，不混搭。</li>
-                  </ul>
-                </div>
-              </div>
-              <label class="text-[11px] font-bold text-fuchsia-400">男女分組</label>
-              <div class="flex items-center bg-slate-950/80 border border-white/10 rounded-lg p-1.5 shadow-inner h-[44px]">
-                <select id="group-rule" class="w-full bg-transparent border-none text-sm text-center font-bold focus:outline-none text-fuchsia-300 appearance-none cursor-pointer px-1">
-                  <option value="random" class="bg-slate-900">隨機</option>
-                  <option value="mixed" class="bg-slate-900">混合</option>
-                  <option value="separated" class="bg-slate-900">男女</option>
-                </select>
-              </div>
-            </div>
-          </div>
-        </div>
 
-        <!-- 不重複抽籤開關 -->
-        <div class="flex items-center justify-between bg-slate-950/50 border border-white/10 rounded-xl p-4 shadow-inner">
-          <div class="flex flex-col">
-            <span class="text-sm font-medium text-slate-200">不重複抽籤</span>
-            <span class="text-xs text-slate-500">已抽出的選項不會再次出現</span>
+            <!-- 不重複抽籤開關 -->
+            <div class="space-y-2 p-3 bg-slate-800/50 border border-white/10 rounded-xl flex flex-col justify-between">
+              <label class="text-xs font-bold text-slate-400 flex justify-between items-center">
+                <span>不重複抽籤</span>
+                <i data-lucide="refresh-cw-off" class="w-3 h-3"></i>
+              </label>
+              <div class="flex items-center justify-center flex-1">
+                <button id="unique-toggle" class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none bg-indigo-500 shadow-inner">
+                  <span id="unique-toggle-knob" class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform translate-x-6 shadow-md"></span>
+                </button>
+              </div>
+            </div>
           </div>
-          <button id="unique-toggle" class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none bg-indigo-500">
-            <span id="unique-toggle-knob" class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform translate-x-6"></span>
-          </button>
         </div>
 
         <!-- 歷史紀錄顯示 -->
@@ -366,25 +397,71 @@
         <!-- 錯誤訊息 -->
         <div id="error-msg" class="hidden p-3 bg-red-500/20 border border-red-500/30 rounded-lg text-red-400 text-sm text-center"></div>
 
-        <!-- 操作按鈕 -->
-        <div class="pt-4 grid grid-cols-2 gap-3">
-          <button id="draw-btn" class="group relative py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2 transition-all duration-300 overflow-hidden bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-500/30 hover:shadow-indigo-500/50 animate-glow">
+        <!-- 核心操作按鈕 -->
+        <div class="pt-2 flex gap-3">
+          <button id="draw-btn" class="flex-1 group relative py-4 rounded-2xl font-black text-2xl flex items-center justify-center gap-3 transition-all duration-300 overflow-hidden bg-indigo-600 hover:bg-indigo-500 text-white shadow-[0_0_30px_rgba(79,70,229,0.4)] hover:shadow-[0_0_40px_rgba(79,70,229,0.6)] animate-glow">
             <span id="draw-btn-content" class="flex items-center justify-center gap-2 relative z-10 pointer-events-none">
-              <i data-lucide="play" class="w-5 h-5 fill-current"></i> 單次抽籤
+              <i data-lucide="play" class="w-7 h-7 fill-current"></i> 開始抽籤
             </span>
             <div id="draw-btn-fx" class="absolute inset-0 -translate-x-full group-hover:animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none" style="transform-origin: left"></div>
           </button>
           
-          <button id="group-btn" class="group relative py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2 transition-all duration-300 overflow-hidden bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-500/30 hover:shadow-emerald-500/50">
-             <span id="group-btn-content" class="flex items-center justify-center gap-2 relative z-10 pointer-events-none">
-                <i data-lucide="layout-grid" class="w-5 h-5 fill-current"></i> 隨機分組
-             </span>
-             <div id="group-btn-fx" class="absolute inset-0 -translate-x-full group-hover:animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none" style="transform-origin: left"></div>
+          <button id="reset-btn" class="w-16 flex-none rounded-2xl py-4 bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors border border-white/10 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center shadow-md active:scale-95" title="重新開始 / 重置紀錄" disabled>
+            <i data-lucide="rotate-ccw" class="w-6 h-6 pointer-events-none"></i>
           </button>
+        </div>
 
-          <button id="reset-btn" class="col-span-2 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors border border-white/5 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2" title="重置籤筒與紀錄" disabled>
-            <i data-lucide="rotate-ccw" class="w-5 h-5 pointer-events-none"></i> 重新開始 / 重置紀錄
-          </button>
+        <!-- ✨ 進階：隨機分組模組 (Accordion) -->
+        <div class="mt-4 border border-emerald-500/20 rounded-2xl overflow-hidden bg-slate-900 shadow-md transition-all duration-300">
+           <button onclick="document.getElementById('grouping-panel').classList.toggle('hidden'); document.getElementById('grouping-chevron').classList.toggle('rotate-180')" class="w-full p-4 flex items-center justify-between text-emerald-400 hover:bg-emerald-500/10 transition-colors bg-emerald-500/5">
+              <span class="font-bold flex items-center gap-2 text-sm"><i data-lucide="layout-grid" class="w-4 h-4"></i> 進階：隨機分組設定</span>
+              <i id="grouping-chevron" data-lucide="chevron-down" class="w-4 h-4 transition-transform duration-300"></i>
+           </button>
+           <div id="grouping-panel" class="hidden p-5 border-t border-emerald-500/20 space-y-5 bg-slate-950/50">
+              <div class="grid grid-cols-2 gap-4">
+                 <!-- 分組設定 -->
+                 <div class="space-y-2 p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl relative">
+                   <div tabindex="0" class="absolute top-0 right-0 p-1.5 bg-emerald-500/20 rounded-bl-lg rounded-tr-xl group cursor-help z-20 outline-none focus:outline-none">
+                     <i data-lucide="help-circle" class="w-3 h-3 text-emerald-400"></i>
+                     <div class="absolute bottom-full right-0 mb-2 w-52 p-3 bg-slate-800/95 backdrop-blur-md text-slate-200 text-xs leading-relaxed rounded-xl shadow-2xl border border-emerald-500/30 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 pointer-events-none z-50 font-normal text-left">
+                       設定每個小組分配多少人。系統會自動幫您計算總組數。
+                     </div>
+                   </div>
+                   <label class="text-[11px] font-bold text-emerald-400">每組人數</label>
+                   <div class="flex items-center bg-slate-900 border border-white/10 rounded-lg p-2 shadow-inner">
+                     <input type="number" id="group-size" value="4" min="1" class="w-full bg-transparent border-none text-xl text-center font-bold focus:outline-none text-emerald-300">
+                   </div>
+                 </div>
+                 <!-- 分組規則 -->
+                 <div class="space-y-2 p-3 bg-fuchsia-500/10 border border-fuchsia-500/20 rounded-xl relative">
+                   <div tabindex="0" class="absolute top-0 right-0 p-1.5 bg-fuchsia-500/20 rounded-bl-lg rounded-tr-xl group cursor-help z-20 outline-none focus:outline-none">
+                     <i data-lucide="help-circle" class="w-3 h-3 text-fuchsia-400"></i>
+                     <div class="absolute bottom-full right-0 mb-2 w-56 p-3 bg-slate-800/95 backdrop-blur-md text-slate-200 text-xs leading-relaxed rounded-xl shadow-2xl border border-fuchsia-500/30 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 pointer-events-none z-50 font-normal text-left">
+                       <ul class="space-y-1">
+                          <li><span class="text-slate-400">【隨機】</span>純打亂</li>
+                          <li><span class="text-slate-400">【混合】</span>男女平均分配</li>
+                          <li><span class="text-slate-400">【男女】</span>純男純女不混搭</li>
+                       </ul>
+                     </div>
+                   </div>
+                   <label class="text-[11px] font-bold text-fuchsia-400">男女分組</label>
+                   <div class="flex items-center bg-slate-900 border border-white/10 rounded-lg p-1.5 shadow-inner h-[44px]">
+                     <select id="group-rule" class="w-full bg-transparent border-none text-sm text-center font-bold focus:outline-none text-fuchsia-300 appearance-none cursor-pointer px-1">
+                       <option value="random" class="bg-slate-900">隨機打散</option>
+                       <option value="mixed" class="bg-slate-900">男女混合</option>
+                       <option value="separated" class="bg-slate-900">純男純女</option>
+                     </select>
+                   </div>
+                 </div>
+              </div>
+              <button id="group-btn" class="w-full group relative py-3 rounded-xl font-bold text-base flex items-center justify-center gap-2 transition-all duration-300 overflow-hidden bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-500/30 hover:shadow-emerald-500/50 active:scale-95">
+                 <span id="group-btn-content" class="flex items-center justify-center gap-2 relative z-10 pointer-events-none">
+                    <i data-lucide="users" class="w-5 h-5 fill-current"></i> 執行隨機分組
+                 </span>
+                 <div id="group-btn-fx" class="absolute inset-0 -translate-x-full group-hover:animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none" style="transform-origin: left"></div>
+              </button>
+              <p class="text-[10px] text-slate-500 text-center">結果將直接顯示，可配合導覽列的「計分板」同步使用。</p>
+           </div>
         </div>
       </div>
 
@@ -434,7 +511,7 @@
         </div>
         
         <!-- 時間顯示 -->
-        <div id="clock-time" class="text-[clamp(4rem,min(18vw,30vh),25rem)] font-black font-mono leading-none tracking-tight bg-gradient-to-b from-white via-indigo-100 to-indigo-500 bg-clip-text text-transparent drop-shadow-[0_0_40px_rgba(99,102,241,0.6)] w-full">
+        <div id="clock-time" class="text-[clamp(3rem,min(13vw,28vh),20rem)] font-black font-mono leading-none tracking-tight bg-gradient-to-b from-white via-indigo-100 to-indigo-500 bg-clip-text text-transparent drop-shadow-[0_0_40px_rgba(99,102,241,0.6)] w-full">
           00:00:00
         </div>
         
@@ -691,44 +768,62 @@
     </div>
 
     <!-- ========================================== -->
-    <!-- 模組 5: 互動白板 (BOARD MODE) -->
+    <!-- 模組 5: 無限畫板 (BOARD MODE) -->
     <!-- ========================================== -->
-    <div id="app-board" class="hidden flex-col w-full h-full animate-pop-in relative flex-1 bg-slate-900/60 rounded-[2rem] border border-white/10 backdrop-blur-sm shadow-xl overflow-hidden">
-      <!-- 白板工具列 -->
-      <div class="flex flex-wrap items-center justify-between p-4 bg-slate-950/80 border-b border-white/10 gap-4 z-10 shadow-md">
-        <!-- 顏色選擇 -->
-        <div class="flex items-center gap-2 md:gap-3 bg-slate-900 p-2 rounded-xl border border-white/5 shadow-inner">
-          <button class="color-btn w-8 h-8 rounded-full bg-white border-2 border-indigo-500 shadow-[0_0_10px_rgba(255,255,255,0.5)] transition-all hover:scale-110" data-color="#ffffff" title="白色"></button>
-          <button class="color-btn w-8 h-8 rounded-full bg-red-500 border-2 border-transparent transition-all hover:scale-110" data-color="#ef4444" title="紅色"></button>
-          <button class="color-btn w-8 h-8 rounded-full bg-blue-500 border-2 border-transparent transition-all hover:scale-110" data-color="#3b82f6" title="藍色"></button>
-          <button class="color-btn w-8 h-8 rounded-full bg-green-500 border-2 border-transparent transition-all hover:scale-110" data-color="#22c55e" title="綠色"></button>
-          <button class="color-btn w-8 h-8 rounded-full bg-yellow-400 border-2 border-transparent transition-all hover:scale-110" data-color="#facc15" title="黃色"></button>
-        </div>
-        
-        <!-- 筆刷粗細 -->
-        <div class="flex items-center gap-3 bg-slate-900 p-2 px-4 rounded-xl border border-white/5 shadow-inner flex-1 max-w-[250px]">
-          <i data-lucide="minus" class="w-4 h-4 text-slate-400"></i>
-          <input type="range" id="brush-size" min="1" max="30" value="4" class="w-full accent-indigo-500 cursor-pointer">
-          <i data-lucide="plus" class="w-5 h-5 text-slate-400"></i>
-        </div>
-
-        <!-- 橡皮擦與清空按鈕 -->
-        <div class="flex items-center gap-2">
-          <button id="eraser-btn" class="flex items-center gap-2 px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl font-bold text-sm transition-all border border-white/5 shadow-sm whitespace-nowrap">
-            <i data-lucide="eraser" class="w-4 h-4"></i> 橡皮擦
-          </button>
-          <div class="w-px h-6 bg-white/10 mx-1 hidden md:block"></div>
-          <button id="clear-board-btn" class="flex items-center gap-2 px-4 py-2.5 bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/30 rounded-xl font-bold text-sm transition-all whitespace-nowrap shadow-sm">
-            <i data-lucide="trash-2" class="w-4 h-4"></i> 清空
-          </button>
-        </div>
-      </div>
+    <div id="app-board" class="hidden w-full h-full animate-pop-in relative flex-1 bg-slate-900/60 rounded-[2rem] border border-white/10 backdrop-blur-sm shadow-xl overflow-hidden">
       
-      <!-- 畫布容器 -->
-      <div class="flex-1 relative cursor-crosshair overflow-hidden bg-slate-900/40" id="canvas-container">
+      <!-- 畫布容器 (全螢幕展開) -->
+      <div class="absolute inset-0 cursor-crosshair overflow-hidden bg-slate-900/40" id="canvas-container">
         <!-- touch-none 是防止在手機上畫畫時螢幕跟著滾動的關鍵 -->
         <canvas id="whiteboard-canvas" class="absolute inset-0 w-full h-full touch-none"></canvas>
       </div>
+
+      <!-- 懸浮白板工具列與開關 -->
+      <div class="absolute bottom-4 sm:bottom-6 left-1/2 transform -translate-x-1/2 z-20 flex flex-col items-center pointer-events-none w-[95%] max-w-2xl transition-transform duration-500 ease-out" id="board-toolbar-wrapper">
+          
+          <!-- 工具列主體 -->
+          <div id="board-toolbar" class="pointer-events-auto w-full bg-slate-950/90 backdrop-blur-xl border border-white/10 p-3 sm:p-4 rounded-[2rem] shadow-2xl flex flex-col sm:flex-row flex-wrap items-center justify-center gap-3 sm:gap-4 transition-all duration-300 origin-bottom transform scale-y-100 opacity-100 mb-2 sm:mb-4">
+              <!-- 顏色選擇 -->
+              <div class="flex items-center justify-between w-full sm:w-auto gap-2 sm:gap-3 bg-slate-900 p-2 rounded-xl border border-white/5 shadow-inner">
+                <button class="color-btn w-8 h-8 md:w-10 md:h-10 rounded-full bg-white border-2 border-indigo-500 shadow-[0_0_10px_rgba(255,255,255,0.5)] transition-all hover:scale-110" data-color="#ffffff" title="白色"></button>
+                <button class="color-btn w-8 h-8 md:w-10 md:h-10 rounded-full bg-red-500 border-2 border-transparent transition-all hover:scale-110" data-color="#ef4444" title="紅色"></button>
+                <button class="color-btn w-8 h-8 md:w-10 md:h-10 rounded-full bg-blue-500 border-2 border-transparent transition-all hover:scale-110" data-color="#3b82f6" title="藍色"></button>
+                <button class="color-btn w-8 h-8 md:w-10 md:h-10 rounded-full bg-green-500 border-2 border-transparent transition-all hover:scale-110" data-color="#22c55e" title="綠色"></button>
+                <button class="color-btn w-8 h-8 md:w-10 md:h-10 rounded-full bg-yellow-400 border-2 border-transparent transition-all hover:scale-110" data-color="#facc15" title="黃色"></button>
+              </div>
+              
+              <!-- 筆刷粗細 -->
+              <div class="flex items-center gap-3 bg-slate-900 p-2 px-4 rounded-xl border border-white/5 shadow-inner flex-1 w-full sm:w-auto max-w-full sm:max-w-[200px] min-w-[150px]">
+                <i data-lucide="minus" class="w-4 h-4 text-slate-400 shrink-0"></i>
+                <input type="range" id="brush-size" min="1" max="30" value="4" class="w-full accent-indigo-500 cursor-pointer relative z-10">
+                <i data-lucide="plus" class="w-5 h-5 text-slate-400 shrink-0"></i>
+              </div>
+
+              <!-- 移動、橡皮擦與清空按鈕 -->
+              <div class="flex items-center justify-between w-full sm:w-auto gap-2 overflow-x-auto no-scrollbar py-1">
+                <button id="pan-btn" class="flex items-center justify-center gap-2 flex-1 sm:flex-none px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl font-bold text-sm transition-all border border-white/5 shadow-sm whitespace-nowrap">
+                  <i data-lucide="move" class="w-4 h-4"></i> <span class="hidden sm:inline">移動</span>
+                </button>
+                <button id="eraser-btn" class="flex items-center justify-center gap-2 flex-1 sm:flex-none px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl font-bold text-sm transition-all border border-white/5 shadow-sm whitespace-nowrap">
+                  <i data-lucide="eraser" class="w-4 h-4"></i> <span class="hidden sm:inline">橡皮擦</span>
+                </button>
+                <div class="w-px h-6 bg-white/10 mx-1 hidden sm:block"></div>
+                <button id="undo-btn" class="flex items-center justify-center gap-2 flex-1 sm:flex-none px-4 py-2.5 bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 border border-amber-500/30 rounded-xl font-bold text-sm transition-all whitespace-nowrap shadow-sm">
+                  <i data-lucide="undo" class="w-4 h-4"></i> <span class="hidden sm:inline">復原</span>
+                </button>
+                <button id="clear-board-btn" class="flex items-center justify-center gap-2 flex-1 sm:flex-none px-4 py-2.5 bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/30 rounded-xl font-bold text-sm transition-all whitespace-nowrap shadow-sm">
+                  <i data-lucide="trash-2" class="w-4 h-4"></i> <span class="hidden sm:inline">清空</span>
+                </button>
+              </div>
+          </div>
+          
+          <!-- 開關按鈕 (Floating Action Button) -->
+          <button onclick="toggleBoardToolbar()" id="board-toolbar-toggle" class="pointer-events-auto bg-slate-800 hover:bg-slate-700 text-white rounded-full px-6 py-3 font-bold shadow-[0_10px_20px_rgba(0,0,0,0.4)] flex items-center justify-center gap-2 hover:-translate-y-1 transition-all border border-white/10 shrink-0 group">
+              <i data-lucide="chevron-down" id="board-toolbar-icon" class="w-5 h-5 text-slate-300 group-hover:text-white transition-colors"></i>
+              <span id="board-toolbar-text" class="text-sm tracking-wide">收合工具</span>
+          </button>
+      </div>
+
     </div>
 
     <!-- ========================================== -->
@@ -817,17 +912,30 @@
         <!-- 左側：控制面板 -->
         <div class="lg:w-1/3 flex flex-col gap-6">
           <!-- 教室資訊 (折疊面板) -->
-          <div class="bg-slate-900/60 rounded-3xl border border-white/10 backdrop-blur-sm shadow-xl overflow-hidden transition-all duration-300 flex-shrink-0">
+          <div class="bg-slate-900/60 rounded-3xl border border-white/10 backdrop-blur-sm shadow-xl transition-all duration-300 flex-shrink-0 relative">
             <!-- 面板標題列 (點擊折疊/展開) -->
-            <button onclick="toggleIRSInfoPanel()" class="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors group">
+            <button onclick="toggleIRSInfoPanel()" class="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors group rounded-3xl">
               <div class="flex items-center gap-3">
                 <div class="p-2 bg-emerald-500/20 rounded-xl border border-emerald-500/30 group-hover:scale-110 transition-transform">
                   <i data-lucide="radio" class="w-5 h-5 text-emerald-400"></i>
                 </div>
                 <div class="text-left">
-                  <h3 class="font-bold text-white tracking-wide text-sm md:text-base">教室資訊</h3>
+                  <div class="flex items-center gap-2 group/tip relative">
+                    <h3 class="font-bold text-white tracking-wide text-sm md:text-base">教室資訊</h3>
+                    <i data-lucide="help-circle" class="w-4 h-4 text-slate-400 hover:text-white cursor-help transition-colors"></i>
+                    
+                    <!-- Tooltip 內容 -->
+                    <div class="absolute left-4 top-full mt-2 w-64 p-4 bg-slate-800 text-sm md:text-xs text-slate-300 border border-white/10 rounded-2xl shadow-2xl opacity-0 invisible group-hover/tip:opacity-100 group-hover/tip:visible transition-all duration-300 z-[100] pointer-events-none text-left">
+                      <p class="font-bold text-white mb-2 flex items-center gap-1.5"><i data-lucide="lightbulb" class="w-4 h-4 text-amber-400"></i> 使用教學</p>
+                      <ul class="list-decimal pl-4 space-y-1.5 font-normal tracking-wide">
+                        <li>點擊此面板展開「房間代碼」或「QRCode」。</li>
+                        <li>請學生輸入代碼或掃描即可連線。</li>
+                        <li>連線後發布題目，學生裝置即變成答題器。</li>
+                      </ul>
+                    </div>
+                  </div>
                   <!-- 關鍵資訊摘要 -->
-                  <p class="text-xs text-slate-400 mt-0.5 flex items-center gap-2">
+                  <p class="text-xs text-slate-400 mt-1 flex items-center gap-2">
                     <span>代碼: <span id="irs-room-id-mini" class="text-indigo-300 font-mono font-bold">連線中...</span></span>
                     <span class="w-1 h-1 rounded-full bg-slate-600"></span>
                     <span>人數: <span id="irs-student-count-mini" class="text-emerald-400 font-bold">0</span></span>
@@ -1147,6 +1255,11 @@
         globalScroll: document.getElementById('global-scroll-hint')
     };
 
+    window.scrollMainNav = (dir) => {
+        if (!scrollHintEls.navContainer) return;
+        scrollHintEls.navContainer.scrollBy({ left: dir * 200, behavior: 'smooth' });
+    };
+
     const updateNavScrollHints = () => {
         if (!scrollHintEls.navContainer || !scrollHintEls.navLeft || !scrollHintEls.navRight) return;
         const { scrollLeft, scrollWidth, clientWidth } = scrollHintEls.navContainer;
@@ -1154,15 +1267,19 @@
         // 是否可以向左滾
         if (scrollLeft > 5) {
             scrollHintEls.navLeft.classList.replace('opacity-0', 'opacity-100');
+            scrollHintEls.navLeft.classList.replace('pointer-events-none', 'pointer-events-auto');
         } else {
             scrollHintEls.navLeft.classList.replace('opacity-100', 'opacity-0');
+            scrollHintEls.navLeft.classList.replace('pointer-events-auto', 'pointer-events-none');
         }
         
         // 是否可以向右滾 (容許一些誤差)
         if (Math.ceil(scrollLeft + clientWidth) < scrollWidth - 5) {
             scrollHintEls.navRight.classList.replace('opacity-0', 'opacity-100');
+            scrollHintEls.navRight.classList.replace('pointer-events-none', 'pointer-events-auto');
         } else {
             scrollHintEls.navRight.classList.replace('opacity-100', 'opacity-0');
+            scrollHintEls.navRight.classList.replace('pointer-events-auto', 'pointer-events-none');
         }
     };
 
@@ -1294,6 +1411,16 @@
               updateNavScrollHints();
               updateGlobalScrollHint();
           }, 300);
+          
+          // 廣播自動跟隨
+          if (typeof irsState !== 'undefined' && !irsState.hostConn && Object.keys(irsState.connections).length > 0) {
+              if (typeof sendToAllStudents === 'function') {
+                  sendToAllStudents({ type: 'sync_mode', mode: mode });
+                  if (mode === 'board') {
+                      sendToAllStudents({ type: 'sync_board', paths: boardState.paths });
+                  }
+              }
+          }
         } else {
           btn.classList.remove(...activeClass);
           btn.classList.add(...inactiveClass);
@@ -2599,14 +2726,16 @@
     renderScoreboard();
 
     // ----------------------------------------------------------------------
-    // 模組 5: 互動白板 (BOARD MODE)
+    // 模組 5: 無限畫板 (BOARD MODE)
     // ----------------------------------------------------------------------
     const boardEls = {
       canvas: document.getElementById('whiteboard-canvas'),
       container: document.getElementById('canvas-container'),
       colorBtns: document.querySelectorAll('.color-btn'),
       brushSize: document.getElementById('brush-size'),
+      panBtn: document.getElementById('pan-btn'),
       eraserBtn: document.getElementById('eraser-btn'),
+      undoBtn: document.getElementById('undo-btn'),
       clearBtn: document.getElementById('clear-board-btn')
     };
 
@@ -2614,39 +2743,65 @@
     
     let boardState = {
       isDrawing: false,
+      tool: 'pen', // 'pen', 'eraser', 'pan'
       color: '#ffffff',
       lineWidth: 4,
-      isErasing: false,
       lastX: 0,
-      lastY: 0
+      lastY: 0,
+      offsetX: 0,
+      offsetY: 0,
+      paths: [], // 儲存所有畫過的筆劃路徑
+      currentPath: null // 正在畫的這筆路徑
     };
 
-    // 處理畫布響應式大小與重繪保存內容
+    // 重新繪製整個畫布 (包含平移與所有筆劃)
+    const redrawBoard = () => {
+      // 1. 清空完整畫布
+      boardCtx.clearRect(0, 0, boardEls.canvas.width, boardEls.canvas.height);
+      
+      // 2. 保存當前 Context 狀態並套用平移
+      boardCtx.save();
+      boardCtx.translate(boardState.offsetX, boardState.offsetY);
+      
+      // 3. 設定共同的畫筆屬性
+      boardCtx.lineCap = 'round';
+      boardCtx.lineJoin = 'round';
+      
+      // 4. 重新繪製所有儲存的筆劃
+      boardState.paths.forEach(path => {
+        if (path.points.length < 2) return;
+        
+        boardCtx.beginPath();
+        if (path.tool === 'eraser') {
+            boardCtx.globalCompositeOperation = 'destination-out';
+            boardCtx.lineWidth = path.lineWidth * 2;
+        } else {
+            boardCtx.globalCompositeOperation = 'source-over';
+            boardCtx.strokeStyle = path.color;
+            boardCtx.lineWidth = path.lineWidth;
+        }
+        
+        boardCtx.moveTo(path.points[0].x, path.points[0].y);
+        for (let i = 1; i < path.points.length; i++) {
+            boardCtx.lineTo(path.points[i].x, path.points[i].y);
+        }
+        boardCtx.stroke();
+      });
+      
+      boardCtx.restore();
+    };
+
+    // 處理畫布響應式大小與重繪內容
     const resizeCanvas = () => {
       if (appState.currentMode !== 'board') return;
       
-      // 保存原有內容
-      const tempCanvas = document.createElement('canvas');
-      tempCanvas.width = boardEls.canvas.width;
-      tempCanvas.height = boardEls.canvas.height;
-      const tempCtx = tempCanvas.getContext('2d');
-      if (boardEls.canvas.width > 0 && boardEls.canvas.height > 0) {
-          tempCtx.drawImage(boardEls.canvas, 0, 0);
-      }
-
       // 重新取得容器大小並設定
       const rect = boardEls.container.getBoundingClientRect();
       boardEls.canvas.width = rect.width;
       boardEls.canvas.height = rect.height;
 
-      // 恢復設定
-      boardCtx.lineCap = 'round';
-      boardCtx.lineJoin = 'round';
-      
-      // 恢復原有內容
-      if (tempCanvas.width > 0 && tempCanvas.height > 0) {
-        boardCtx.drawImage(tempCanvas, 0, 0);
-      }
+      // 觸發重新繪製以套用既有筆劃與平移
+      redrawBoard();
     };
 
     // 引入 ResizeObserver 自動監聽容器大小變化，確保無縫適應螢幕
@@ -2666,13 +2821,19 @@
         });
     });
 
-    // 取得指標在 Canvas 內的相對位置 (加入縮放校正解決落差)
+    // 取得指標在 Canvas 內的絕對位置 (考慮縮放與畫布本身的偏移 offsetX/offsetY)
     const getPointerPos = (e) => {
       const rect = boardEls.canvas.getBoundingClientRect();
-      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      let clientX, clientY;
       
-      // 計算縮放比例，解決鼠標與畫筆的落差問題
+      if (e.touches && e.touches.length > 0) {
+          clientX = e.touches[0].clientX;
+          clientY = e.touches[0].clientY;
+      } else {
+          clientX = e.clientX;
+          clientY = e.clientY;
+      }
+      
       const scaleX = boardEls.canvas.width / rect.width;
       const scaleY = boardEls.canvas.height / rect.height;
       
@@ -2684,42 +2845,112 @@
 
     const startDrawing = (e) => {
       boardState.isDrawing = true;
+      
+      // 觸控雙指、滑鼠中鍵、或是按住空白鍵，都強制進入暫時平移模式
+      if ((e.touches && e.touches.length >= 2) || e.button === 1 || boardState.isSpacePressed) {
+          boardState.tempPan = true;
+      } else {
+          boardState.tempPan = false;
+      }
+
       const pos = getPointerPos(e);
       boardState.lastX = pos.x;
       boardState.lastY = pos.y;
-      draw(e);
+      
+      const isPanning = boardState.tool === 'pan' || boardState.tempPan;
+      
+      if (!isPanning) {
+          // 開啟一筆新繪圖路徑 (記錄相對於原點的座標)
+          boardState.currentPath = {
+              tool: boardState.tool,
+              color: boardState.color,
+              lineWidth: boardState.lineWidth,
+              points: [{ x: pos.x - boardState.offsetX, y: pos.y - boardState.offsetY }]
+          };
+      } else {
+          boardEls.canvas.style.cursor = 'grabbing';
+      }
     };
 
-    const stopDrawing = () => {
+    const stopDrawing = (e) => {
+      if (!boardState.isDrawing) return;
       boardState.isDrawing = false;
+      boardState.tempPan = false;
       boardCtx.beginPath();
+      
+      // 恢復原始游標外觀 (若是空白鍵按住則維持 grab，否則 crosshair)
+      boardEls.canvas.style.cursor = boardState.isSpacePressed ? 'grab' : '';
+      
+      // 如果剛剛結束的是畫筆或橡皮擦，而且有畫出點，就把這個筆劃存下來
+      if (boardState.currentPath && boardState.currentPath.points.length > 0) {
+          boardState.paths.push(boardState.currentPath);
+          
+          if (irsState.hostConn && irsState.hostConn.open) {
+              irsState.hostConn.send({ type: 'draw_path', path: boardState.currentPath });
+          } else if (typeof sendToAllStudents === 'function') {
+              sendToAllStudents({ type: 'draw_path', path: boardState.currentPath });
+          }
+
+          boardState.currentPath = null;
+      }
     };
 
     const draw = (e) => {
       if (!boardState.isDrawing) return;
-      e.preventDefault(); // 阻止滾動等預設行為
       
-      const pos = getPointerPos(e);
-
-      boardCtx.lineWidth = boardState.lineWidth;
-      boardCtx.lineCap = 'round';
-      boardCtx.lineJoin = 'round';
+      // 在畫布上操作時阻止預設的全螢幕滑動效果
+      if(e.cancelable) {
+         e.preventDefault(); 
+      }
       
-      if (boardState.isErasing) {
-        boardCtx.globalCompositeOperation = 'destination-out';
-        boardCtx.lineWidth = boardState.lineWidth * 2; // 橡皮擦稍微粗一點
-      } else {
-        boardCtx.globalCompositeOperation = 'source-over';
-        boardCtx.strokeStyle = boardState.color;
+      // 若觸控中途變成雙指，強制轉為平移
+      if (e.touches && e.touches.length >= 2) {
+         boardState.tempPan = true;
+         boardEls.canvas.style.cursor = 'grabbing';
       }
 
-      boardCtx.beginPath();
-      boardCtx.moveTo(boardState.lastX, boardState.lastY);
-      boardCtx.lineTo(pos.x, pos.y);
-      boardCtx.stroke();
+      const pos = getPointerPos(e);
+      const isPanning = boardState.tool === 'pan' || boardState.tempPan;
 
-      boardState.lastX = pos.x;
-      boardState.lastY = pos.y;
+      if (isPanning) {
+          // 平移模式：計算拖曳差值，更新畫布偏移並重繪
+          const dx = pos.x - boardState.lastX;
+          const dy = pos.y - boardState.lastY;
+          boardState.offsetX += dx;
+          boardState.offsetY += dy;
+          boardState.lastX = pos.x;
+          boardState.lastY = pos.y;
+          redrawBoard();
+      } else {
+          // 畫圖模式：即時繪製線條並記錄點座標
+          boardCtx.save();
+          boardCtx.translate(boardState.offsetX, boardState.offsetY);
+          boardCtx.lineWidth = boardState.lineWidth;
+          boardCtx.lineCap = 'round';
+          boardCtx.lineJoin = 'round';
+          
+          if (boardState.tool === 'eraser') {
+            boardCtx.globalCompositeOperation = 'destination-out';
+            boardCtx.lineWidth = boardState.lineWidth * 2;
+          } else {
+            boardCtx.globalCompositeOperation = 'source-over';
+            boardCtx.strokeStyle = boardState.color;
+          }
+
+          const relativeX = pos.x - boardState.offsetX;
+          const relativeY = pos.y - boardState.offsetY;
+
+          boardCtx.beginPath();
+          const lastPoint = boardState.currentPath.points[boardState.currentPath.points.length - 1];
+          boardCtx.moveTo(lastPoint.x, lastPoint.y);
+          boardCtx.lineTo(relativeX, relativeY);
+          boardCtx.stroke();
+          boardCtx.restore();
+
+          boardState.currentPath.points.push({ x: relativeX, y: relativeY });
+          boardState.lastX = pos.x;
+          boardState.lastY = pos.y;
+      }
     };
 
     // 綁定滑鼠事件
@@ -2734,23 +2965,108 @@
     boardEls.canvas.addEventListener('touchend', stopDrawing);
     boardEls.canvas.addEventListener('touchcancel', stopDrawing);
 
+    // 電腦版無限畫布增強體驗: 支援觸控板與滑鼠滾輪平移
+    boardEls.canvas.addEventListener('wheel', (e) => {
+        if (appState.currentMode !== 'board') return;
+        e.preventDefault();
+        // 放大縮小或是平移，此處運用滾輪的差值來直接位移畫布
+        boardState.offsetX -= e.deltaX;
+        boardState.offsetY -= e.deltaY;
+        redrawBoard();
+    }, { passive: false });
+
+    // 電腦版無限畫布增強體驗: 支援空白鍵按住啟動平移 (如同 Photoshop)
+    window.addEventListener('keydown', (e) => {
+        if (appState.currentMode === 'board' && e.code === 'Space' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+            if (!boardState.isSpacePressed) {
+                e.preventDefault();
+                boardState.isSpacePressed = true;
+                if (!boardState.isDrawing) {
+                    boardEls.canvas.style.cursor = 'grab';
+                }
+            }
+        }
+    });
+
+    window.addEventListener('keyup', (e) => {
+        if (e.code === 'Space') {
+            boardState.isSpacePressed = false;
+            // 恢復原本的游標 (如果正在畫就算了)
+            if (!boardState.isDrawing) {
+                boardEls.canvas.style.cursor = '';
+            }
+        }
+    });
+
+    window.toggleBoardToolbar = () => {
+        const toolbar = document.getElementById('board-toolbar');
+        const icon = document.getElementById('board-toolbar-icon');
+        const text = document.getElementById('board-toolbar-text');
+        const toggleBtn = document.getElementById('board-toolbar-toggle');
+
+        const isCollapsed = toolbar.classList.contains('scale-y-0');
+
+        if (isCollapsed) {
+            // 展開
+            toolbar.classList.remove('scale-y-0', 'opacity-0', 'h-0', 'pointer-events-none', 'py-0', 'px-0', 'mb-0');
+            toolbar.classList.add('p-3', 'sm:p-4', 'scale-y-100', 'opacity-100', 'mb-2', 'sm:mb-4');
+            
+            icon.setAttribute('data-lucide', 'chevron-down');
+            text.textContent = '收合工具';
+            toggleBtn.classList.replace('bg-indigo-600', 'bg-slate-800');
+            toggleBtn.classList.replace('hover:bg-indigo-500', 'hover:bg-slate-700');
+            toggleBtn.classList.replace('shadow-[0_10px_20px_rgba(79,70,229,0.4)]', 'shadow-[0_10px_20px_rgba(0,0,0,0.4)]');
+            toggleBtn.classList.replace('border-indigo-400/50', 'border-white/10');
+            icon.classList.replace('text-white', 'text-slate-300');
+        } else {
+            // 收合
+            toolbar.classList.remove('p-3', 'sm:p-4', 'scale-y-100', 'opacity-100', 'mb-2', 'sm:mb-4');
+            toolbar.classList.add('scale-y-0', 'opacity-0', 'h-0', 'pointer-events-none', 'py-0', 'px-0', 'mb-0');
+            
+            icon.setAttribute('data-lucide', 'pen-tool');
+            text.textContent = '展開工具';
+            toggleBtn.classList.replace('bg-slate-800', 'bg-indigo-600');
+            toggleBtn.classList.replace('hover:bg-slate-700', 'hover:bg-indigo-500');
+            toggleBtn.classList.replace('shadow-[0_10px_20px_rgba(0,0,0,0.4)]', 'shadow-[0_10px_20px_rgba(79,70,229,0.4)]');
+            toggleBtn.classList.replace('border-white/10', 'border-indigo-400/50');
+            icon.classList.replace('text-slate-300', 'text-white');
+        }
+        lucide.createIcons();
+    };
+
     // 白板工具控制邏輯
-    boardEls.colorBtns.forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        boardState.isErasing = false;
-        boardState.color = e.target.dataset.color;
-        
-        // 更新 UI
+    const updateToolUI = () => {
         boardEls.colorBtns.forEach(b => b.classList.replace('border-indigo-500', 'border-transparent'));
         boardEls.colorBtns.forEach(b => b.classList.remove('shadow-[0_0_10px_rgba(255,255,255,0.5)]'));
-        e.target.classList.replace('border-transparent', 'border-indigo-500');
-        if(boardState.color === '#ffffff') {
-           e.target.classList.add('shadow-[0_0_10px_rgba(255,255,255,0.5)]');
-        }
-
-        // 恢復橡皮擦按鈕外觀
+        
         boardEls.eraserBtn.classList.remove('bg-indigo-600', 'text-white');
         boardEls.eraserBtn.classList.add('bg-slate-800', 'text-slate-300');
+        
+        boardEls.panBtn.classList.remove('bg-indigo-600', 'text-white');
+        boardEls.panBtn.classList.add('bg-slate-800', 'text-slate-300');
+        
+        if (boardState.tool === 'pen') {
+            const activeColorBtn = Array.from(boardEls.colorBtns).find(b => b.dataset.color === boardState.color);
+            if (activeColorBtn) {
+                activeColorBtn.classList.replace('border-transparent', 'border-indigo-500');
+                if(boardState.color === '#ffffff') {
+                   activeColorBtn.classList.add('shadow-[0_0_10px_rgba(255,255,255,0.5)]');
+                }
+            }
+        } else if (boardState.tool === 'eraser') {
+            boardEls.eraserBtn.classList.replace('bg-slate-800', 'bg-indigo-600');
+            boardEls.eraserBtn.classList.replace('text-slate-300', 'text-white');
+        } else if (boardState.tool === 'pan') {
+            boardEls.panBtn.classList.replace('bg-slate-800', 'bg-indigo-600');
+            boardEls.panBtn.classList.replace('text-slate-300', 'text-white');
+        }
+    };
+
+    boardEls.colorBtns.forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        boardState.tool = 'pen';
+        boardState.color = e.target.dataset.color;
+        updateToolUI();
       });
     });
 
@@ -2758,18 +3074,44 @@
       boardState.lineWidth = e.target.value;
     });
 
+    boardEls.panBtn.addEventListener('click', () => {
+      boardState.tool = 'pan';
+      updateToolUI();
+    });
+
     boardEls.eraserBtn.addEventListener('click', () => {
-      boardState.isErasing = true;
-      boardEls.eraserBtn.classList.replace('bg-slate-800', 'bg-indigo-600');
-      boardEls.eraserBtn.classList.replace('text-slate-300', 'text-white');
-      
-      // 移除顏色選擇的高光
-      boardEls.colorBtns.forEach(b => b.classList.replace('border-indigo-500', 'border-transparent'));
-      boardEls.colorBtns.forEach(b => b.classList.remove('shadow-[0_0_10px_rgba(255,255,255,0.5)]'));
+      boardState.tool = 'eraser';
+      updateToolUI();
+    });
+
+    boardEls.undoBtn.addEventListener('click', () => {
+      if (boardState.paths.length > 0) {
+          boardState.paths.pop();
+          redrawBoard();
+          if (typeof irsState !== 'undefined') {
+              if (irsState.hostConn && irsState.hostConn.open) {
+                 irsState.hostConn.send({ type: 'undo_path' });
+              } else if (typeof sendToAllStudents === 'function') {
+                 sendToAllStudents({ type: 'undo_path' });
+              }
+          }
+      }
     });
 
     boardEls.clearBtn.addEventListener('click', () => {
-      boardCtx.clearRect(0, 0, boardEls.canvas.width, boardEls.canvas.height);
+      if (confirm("確定要清空畫布嗎？")) {
+          boardState.paths = [];
+          boardState.offsetX = 0;
+          boardState.offsetY = 0;
+          redrawBoard();
+          if (typeof irsState !== 'undefined') {
+              if (irsState.hostConn && irsState.hostConn.open) {
+                 irsState.hostConn.send({ type: 'clear_board' });
+              } else if (typeof sendToAllStudents === 'function') {
+                 sendToAllStudents({ type: 'clear_board' });
+              }
+          }
+      }
     });
 
     // ----------------------------------------------------------------------
@@ -3168,6 +3510,31 @@
                updateTeacherUI();
            }
         }
+      } else if (data.type === 'chat_msg') {
+        appendChatMessage(data.name, data.msg, data.timestamp, false);
+        if (typeof sendToAllStudents === 'function') {
+            sendToAllStudents({ type: 'chat_msg', name: data.name, msg: data.msg, timestamp: data.timestamp }, peerId);
+        }
+      } else if (data.type === 'draw_path') {
+        boardState.paths.push(data.path);
+        redrawBoard();
+        if (typeof sendToAllStudents === 'function') {
+            sendToAllStudents({ type: 'draw_path', path: data.path }, peerId);
+        }
+      } else if (data.type === 'undo_path') {
+        boardState.paths.pop();
+        redrawBoard();
+        if (typeof sendToAllStudents === 'function') {
+            sendToAllStudents({ type: 'undo_path' }, peerId);
+        }
+      } else if (data.type === 'clear_board') {
+        boardState.paths = [];
+        boardState.offsetX = 0;
+        boardState.offsetY = 0;
+        redrawBoard();
+        if (typeof sendToAllStudents === 'function') {
+            sendToAllStudents({ type: 'clear_board' }, peerId);
+        }
       }
     };
 
@@ -3469,7 +3836,27 @@
     };
 
     const handleStudentReceive = (data) => {
-       if (data.type === 'question') {
+       if (data.type === 'sync_mode') {
+          if (data.mode !== appState.currentMode) {
+             switchAppMode(data.mode);
+          }
+       } else if (data.type === 'sync_board') {
+          boardState.paths = data.paths || [];
+          redrawBoard();
+       } else if (data.type === 'draw_path') {
+          boardState.paths.push(data.path);
+          redrawBoard();
+       } else if (data.type === 'undo_path') {
+          boardState.paths.pop();
+          redrawBoard();
+       } else if (data.type === 'clear_board') {
+          boardState.paths = [];
+          boardState.offsetX = 0;
+          boardState.offsetY = 0;
+          redrawBoard();
+       } else if (data.type === 'chat_msg') {
+          appendChatMessage(data.name, data.msg, data.timestamp, false);
+       } else if (data.type === 'question') {
           if (audioCtx.state === 'suspended') audioCtx.resume();
           playScoreSound('add'); // 提示音
           
@@ -3563,6 +3950,166 @@
        }
     };
 
+    // ----------------------------------------------------------------------
+    // 課堂資料長久儲存 (匯出/匯入)
+    // ----------------------------------------------------------------------
+    window.showDataModal = () => {
+        document.getElementById('data-manage-modal').classList.remove('hidden');
+        lucide.createIcons(); // 確保新畫出的圖示正常載入
+    };
+
+    window.hideDataModal = () => {
+        document.getElementById('data-manage-modal').classList.add('hidden');
+    };
+
+    function parseCSVLine(text) {
+        let ret = [], col = "", inQuote = false;
+        for (let i = 0; i < text.length; i++) {
+            let c = text[i];
+            if (inQuote) {
+                if (c === '"') {
+                    if (i + 1 < text.length && text[i + 1] === '"') { col += '"'; i++; }
+                    else { inQuote = false; }
+                } else { col += c; }
+            } else {
+                if (c === '"') { inQuote = true; }
+                else if (c === ',') { ret.push(col); col = ""; }
+                else { col += c; }
+            }
+        }
+        ret.push(col);
+        return ret;
+    }
+
+    window.exportClassData = () => {
+        const exportRoster = document.getElementById('export-roster-cb').checked;
+        const exportScores = document.getElementById('export-scores-cb').checked;
+        const exportIRS = document.getElementById('export-irs-cb').checked;
+        
+        if (!exportRoster && !exportScores && !exportIRS) {
+            alert("請至少選擇一項欲匯出的資料！");
+            return;
+        }
+
+        let csvContent = "\ufeff資料類型,名稱(學生/小組),數值(性別/分數),詳細(作答內容/名單),狀態\n";
+
+        if (exportRoster) {
+            const names = drawEls.nameInput.value.split(/[\n,，、]+/).map(n => n.trim()).filter(n => n);
+            names.forEach(name => {
+                const safeName = name.replace(/"/g, '""');
+                csvContent += `名單,"${safeName}","","",""\n`;
+            });
+        }
+        
+        if (exportScores) {
+            scoreState.teams.forEach(team => {
+                const teamName = team.name.replace(/"/g, '""');
+                const members = (team.members || []).join(',').replace(/"/g, '""');
+                csvContent += `小組,"${teamName}","${team.score}","${members}",""\n`;
+            });
+        }
+
+        if (exportIRS) {
+            const students = Object.values(irsState.studentsInfo);
+            students.forEach(s => {
+                const safeName = s.name.replace(/"/g, '""');
+                let ans = s.answer || "";
+                if (irsState.currentQ === 'BUZZER' && s.hasAnswered) {
+                    const peerId = Object.keys(irsState.studentsInfo).find(key => irsState.studentsInfo[key] === s);
+                    const rank = irsState.buzzerList.indexOf(peerId) + 1;
+                    ans = rank > 0 ? `第 ${rank} 位搶答` : "已答";
+                }
+                const safeAns = String(ans).replace(/"/g, '""');
+                const status = s.hasAnswered ? "已答" : "未答";
+                const gender = s.gender || '';
+                csvContent += `IRS紀錄,"${safeName}","${gender}","${safeAns}","${status}"\n`;
+            });
+        }
+
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const downloadAnchorNode = document.createElement('a');
+        const dateStr = new Date().toISOString().slice(0, 10);
+        downloadAnchorNode.setAttribute("href", url);
+        downloadAnchorNode.setAttribute("download", `智慧課堂_備份與紀錄_${dateStr}.csv`);
+        document.body.appendChild(downloadAnchorNode);
+        downloadAnchorNode.click();
+        document.body.removeChild(downloadAnchorNode);
+        showGlobalToast("資料匯出成功！已下載 Excel (.csv) 檔案。", "check-circle", "text-emerald-400");
+    };
+
+    window.importClassData = (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+        
+        const importRoster = document.getElementById('import-roster-cb').checked;
+        const importScores = document.getElementById('import-scores-cb').checked;
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const lines = e.target.result.split(/\r?\n/);
+                let importedNames = [];
+                let importedTeams = [];
+                
+                for (let i = 1; i < lines.length; i++) {
+                    const line = lines[i].trim();
+                    if (!line) continue;
+                    
+                    const cols = parseCSVLine(line);
+                    if (cols.length < 2) continue;
+                    
+                    const type = cols[0];
+                    if (type === '名單') {
+                        if (cols[1]) importedNames.push(cols[1]);
+                    } else if (type === '小組') {
+                        importedTeams.push({
+                            name: cols[1] || '未命名小組',
+                            score: parseInt(cols[2]) || 0,
+                            members: cols[3] ? cols[3].split(',').map(n => n.trim()).filter(n => n) : []
+                        });
+                    }
+                }
+
+                let importedMsg = [];
+                
+                if (importRoster) {
+                    if (importedNames.length > 0) {
+                        const newText = importedNames.join('\n');
+                        drawEls.nameInput.value = newText;
+                        drawState.nameText = newText;
+                        updateAvailableList();
+                        importedMsg.push("學生名單");
+                    } else {
+                        alert("提示：上傳的檔案中不包含名單資料，已略過。");
+                    }
+                }
+                
+                if (importScores) {
+                    if (importedTeams.length > 0) {
+                        scoreState.teams = importedTeams;
+                        renderScoreboard();
+                        importedMsg.push("小組與分數");
+                    } else {
+                        alert("提示：上傳的檔案中不包含小組分數資料，已略過。");
+                    }
+                }
+                
+                if (importedMsg.length > 0) {
+                    showGlobalToast(`匯入成功！已從 Excel 還原 ${importedMsg.join(' 和 ')}。`, "check-circle", "text-emerald-400");
+                    hideDataModal();
+                } else if (!importRoster && !importScores) {
+                    alert("提示：您沒有勾選任何欲匯入的選項。");
+                }
+            } catch (err) {
+                console.error("Import error:", err);
+                alert("匯入失敗：Excel (CSV) 檔案格式錯誤或損毀");
+            }
+            event.target.value = ""; // 清空 input
+        };
+        reader.readAsText(file);
+    };
+
     // 初始載入時設定一次畫布大小與解析網址參數
     window.addEventListener('load', () => {
         if(appState.currentMode === 'board') resizeCanvas();
@@ -3571,6 +4118,16 @@
         const urlParams = new URLSearchParams(window.location.search);
         const roomParam = urlParams.get('room');
         if (roomParam) {
+            // 設定標記，避免 Welcome Modal 被其他 load 事件觸發顯示
+            localStorage.setItem('classroom_assistant_pro_seen', 'true');
+            // 強制隱藏 Welcome Modal
+            const welcomeModal = document.getElementById('welcome-guide-modal');
+            if (welcomeModal) welcomeModal.classList.add('hidden');
+            
+            // 徹底隱藏頂部的老師端導覽列，提供純淨的學生登入區
+            const mainHeader = document.querySelector('header');
+            if (mainHeader) mainHeader.classList.add('hidden');
+
             // 自動切換至即問即答模組
             switchAppMode('irs');
             // 自動開啟學生登入畫面
@@ -3584,6 +4141,116 @@
         }
     });
 
+    window.sendToAllStudents = (data, excludePeerId = null) => {
+        if (typeof irsState === 'undefined' || !irsState.connections) return;
+        Object.entries(irsState.connections).forEach(([peerId, conn]) => {
+           if (peerId !== excludePeerId && conn && conn.open) {
+               conn.send(data);
+           }
+        });
+    };
+
+    // -- 聊天室功能邏輯 --
+    let isChatOpen = false;
+    window.toggleChatPanel = () => {
+        const panel = document.getElementById('chat-panel');
+        const dot = document.getElementById('chat-unread-dot');
+        isChatOpen = !isChatOpen;
+        if (isChatOpen) {
+            panel.classList.replace('scale-0', 'scale-100');
+            panel.classList.replace('opacity-0', 'opacity-100');
+            panel.classList.replace('pointer-events-none', 'pointer-events-auto');
+            dot.classList.add('hidden');
+            setTimeout(() => document.getElementById('chat-input').focus(), 100);
+        } else {
+            panel.classList.replace('scale-100', 'scale-0');
+            panel.classList.replace('opacity-100', 'opacity-0');
+            panel.classList.replace('pointer-events-auto', 'pointer-events-none');
+        }
+    };
+
+    window.appendChatMessage = (name, msg, timestamp, isMe) => {
+        const chatMsgs = document.getElementById('chat-messages');
+        const bubbleColor = isMe ? 'bg-indigo-600' : 'bg-slate-700';
+        const align = isMe ? 'self-end' : 'self-start';
+        const nameDisplay = isMe ? '' : `<div class="text-[10px] text-slate-400 mb-1 ml-1">${name}</div>`;
+        const html = `
+            <div class="flex flex-col ${align} max-w-[85%] animate-pop-in">
+               ${nameDisplay}
+               <div class="${bubbleColor} text-white text-sm px-3 py-2 rounded-2xl shadow-sm break-words">${escapeHTML(msg)}</div>
+               <div class="text-[9px] text-slate-500 mt-1 mr-1 ${align}">${timestamp}</div>
+            </div>
+        `;
+        chatMsgs.insertAdjacentHTML('beforeend', html);
+        chatMsgs.scrollTop = chatMsgs.scrollHeight;
+
+        if (!isChatOpen && !isMe) {
+            document.getElementById('chat-unread-dot').classList.remove('hidden');
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            playScoreSound('add');
+        }
+    };
+
+    window.sendChatMessage = () => {
+        const input = document.getElementById('chat-input');
+        const msg = input.value.trim();
+        if (!msg) return;
+        
+        let senderName = "老師";
+        if (typeof irsState !== 'undefined' && irsState.hostConn) {
+             const mName = document.getElementById('irs-my-name')?.textContent || "學生";
+             // 去除(性別)後綴，只取名字
+             senderName = mName.split('(')[0].trim() || "學生";
+        }
+
+        const timestamp = new Date().toLocaleTimeString('zh-TW', {hour: '2-digit', minute:'2-digit'});
+        appendChatMessage(senderName, msg, timestamp, true);
+        
+        const payload = { type: 'chat_msg', name: senderName, msg: msg, timestamp: timestamp };
+        if (typeof irsState !== 'undefined') {
+            if (irsState.hostConn && irsState.hostConn.open) {
+                irsState.hostConn.send(payload);
+            } else if (typeof sendToAllStudents === 'function') {
+                sendToAllStudents(payload);
+            }
+        }
+        input.value = "";
+    };
   </script>
+
+  <!-- 全域聊天室 Widget -->
+  <div id="global-chat-widget" class="fixed bottom-6 right-6 z-[100] flex flex-col items-end pointer-events-none">
+    <!-- 聊天對話框 (預設隱藏) -->
+    <div id="chat-panel" class="w-80 h-96 bg-slate-900/90 backdrop-blur-md rounded-2xl border border-indigo-500/30 shadow-2xl flex flex-col mb-4 overflow-hidden pointer-events-none transition-all duration-300 origin-bottom-right scale-0 opacity-0 relative group">
+      <div class="bg-indigo-600/50 p-3 border-b border-indigo-500/30 flex justify-between items-center backdrop-blur-md">
+        <h4 class="text-white font-bold flex items-center gap-2"><i data-lucide="message-circle" class="w-4 h-4"></i> 課堂聊天室</h4>
+        <button onclick="toggleChatPanel()" class="text-indigo-200 hover:text-white transition-colors p-1"><i data-lucide="minus" class="w-4 h-4"></i></button>
+      </div>
+      <!-- 訊息區 -->
+      <div id="chat-messages" class="flex-1 p-3 overflow-y-auto flex flex-col gap-3 scroll-smooth no-scrollbar select-text pointer-events-auto">
+         <div class="text-xs text-center text-slate-500 my-2">-- 歡迎來到課堂聊天室 --</div>
+      </div>
+      <!-- 獨立輸入區 -->
+      <div class="p-3 border-t border-white/10 bg-slate-950/50 pointer-events-auto">
+        <div class="flex items-center gap-2">
+          <input type="text" id="chat-input" class="flex-1 bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500 transition-colors" placeholder="輸入訊息..." onkeydown="if(event.key==='Enter') sendChatMessage()">
+          <button onclick="sendChatMessage()" class="p-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white transition-colors shadow-md">
+            <i data-lucide="send" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 懸浮按鈕 (FAB) -->
+    <button onclick="toggleChatPanel()" class="w-14 h-14 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 hover:scale-110 active:scale-95 shadow-[0_0_20px_rgba(99,102,241,0.5)] transition-all flex items-center justify-center pointer-events-auto relative group border border-indigo-400/50">
+      <i data-lucide="message-square" class="w-6 h-6 text-white"></i>
+      <!-- 新訊息紅點 -->
+      <span id="chat-unread-dot" class="absolute top-0 right-0 w-3.5 h-3.5 bg-rose-500 border-2 border-slate-900 rounded-full hidden animate-pulse"></span>
+      <!-- Tooltip -->
+      <div class="absolute right-full mr-4 top-1/2 -translate-y-1/2 px-3 py-1.5 bg-slate-800 text-white text-xs font-medium rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all whitespace-nowrap border border-white/10 before:absolute before:top-1/2 before:-right-1 text-center before:-translate-y-1/2 before:border-l-[6px] before:border-l-slate-800 before:border-y-[6px] before:border-y-transparent">
+        課堂聊天室<br><span class="text-slate-400 text-[10px]">(支援所有人發言)</span>
+      </div>
+    </button>
+  </div>
 </body>
 </html>
