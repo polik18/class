@@ -1100,7 +1100,7 @@
                <label class="block text-sm font-medium text-slate-400 mb-2">你的性別 (分組用)</label>
                <div class="flex gap-6 bg-slate-950 border border-white/10 rounded-xl px-4 py-3 shadow-inner">
                   <label class="flex items-center gap-2 text-white cursor-pointer flex-1 justify-center transition-all hover:scale-105">
-                     <input type="radio" name="irs-gender" value="男" checked class="w-4 h-4 text-cyan-500 focus:ring-cyan-500 bg-slate-800 border-white/20"> 
+                     <input type="radio" name="irs-gender" value="男" class="w-4 h-4 text-cyan-500 focus:ring-cyan-500 bg-slate-800 border-white/20"> 
                      <span class="font-bold text-cyan-400">男生 <i data-lucide="mars" class="w-4 h-4 inline"></i></span>
                   </label>
                   <div class="w-px bg-white/10"></div>
@@ -3272,9 +3272,9 @@
           debug: 2,
           config: {
               'iceServers': [
-                  { url: 'stun:stun.l.google.com:19302' },
-                  { url: 'stun:stun1.l.google.com:19302' },
-                  { url: 'stun:stun2.l.google.com:19302' }
+                  { urls: 'stun:stun.l.google.com:19302' },
+                  { urls: 'stun:stun1.l.google.com:19302' },
+                  { urls: 'stun:stun2.l.google.com:19302' }
               ]
           }
       });
@@ -3486,7 +3486,7 @@
         updateTeacherUI();
 
         // --- 新增：自動將 IRS 學生加入抽籤機的姓名名單中 (帶有性別標記) ---
-        const formattedName = `${data.name}(${data.gender})`;
+        const formattedName = data.gender ? `${data.name}(${data.gender})` : data.name;
         const currentNames = drawEls.nameInput.value.split(/[\n,，、]+/).map(n => n.trim()).filter(n => n);
         if (!currentNames.includes(formattedName)) {
             currentNames.push(formattedName);
@@ -3574,7 +3574,8 @@
       irsEls.studentList.innerHTML = Object.values(irsState.studentsInfo).map(student => {
         if(student.hasAnswered) answeredCount++;
         const bgClass = student.hasAnswered ? 'bg-emerald-500/20 border-emerald-500/30 text-emerald-300' : 'bg-slate-800 border-white/10 text-slate-400';
-        return `<span class="px-3 py-1 text-sm rounded-full border ${bgClass} font-medium shadow-sm transition-colors">${renderName(`${student.name}(${student.gender})`, false)}</span>`;
+        const displayName = student.gender ? `${student.name}(${student.gender})` : student.name;
+        return `<span class="px-3 py-1 text-sm rounded-full border ${bgClass} font-medium shadow-sm transition-colors">${renderName(displayName, false)}</span>`;
       }).join('');
 
       // 繪製結果圖表
@@ -3591,7 +3592,8 @@
                     const st = irsState.studentsInfo[id];
                     const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `<span class="text-slate-500 text-sm">${index+1}.</span>`;
                     const bgClass = index === 0 ? 'bg-gradient-to-r from-amber-500/20 to-orange-500/10 border-amber-500/50 text-amber-300 scale-105 shadow-[0_0_15px_rgba(245,158,11,0.2)]' : 'bg-slate-800/80 border-white/10 text-slate-300';
-                    const displayName = st ? renderName(`${st.name}(${st.gender})`, false) : '未知';
+                    const stNameWithGender = st ? (st.gender ? `${st.name}(${st.gender})` : st.name) : '';
+                    const displayName = st ? renderName(stNameWithGender, false) : '未知';
                     return `<div class="flex items-center gap-4 p-3 rounded-xl border ${bgClass} transition-all w-full max-w-md">
                         <div class="text-3xl w-8 text-center drop-shadow-md">${medal}</div>
                         <div class="font-bold text-xl flex-1 tracking-wide">${displayName}</div>
@@ -3789,7 +3791,7 @@
       if (audioCtx.state === 'suspended') audioCtx.resume();
       const joinId = irsEls.joinId.value.trim().toUpperCase();
       const joinName = irsEls.joinName.value.trim();
-      const joinGender = document.querySelector('input[name="irs-gender"]:checked')?.value || "男";
+      const joinGender = document.querySelector('input[name="irs-gender"]:checked')?.value || "";
       
       if (!joinId || !joinName) {
          irsEls.loginError.textContent = "請輸入代碼與名稱！";
@@ -3801,18 +3803,19 @@
       irsEls.joinBtn.disabled = true;
 
       irsState.studentName = joinName;
-      irsState.peer = new Peer({
+      const studentId = 'irs_' + Math.random().toString(36).substring(2, 10);
+      irsState.peer = new Peer(studentId, {
           config: {
               'iceServers': [
-                  { url: 'stun:stun.l.google.com:19302' },
-                  { url: 'stun:stun1.l.google.com:19302' },
-                  { url: 'stun:stun2.l.google.com:19302' }
+                  { urls: 'stun:stun.l.google.com:19302' },
+                  { urls: 'stun:stun1.l.google.com:19302' },
+                  { urls: 'stun:stun2.l.google.com:19302' }
               ]
           }
       });
 
       irsState.peer.on('open', () => {
-         const conn = irsState.peer.connect(joinId, { reliable: true });
+         const conn = irsState.peer.connect(joinId);
          
          conn.on('open', () => {
             irsState.hostConn = conn;
@@ -3822,7 +3825,8 @@
             irsEls.studentLogin.classList.add('hidden');
             irsEls.studentView.classList.replace('hidden', 'flex');
             // 學生端顯示姓名加上性別圖示
-            irsEls.myName.innerHTML = renderName(`${joinName}(${joinGender})`, false);
+            const joinedNameWithGender = joinGender ? `${joinName}(${joinGender})` : joinName;
+            irsEls.myName.innerHTML = renderName(joinedNameWithGender, false);
             
             // 恢復按鈕
             irsEls.joinBtn.innerHTML = '連線加入';
