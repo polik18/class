@@ -205,7 +205,7 @@
           <i data-lucide="users" class="w-4 h-4"></i> 抽籤機
         </button>
         <button onclick="switchAppMode('clock')" id="nav-clock" class="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-white/5 font-bold transition-all whitespace-nowrap">
-          <i data-lucide="clock" class="w-4 h-4"></i> 考試大鐘
+          <i data-lucide="clock" class="w-4 h-4"></i> 時間管理
         </button>
         <button onclick="switchAppMode('timer')" id="nav-timer" class="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-white/5 font-bold transition-all relative whitespace-nowrap">
           <i data-lucide="timer" class="w-4 h-4"></i> 小組計時
@@ -230,8 +230,11 @@
       </button>
     </div>
 
-    <!-- 匯出與匯入功能按鈕 -->
+    <!-- 螢幕廣播與匯出匯入按鈕 -->
     <div class="flex items-center gap-2 hidden lg:flex shrink-0 mr-2 md:mr-0">
+      <button id="teacher-broadcast-btn" onclick="toggleTeacherBroadcast()" class="py-2.5 px-4 rounded-xl bg-emerald-600/20 hover:bg-emerald-600 transition-all duration-300 border border-emerald-500/30 flex items-center gap-2 text-sm text-emerald-300 hover:text-white shadow-sm font-bold group" title="向全班廣播您的螢幕畫面">
+        <i data-lucide="monitor-up" id="broadcast-icon" class="w-4 h-4 group-hover:animate-bounce"></i> <span id="broadcast-text">廣播螢幕</span>
+      </button>
       <button onclick="showDataModal()" class="py-2.5 px-4 rounded-xl bg-indigo-600/20 hover:bg-indigo-600 transition-all duration-300 border border-indigo-500/30 flex items-center gap-2 text-sm text-indigo-300 hover:text-white shadow-sm font-bold group" title="課堂資料管理中心">
         <i data-lucide="package" class="w-4 h-4 group-hover:animate-bounce"></i> 資料管理
       </button>
@@ -545,26 +548,127 @@
     </div>
 
     <!-- ========================================== -->
-    <!-- 模組 2: 考試大鐘 (CLOCK MODE) -->
+    <!-- 模組 2: 時間管理 (TIME MANAGEMENT MODE) -->
     <!-- ========================================== -->
-    <div id="app-clock" class="hidden flex-col items-center justify-center min-h-[75vh] w-full animate-pop-in relative flex-1">
+    <div id="app-clock" class="hidden flex-col items-center justify-start min-h-[75vh] w-full animate-pop-in relative flex-1">
       <div class="absolute inset-0 bg-indigo-900/10 rounded-[3rem] border border-white/5 backdrop-blur-sm -z-10 shadow-2xl"></div>
       
-      <div class="text-center space-y-4 sm:space-y-8 p-4 sm:p-10 w-full overflow-hidden flex flex-col items-center">
-        <!-- 日期顯示 -->
-        <div id="clock-date" class="text-[clamp(1.5rem,4vw,3.5rem)] font-medium text-indigo-300/80 tracking-widest drop-shadow-md">
-          載入日期中...
-        </div>
+      <!-- 新增：子功能切換導覽列 -->
+      <div class="flex justify-center mt-6 md:mt-10 mb-2 relative z-10 w-full px-6">
+         <div class="bg-slate-900/80 p-1.5 rounded-2xl border border-white/10 shadow-inner flex overflow-x-auto no-scrollbar max-w-2xl w-full">
+            <button onclick="switchClockSubMode('exam')" id="clock-tab-exam" class="flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-indigo-600 text-white font-bold transition-all shadow-md whitespace-nowrap min-w-[120px]">
+               <i data-lucide="clock" class="w-4 h-4"></i> 考試大鐘
+            </button>
+            <button onclick="switchClockSubMode('bell')" id="clock-tab-bell" class="flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-white/5 font-bold transition-all whitespace-nowrap min-w-[120px]">
+               <i data-lucide="bell-ring" class="w-4 h-4"></i> 上下課鐘
+            </button>
+            <button onclick="switchClockSubMode('pomo')" id="clock-tab-pomo" class="flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-white/5 font-bold transition-all whitespace-nowrap min-w-[120px]">
+               <i data-lucide="coffee" class="w-4 h-4"></i> 讀書蕃茄鐘
+            </button>
+         </div>
+      </div>
+
+      <!-- 子容器 Wrapper -->
+      <div class="w-full flex-1 flex flex-col relative overflow-hidden p-4 sm:p-10 text-center">
         
-        <!-- 時間顯示 -->
-        <div id="clock-time" class="text-[clamp(3rem,min(13vw,28vh),20rem)] font-black font-mono leading-none tracking-tight bg-gradient-to-b from-white via-indigo-100 to-indigo-500 bg-clip-text text-transparent drop-shadow-[0_0_40px_rgba(99,102,241,0.6)] w-full">
-          00:00:00
+        <!-- 子功能 1：考試大鐘 -->
+        <div id="clock-sub-exam" class="w-full h-full flex flex-col items-center justify-center absolute inset-0 transition-opacity duration-300 ease-in-out z-10">
+          <div id="clock-date" class="text-[clamp(1.5rem,4vw,3.5rem)] font-medium text-indigo-300/80 tracking-widest drop-shadow-md">
+            載入日期中...
+          </div>
+          <div id="clock-time" class="text-[clamp(3rem,min(13vw,28vh),20rem)] font-black font-mono leading-none tracking-tight bg-gradient-to-b from-white via-indigo-100 to-indigo-500 bg-clip-text text-transparent drop-shadow-[0_0_40px_rgba(99,102,241,0.6)] w-full">
+            00:00:00
+          </div>
+          <div class="w-full max-w-2xl mx-auto h-2 bg-slate-800 rounded-full overflow-hidden mt-4 sm:mt-10 shadow-inner border border-white/5 flex-shrink-0">
+            <div id="clock-seconds-bar" class="h-full bg-gradient-to-r from-indigo-500 to-purple-500 transition-all duration-1000 ease-linear shadow-[0_0_10px_rgba(99,102,241,0.8)]" style="width: 0%"></div>
+          </div>
         </div>
-        
-        <!-- 秒數進度條(視覺點綴) -->
-        <div class="w-full max-w-2xl mx-auto h-2 bg-slate-800 rounded-full overflow-hidden mt-4 sm:mt-8 shadow-inner border border-white/5 flex-shrink-0">
-          <div id="clock-seconds-bar" class="h-full bg-gradient-to-r from-indigo-500 to-purple-500 transition-all duration-1000 ease-linear shadow-[0_0_10px_rgba(99,102,241,0.8)]" style="width: 0%"></div>
+
+        <!-- 子功能 2：上下課鐘 -->
+        <div id="clock-sub-bell" class="w-full h-full flex flex-col items-center justify-center absolute inset-0 opacity-0 pointer-events-none transition-opacity duration-300 ease-in-out gap-8 z-0">
+           <h3 class="text-3xl sm:text-4xl font-black text-indigo-300 tracking-widest bg-slate-900/50 px-8 py-3 rounded-full border border-indigo-500/30">校園響鈴控制台</h3>
+           
+           <div class="flex flex-col sm:flex-row gap-6 mt-4 w-full max-w-3xl justify-center">
+             <button onclick="playSchoolBell('start')" class="group relative overflow-hidden flex-1 sm:max-w-xs py-12 rounded-[2.5rem] bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-black text-3xl shadow-[0_0_40px_rgba(16,185,129,0.3)] transition-all border-b-8 border-emerald-800 hover:border-emerald-700 active:border-b-0 active:translate-y-2">
+                <div class="flex flex-col items-center justify-center gap-4 relative z-10">
+                   <i data-lucide="play-circle" class="w-16 h-16 group-hover:scale-110 transition-transform drop-shadow-lg"></i>
+                   <span class="tracking-widest drop-shadow-md">上課響鈴</span>
+                </div>
+             </button>
+             
+             <button onclick="playSchoolBell('end')" class="group relative overflow-hidden flex-1 sm:max-w-xs py-12 rounded-[2.5rem] bg-rose-600 hover:bg-rose-500 active:scale-95 text-white font-black text-3xl shadow-[0_0_40px_rgba(225,29,72,0.3)] transition-all border-b-8 border-rose-800 hover:border-rose-700 active:border-b-0 active:translate-y-2">
+                <div class="flex flex-col items-center justify-center gap-4 relative z-10">
+                   <i data-lucide="stop-circle" class="w-16 h-16 group-hover:scale-110 transition-transform drop-shadow-lg"></i>
+                   <span class="tracking-widest drop-shadow-md">下課響鈴</span>
+                </div>
+             </button>
+           </div>
+
+           <div class="mt-8 bg-slate-900/40 p-6 rounded-[2rem] border border-white/5 w-full max-w-xl shadow-inner relative group text-center">
+              <div class="text-slate-400 font-bold mb-5 flex items-center justify-center gap-2">
+                 <i data-lucide="clock" class="w-5 h-5"></i> 快速下課倒數 (時間到自動打下課鈴)
+              </div>
+              <div class="flex gap-4 justify-center" id="quick-break-buttons">
+                 <button onclick="startQuickBreakCountdown(10)" class="flex-1 max-w-[140px] py-4 rounded-xl bg-slate-800 hover:bg-indigo-600 text-slate-300 hover:text-white transition-colors font-bold border border-white/10 hover:border-indigo-400 shadow-sm flex flex-col items-center gap-1 active:scale-95">
+                    <span class="text-2xl">10</span> <span class="text-xs opacity-70">分鐘</span>
+                 </button>
+                 <button onclick="startQuickBreakCountdown(5)" class="flex-1 max-w-[140px] py-4 rounded-xl bg-slate-800 hover:bg-indigo-600 text-slate-300 hover:text-white transition-colors font-bold border border-white/10 hover:border-indigo-400 shadow-sm flex flex-col items-center gap-1 active:scale-95">
+                    <span class="text-2xl">5</span> <span class="text-xs opacity-70">分鐘</span>
+                 </button>
+              </div>
+              <div id="quick-break-active" class="hidden flex-col items-center justify-center gap-4">
+                 <div id="quick-break-display" class="text-6xl font-black font-mono text-indigo-400 tracking-widest drop-shadow-[0_0_15px_rgba(99,102,241,0.5)]">
+                    10:00
+                 </div>
+                 <button onclick="stopQuickBreakCountdown()" class="px-8 py-3 rounded-full bg-rose-600 hover:bg-rose-500 text-white transition-all font-bold shadow-[0_0_15px_rgba(225,29,72,0.4)] active:scale-95 flex items-center gap-2">
+                    <i data-lucide="x" class="w-4 h-4"></i> 取消倒數
+                 </button>
+              </div>
+           </div>
         </div>
+
+        <!-- 子功能 3：蕃茄鐘 -->
+        <div id="clock-sub-pomo" class="w-full h-full flex flex-col items-center justify-center absolute inset-0 opacity-0 pointer-events-none transition-opacity duration-300 ease-in-out gap-8 z-0">
+           
+           <div class="bg-slate-900/60 p-10 rounded-[3rem] border border-white/10 shadow-2xl relative w-full max-w-md mx-auto">
+              <!-- 紅綠模式切換標籤 -->
+              <div id="pomo-mode-badge" class="absolute -top-6 left-1/2 -translate-x-1/2 bg-rose-600 text-rose-50 px-8 py-2 rounded-full border-4 border-slate-950 shadow-lg tracking-widest text-lg font-black z-10 transition-colors duration-500 whitespace-nowrap">
+                 專注時間
+              </div>
+              
+              <!-- 蕃茄鐘圓環 -->
+              <div class="relative w-64 h-64 sm:w-72 sm:h-72 mx-auto mt-4">
+                <!-- 背景環 -->
+                <svg class="w-full h-full transform -rotate-90">
+                  <circle cx="50%" cy="50%" r="45%" fill="none" class="text-slate-800 stroke-current" stroke-width="12" />
+                  <!-- 進度環 -->
+                  <circle id="pomo-progress-ring" cx="50%" cy="50%" r="45%" fill="none" class="text-rose-500 stroke-current transition-all duration-1000 ease-linear timer-circle" stroke-width="12" stroke-dasharray="283" stroke-dashoffset="0" />
+                </svg>
+                <!-- 時間文字 -->
+                <div class="absolute inset-0 flex flex-col items-center justify-center">
+                   <span id="pomo-time-display" class="text-6xl sm:text-7xl font-black font-mono text-white tracking-widest drop-shadow-[0_0_20px_rgba(255,255,255,0.3)]">25:00</span>
+                </div>
+              </div>
+
+              <!-- 控制面板 -->
+              <div class="flex justify-center gap-4 mt-10">
+                 <button onclick="skipPomoPhase()" class="w-14 h-14 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 border border-white/10 shadow-md transition-all flex items-center justify-center active:scale-95 group" title="跳過此階段">
+                    <i data-lucide="fast-forward" class="w-6 h-6 group-hover:scale-110 transition-transform"></i>
+                 </button>
+                 <button onclick="togglePomoTimer()" id="pomo-toggle-btn" class="w-[4.5rem] h-[4.5rem] rounded-full bg-white text-slate-900 hover:bg-slate-200 shadow-[0_0_20px_rgba(255,255,255,0.4)] transition-all flex items-center justify-center active:scale-95 group">
+                    <i data-lucide="play" id="pomo-toggle-icon" class="w-8 h-8 fill-slate-900 ml-1 group-hover:scale-110 transition-transform"></i>
+                 </button>
+                 <button onclick="resetPomoTimer()" class="w-14 h-14 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 border border-white/10 shadow-md transition-all flex items-center justify-center active:scale-95 group" title="重新開始">
+                    <i data-lucide="rotate-ccw" class="w-6 h-6 group-hover:-rotate-180 transition-transform duration-500"></i>
+                 </button>
+              </div>
+           </div>
+           
+           <div class="text-slate-400 font-bold bg-slate-900/50 px-6 py-3 rounded-full border border-white/5 flex items-center gap-2">
+              <i data-lucide="info" class="w-4 h-4 text-indigo-400"></i> 預設循環：25分鐘專注 ➔ 5分鐘休息
+           </div>
+        </div>
+
       </div>
     </div>
 
@@ -1174,9 +1278,14 @@
                  <div class="text-xs text-emerald-400 flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> 已連線至教室</div>
                </div>
              </div>
-             <button onclick="leaveIRS()" class="p-2 rounded-lg bg-slate-800 hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 transition-all border border-white/5">
-               <i data-lucide="log-out" class="w-5 h-5"></i>
-             </button>
+             <div class="flex items-center gap-2">
+               <button id="student-cast-btn" onclick="requestCastToTeacher()" class="py-1.5 px-3 rounded-lg bg-cyan-600/20 hover:bg-cyan-600 text-cyan-400 hover:text-white text-sm font-bold transition-all border border-cyan-500/30 flex items-center gap-1.5 shadow-sm active:scale-95" title="向老師申請投影我的畫面">
+                 <i data-lucide="monitor-up" class="w-4 h-4"></i> <span id="cast-text">投影給老師</span>
+               </button>
+               <button onclick="leaveIRS()" class="p-2 rounded-lg bg-slate-800 hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 transition-all border border-white/5" title="離開教室">
+                 <i data-lucide="log-out" class="w-5 h-5"></i>
+               </button>
+             </div>
            </div>
 
            <!-- 答題區域 -->
@@ -1476,7 +1585,7 @@
               if (typeof sendToAllStudents === 'function') {
                   sendToAllStudents({ type: 'sync_mode', mode: mode });
                   if (mode === 'board') {
-                      sendToAllStudents({ type: 'sync_board', paths: boardState.paths });
+                      sendToAllStudents({ type: 'sync_board', paths: boardState.paths, offsetX: boardState.offsetX, offsetY: boardState.offsetY });
                   }
               }
           }
@@ -2096,6 +2205,260 @@
     // 每秒更新大時鐘
     setInterval(updateClock, 1000);
 
+    // ==========================================
+    // 時間管理：子功能切換與邏輯 (Clock Sub Modes)
+    // ==========================================
+    let currentClockSubMode = 'exam'; // 'exam', 'bell', 'pomo'
+    
+    window.switchClockSubMode = (mode) => {
+        currentClockSubMode = mode;
+        const examTab = document.getElementById('clock-tab-exam');
+        const bellTab = document.getElementById('clock-tab-bell');
+        const pomoTab = document.getElementById('clock-tab-pomo');
+        const examSub = document.getElementById('clock-sub-exam');
+        const bellSub = document.getElementById('clock-sub-bell');
+        const pomoSub = document.getElementById('clock-sub-pomo');
+
+        // Reset Nav
+        [examTab, bellTab, pomoTab].forEach(t => {
+            if(t) t.className = "flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-white/5 font-bold transition-all whitespace-nowrap min-w-[120px]";
+        });
+        
+        // Hide all subs
+        [examSub, bellSub, pomoSub].forEach(sub => {
+            if(sub) {
+                sub.classList.remove('z-10');
+                sub.classList.add('opacity-0', 'pointer-events-none', 'translate-x-[100px]', 'z-0');
+            }
+        });
+
+        // Activate Sub
+        if (mode === 'exam') {
+            if(examTab) examTab.className = "flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-indigo-600 text-white font-bold transition-all shadow-md whitespace-nowrap min-w-[120px]";
+            if(examSub) {
+                examSub.classList.remove('opacity-0', 'pointer-events-none', 'translate-x-[100px]', 'z-0');
+                examSub.classList.add('z-10');
+            }
+            updateClock();
+        } else if (mode === 'bell') {
+            if(bellTab) bellTab.className = "flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-indigo-600 text-white font-bold transition-all shadow-md whitespace-nowrap min-w-[120px]";
+            if(bellSub) {
+                bellSub.classList.remove('opacity-0', 'pointer-events-none', 'translate-x-[100px]', 'z-0', 'translate-x-24');
+                bellSub.classList.add('z-10');
+            }
+        } else if (mode === 'pomo') {
+            if(pomoTab) pomoTab.className = "flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-indigo-600 text-white font-bold transition-all shadow-md whitespace-nowrap min-w-[120px]";
+            if(pomoSub) {
+                pomoSub.classList.remove('opacity-0', 'pointer-events-none', 'translate-x-[100px]', 'z-0', 'translate-x-24');
+                pomoSub.classList.add('z-10');
+            }
+        }
+    };
+
+    // --- 上下課鐘功能 (Class Bell) ---
+    // 使用 Web Audio API 合成極度真實的雙音校園鐘聲
+    window.playSchoolBell = (type) => {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        
+        const mainGain = audioCtx.createGain();
+        mainGain.connect(audioCtx.destination);
+        mainGain.gain.setValueAtTime(0.5, audioCtx.currentTime);
+
+        const playChime = (freq, startTime, duration) => {
+            const osc = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, startTime);
+            
+            // 鐘聲的獨特音色處理 (主要依靠包絡線 Envelope)
+            gainNode.gain.setValueAtTime(0, startTime);
+            gainNode.gain.linearRampToValueAtTime(1, startTime + 0.05); // 敲擊瞬間
+            gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + duration); // 餘音繞樑
+            
+            osc.connect(gainNode);
+            gainNode.connect(mainGain);
+            
+            osc.start(startTime);
+            osc.stop(startTime + duration);
+        };
+
+        const now = audioCtx.currentTime;
+        
+        if (type === 'start') {
+            // 上課鐘：簡單雙音 (Mi~ Do~)
+            playChime(659.25, now, 2);       // Mi
+            playChime(523.25, now + 0.8, 2.5); // Do
+        } else if (type === 'end') {
+            // 下課鐘：西敏寺鐘聲 (Mi-Do-Re-Sol, Sol-Re-Mi-Do)
+            const notes = [
+                329.63, 261.63, 293.66, 196.00, // Mi Do Re Sol (低)
+                196.00, 293.66, 329.63, 261.63  // Sol Re Mi Do
+            ];
+            const delays = [0, 1.2, 2.4, 3.6, 5.4, 6.6, 7.8, 9.0];
+            
+            for(let i=0; i<notes.length; i++) {
+                playChime(notes[i], now + delays[i], 3.5);
+            }
+        }
+    };
+
+    let quickBreakInterval = null;
+    let quickBreakRemaining = 0;
+
+    window.startQuickBreakCountdown = (minutes) => {
+        clearInterval(quickBreakInterval);
+        quickBreakRemaining = minutes * 60;
+        
+        document.getElementById('quick-break-buttons').classList.add('hidden');
+        document.getElementById('quick-break-active').classList.remove('hidden');
+        document.getElementById('quick-break-active').classList.add('flex');
+        
+        updateQuickBreakDisplay();
+        
+        quickBreakInterval = setInterval(() => {
+            quickBreakRemaining--;
+            updateQuickBreakDisplay();
+            
+            if (quickBreakRemaining <= 0) {
+                clearInterval(quickBreakInterval);
+                playSchoolBell('end'); // 時間到自動打下課鈴
+                stopQuickBreakCountdown();
+            }
+        }, 1000);
+    };
+
+    window.stopQuickBreakCountdown = () => {
+        clearInterval(quickBreakInterval);
+        document.getElementById('quick-break-active').classList.add('hidden');
+        document.getElementById('quick-break-active').classList.remove('flex');
+        document.getElementById('quick-break-buttons').classList.remove('hidden');
+    };
+
+    const updateQuickBreakDisplay = () => {
+        const m = String(Math.floor(quickBreakRemaining / 60)).padStart(2, '0');
+        const s = String(quickBreakRemaining % 60).padStart(2, '0');
+        const el = document.getElementById('quick-break-display');
+        if(el) el.textContent = `${m}:${s}`;
+    };
+
+
+    // --- 讀書蕃茄鐘功能 (Pomodoro) ---
+    let pomoState = {
+        mode: 'focus', // 'focus' | 'break'
+        isRunning: false,
+        remainingSecs: 25 * 60,
+        intervalId: null
+    };
+    const POMO_SECONDS_WORK = 25 * 60;
+    const POMO_SECONDS_BREAK = 5 * 60;
+
+    window.togglePomoTimer = () => {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const icon = document.getElementById('pomo-toggle-icon');
+        const btn = document.getElementById('pomo-toggle-btn');
+        const colorShadow = pomoState.mode === 'focus' ? 'rgba(225,29,72,0.6)' : 'rgba(16,185,129,0.6)';
+        
+        if (pomoState.isRunning) {
+            clearInterval(pomoState.intervalId);
+            pomoState.isRunning = false;
+            icon.setAttribute('data-lucide', 'play');
+            btn.style.boxShadow = '0 0 20px rgba(255,255,255,0.4)';
+        } else {
+            pomoState.isRunning = true;
+            icon.setAttribute('data-lucide', 'pause');
+            btn.style.boxShadow = `0 0 30px ${colorShadow}`;
+            pomoState.intervalId = setInterval(tickPomoTimer, 1000);
+        }
+        lucide.createIcons();
+    };
+
+    const tickPomoTimer = () => {
+        if (pomoState.remainingSecs <= 0) {
+            playPomodoroAlert();
+            skipPomoPhase();
+            return;
+        }
+        pomoState.remainingSecs--;
+        updatePomoDisplay();
+    };
+
+    window.skipPomoPhase = () => {
+        if (pomoState.mode === 'focus') {
+            pomoState.mode = 'break';
+            pomoState.remainingSecs = POMO_SECONDS_BREAK;
+        } else {
+            pomoState.mode = 'focus';
+            pomoState.remainingSecs = POMO_SECONDS_WORK;
+        }
+        updatePomoDisplay();
+        
+        // 若切換時正在計時，確保按鈕光暈顏色跟著改變
+        if (pomoState.isRunning) {
+           const btn = document.getElementById('pomo-toggle-btn');
+           const colorShadow = pomoState.mode === 'focus' ? 'rgba(225,29,72,0.6)' : 'rgba(16,185,129,0.6)';
+           btn.style.boxShadow = `0 0 30px ${colorShadow}`;
+        }
+    };
+
+    window.resetPomoTimer = () => {
+        clearInterval(pomoState.intervalId);
+        pomoState.isRunning = false;
+        pomoState.mode = 'focus';
+        pomoState.remainingSecs = POMO_SECONDS_WORK;
+        
+        const icon = document.getElementById('pomo-toggle-icon');
+        icon.setAttribute('data-lucide', 'play');
+        document.getElementById('pomo-toggle-btn').style.boxShadow = '0 0 20px rgba(255,255,255,0.4)';
+        lucide.createIcons();
+        
+        updatePomoDisplay();
+    };
+
+    const updatePomoDisplay = () => {
+        const m = String(Math.floor(pomoState.remainingSecs / 60)).padStart(2, '0');
+        const s = String(pomoState.remainingSecs % 60).padStart(2, '0');
+        document.getElementById('pomo-time-display').textContent = `${m}:${s}`;
+
+        const badge = document.getElementById('pomo-mode-badge');
+        const ring = document.getElementById('pomo-progress-ring');
+        
+        if(!badge || !ring) return;
+
+        let total = pomoState.mode === 'focus' ? POMO_SECONDS_WORK : POMO_SECONDS_BREAK;
+        let percentage = pomoState.remainingSecs / total;
+        // SVG circle path 283 = 2 * PI * r (r=45)
+        ring.style.strokeDashoffset = 283 - (283 * percentage);
+
+        if (pomoState.mode === 'focus') {
+            badge.textContent = '專注時間';
+            badge.className = 'absolute -top-6 left-1/2 -translate-x-1/2 bg-rose-600 text-rose-50 px-8 py-2 rounded-full border-4 border-slate-950 shadow-[0_0_20px_rgba(225,29,72,0.5)] tracking-widest text-lg font-black z-10 transition-colors duration-500 whitespace-nowrap';
+            ring.classList.replace('text-emerald-500', 'text-rose-500');
+        } else {
+            badge.textContent = '休息時間';
+            badge.className = 'absolute -top-6 left-1/2 -translate-x-1/2 bg-emerald-600 text-emerald-50 px-8 py-2 rounded-full border-4 border-slate-950 shadow-[0_0_20px_rgba(16,185,129,0.5)] tracking-widest text-lg font-black z-10 transition-colors duration-500 whitespace-nowrap';
+            ring.classList.replace('text-rose-500', 'text-emerald-500');
+        }
+    };
+
+    const playPomodoroAlert = () => {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(880, audioCtx.currentTime); // A5
+        osc.frequency.exponentialRampToValueAtTime(440, audioCtx.currentTime + 0.5); // Slide to A4
+        
+        gain.gain.setValueAtTime(0, audioCtx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.5, audioCtx.currentTime + 0.1);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 1.5);
+        
+        osc.start(audioCtx.currentTime);
+        osc.stop(audioCtx.currentTime + 1.5);
+    };
 
     // ----------------------------------------------------------------------
     // 模組 3: 小組計時器 (TIMER MODE)
@@ -2437,24 +2800,63 @@
       scoreEls.removeBtn.style.opacity = scoreEls.removeBtn.disabled ? '0.5' : '1';
     };
 
-    const updateTeamScoreUI = (id, score, type) => {
+    const broadcastScore = () => {
+        if (typeof sendToAllStudents === 'function') {
+            sendToAllStudents({ type: 'sync_score', teams: scoreState.teams });
+        }
+    };
+
+    const showFloatingScoreEffect = (targetEl, type, pointsDiff) => {
+        const container = targetEl.closest('.bg-gradient-to-br');
+        if (!container) return;
+
+        // Create floating text
+        const floatEl = document.createElement('div');
+        const sign = pointsDiff > 0 ? '+' : '';
+        floatEl.textContent = `${sign}${pointsDiff}`;
+        floatEl.className = `absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-6xl md:text-7xl font-black drop-shadow-[0_0_15px_rgba(0,0,0,0.5)] z-50 pointer-events-none transition-all duration-700 ease-out opacity-100 ${type === 'add' ? 'text-emerald-400' : 'text-rose-400'}`;
+        container.appendChild(floatEl);
+
+        // Flash container border and shadow
+        container.classList.add('scale-105', 'z-10');
+        if (type === 'add') container.classList.add('border-emerald-400', 'shadow-[0_0_30px_rgba(16,185,129,0.5)]');
+        else container.classList.add('border-rose-400', 'shadow-[0_0_30px_rgba(244,63,94,0.5)]');
+
+        // Animate float
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                floatEl.style.transform = 'translate(-50%, -200%) scale(1.5)';
+                floatEl.style.opacity = '0';
+            });
+        });
+
+        // Cleanup
+        setTimeout(() => {
+            if (floatEl.parentNode === container) container.removeChild(floatEl);
+            container.classList.remove('scale-105', 'z-10', 'border-emerald-400', 'border-rose-400', 'shadow-[0_0_30px_rgba(16,185,129,0.5)]', 'shadow-[0_0_30px_rgba(244,63,94,0.5)]');
+        }, 700);
+    };
+
+    const updateTeamScoreUI = (id, score, type, diff = null) => {
       const scoreDisplay = document.querySelector(`.score-display[data-id="${id}"]`);
       if (scoreDisplay) {
         scoreDisplay.textContent = score;
         const colorClass = type === 'add' ? 'text-emerald-400' : 'text-rose-400';
         scoreDisplay.classList.add('scale-125', colorClass);
+        if (diff !== null) showFloatingScoreEffect(scoreDisplay, type, diff);
         setTimeout(() => {
           scoreDisplay.classList.remove('scale-125', colorClass);
         }, 200);
       }
     };
 
-    const updateMemberScoreUI = (teamId, memberIdx, score, type) => {
+    const updateMemberScoreUI = (teamId, memberIdx, score, type, diff = null) => {
       const scoreDisplay = document.querySelector(`.member-score-display[data-team-id="${teamId}"][data-member-idx="${memberIdx}"]`);
       if (scoreDisplay) {
         scoreDisplay.textContent = score;
         const colorClass = type === 'add' ? 'text-emerald-400' : 'text-rose-400';
         scoreDisplay.classList.add('scale-125', colorClass);
+        if (diff !== null) showFloatingScoreEffect(scoreDisplay, type, diff);
         setTimeout(() => {
           scoreDisplay.classList.remove('scale-125', colorClass);
         }, 200);
@@ -2462,12 +2864,13 @@
     };
 
     // 支援傳入不同顏色來區分加減分的動畫 (用於噪音自動扣分)
-    const animateScoreUpdate = (type) => {
+    const animateScoreUpdate = (type, pointsDiff = null) => {
       const colorClass = type === 'add' ? 'text-emerald-400' : 'text-rose-400';
       scoreState.teams.forEach(team => {
         const scoreDisplay = document.querySelector(`.score-display[data-id="${team.id}"]`);
         if (scoreDisplay) {
           scoreDisplay.classList.add('scale-125', colorClass);
+          if (pointsDiff !== null) showFloatingScoreEffect(scoreDisplay, type, pointsDiff);
           setTimeout(() => {
             scoreDisplay.classList.remove('scale-125', colorClass);
           }, 300);
@@ -2489,24 +2892,25 @@
         if (action === 'add') {
           team.score += 1;
           playScoreSound('add');
-          updateTeamScoreUI(id, team.score, 'add');
+          updateTeamScoreUI(id, team.score, 'add', 1);
         } else if (action === 'sub') {
           team.score -= 1;
           playScoreSound('sub');
-          updateTeamScoreUI(id, team.score, 'sub');
+          updateTeamScoreUI(id, team.score, 'sub', -1);
         } else if (action === 'add-member' && memberIdx !== null) {
           team.members[memberIdx].score += 1;
           team.score += 1; // 預設個人加分也會幫小組加分
           playScoreSound('add');
-          updateMemberScoreUI(id, memberIdx, team.members[memberIdx].score, 'add');
-          updateTeamScoreUI(id, team.score, 'add');
+          updateMemberScoreUI(id, memberIdx, team.members[memberIdx].score, 'add', 1);
+          updateTeamScoreUI(id, team.score, 'add', 1);
         } else if (action === 'sub-member' && memberIdx !== null) {
           team.members[memberIdx].score -= 1;
           team.score -= 1; // 預設個人扣分也會幫小組扣分
           playScoreSound('sub');
-          updateMemberScoreUI(id, memberIdx, team.members[memberIdx].score, 'sub');
-          updateTeamScoreUI(id, team.score, 'sub');
+          updateMemberScoreUI(id, memberIdx, team.members[memberIdx].score, 'sub', -1);
+          updateTeamScoreUI(id, team.score, 'sub', -1);
         }
+        broadcastScore();
       }
     });
 
@@ -2517,6 +2921,7 @@
         if (team) {
           team.name = e.target.value.trim() || `第 ${id} 組`;
           e.target.value = team.name; // 這裡不轉義是因為我們直接更新 input value，DOM 會處理
+          broadcastScore();
         }
       }
     });
@@ -2527,6 +2932,7 @@
         const nextId = (scoreState.teams[scoreState.teams.length - 1]?.id || 0) + 1;
         scoreState.teams.push({ id: nextId, name: `第 ${scoreState.teams.length + 1} 組`, score: 0, members: [] });
         renderScoreboard();
+        broadcastScore();
       }
     });
 
@@ -2534,6 +2940,7 @@
       if (scoreState.teams.length > 1) {
         scoreState.teams.pop();
         renderScoreboard();
+        broadcastScore();
       }
     });
 
@@ -2544,6 +2951,7 @@
             if(t.members) t.members.forEach(m => m.score = 0);
         });
         renderScoreboard();
+        broadcastScore();
         scoreEls.resetBtn.dataset.confirm = 'false';
         scoreEls.resetBtn.innerHTML = `<i data-lucide="rotate-ccw" class="w-4 h-4 pointer-events-none"></i> 分數歸零`;
         lucide.createIcons();
@@ -2663,7 +3071,8 @@
       
       scoreState.teams.forEach(t => t.score -= noiseState.deductPoints);
       renderScoreboard();
-      animateScoreUpdate('sub');
+      animateScoreUpdate('sub', -noiseState.deductPoints);
+      broadcastScore();
 
       showNoiseMessage(`音量過大！全班已扣 ${noiseState.deductPoints} 分！(冷卻中...)`, 'rose', 'alert-octagon');
       
@@ -2678,7 +3087,8 @@
       
       scoreState.teams.forEach(t => t.score += noiseState.rewardPoints);
       renderScoreboard();
-      animateScoreUpdate('add');
+      animateScoreUpdate('add', noiseState.rewardPoints);
+      broadcastScore();
       
       // 歸零重新開始計算下一輪
       noiseState.quietTimeElapsed = 0;
@@ -2997,6 +3407,10 @@
           boardState.lastX = pos.x;
           boardState.lastY = pos.y;
           redrawBoard();
+          
+          if (typeof sendToAllStudents === 'function') {
+              sendToAllStudents({ type: 'sync_board_pan', offsetX: boardState.offsetX, offsetY: boardState.offsetY });
+          }
       } else {
           // 畫圖模式：即時繪製線條並記錄點座標
           boardCtx.save();
@@ -3049,6 +3463,9 @@
         boardState.offsetX -= e.deltaX;
         boardState.offsetY -= e.deltaY;
         redrawBoard();
+        if (typeof sendToAllStudents === 'function') {
+            sendToAllStudents({ type: 'sync_board_pan', offsetX: boardState.offsetX, offsetY: boardState.offsetY });
+        }
     }, { passive: false });
 
     // 電腦版無限畫布增強體驗: 支援空白鍵按住啟動平移 (如同 Photoshop)
@@ -3429,6 +3846,13 @@
         });
       });
 
+      irsState.peer.on('call', (call) => {
+          call.answer();
+          call.on('stream', (remoteStream) => {
+              openScreenViewModal(remoteStream, '學生投影畫面中...');
+          });
+      });
+
       irsState.peer.on('error', (err) => {
         console.error("PeerJS Error:", err);
         alert("網路連線發生錯誤，請稍後再試！");
@@ -3640,6 +4064,19 @@
         }
         // ----------------------------------------
 
+        // 告知學生當前的模式與狀態 (Handshake)
+        conn.send({ type: 'sync_mode', mode: appState.currentMode });
+        if (appState.currentMode === 'board') {
+            conn.send({ type: 'sync_board', paths: boardState.paths, offsetX: boardState.offsetX, offsetY: boardState.offsetY });
+        } else if (appState.currentMode === 'score') {
+            conn.send({ type: 'sync_score', teams: scoreState.teams });
+        }
+        
+        // 確保剛加入的學生能同步目前的聊天室狀態
+        if (typeof isChatAllowed !== 'undefined') {
+            conn.send({ type: 'chat_toggle', enabled: isChatAllowed });
+        }
+
         // 如果目前有題目，補發給剛加入的學生
         if (irsState.currentQ) {
            conn.send({ type: 'question', qType: irsState.currentQ });
@@ -3688,6 +4125,10 @@
         if (typeof sendToAllStudents === 'function') {
             sendToAllStudents({ type: 'clear_board' }, peerId);
         }
+      } else if (data.type === 'request_screen_share') {
+        showShareRequestModal(peerId, data.name);
+      } else if (data.type === 'stop_screen_share') {
+        closeScreenViewModal();
       }
     };
 
@@ -3954,6 +4395,13 @@
           config: { 'iceServers': getIrsIceServers() }
       });
 
+      irsState.peer.on('call', (call) => {
+          call.answer();
+          call.on('stream', (remoteStream) => {
+              openScreenViewModal(remoteStream, '老師畫面廣播中...');
+          });
+      });
+
       irsState.peer.on('open', () => {
          const conn = irsState.peer.connect(joinId, { reliable: true });
          
@@ -4030,7 +4478,52 @@
           }
        } else if (data.type === 'sync_board') {
           boardState.paths = data.paths || [];
+          if (data.offsetX !== undefined) boardState.offsetX = data.offsetX;
+          if (data.offsetY !== undefined) boardState.offsetY = data.offsetY;
           redrawBoard();
+       } else if (data.type === 'sync_board_pan') {
+          boardState.offsetX = data.offsetX;
+          boardState.offsetY = data.offsetY;
+          redrawBoard();
+       } else if (data.type === 'sync_score') {
+          let structureChanged = false;
+          if (scoreState.teams.length !== data.teams.length) {
+              structureChanged = true;
+          } else {
+              for (let i = 0; i < scoreState.teams.length; i++) {
+                  const localTeam = scoreState.teams[i];
+                  const remoteTeam = data.teams[i];
+                  if (localTeam.id !== remoteTeam.id || localTeam.name !== remoteTeam.name || (localTeam.members && remoteTeam.members && localTeam.members.length !== remoteTeam.members.length)) {
+                      structureChanged = true;
+                      break;
+                  }
+                  
+                  if (localTeam.score !== remoteTeam.score) {
+                      const diff = remoteTeam.score - localTeam.score;
+                      const type = diff > 0 ? 'add' : 'sub';
+                      updateTeamScoreUI(localTeam.id, remoteTeam.score, type, diff);
+                  }
+                  
+                  if (localTeam.members && remoteTeam.members) {
+                      for (let j = 0; j < localTeam.members.length; j++) {
+                          if (localTeam.members[j].name !== remoteTeam.members[j].name) {
+                              structureChanged = true;
+                              break;
+                          }
+                          if (localTeam.members[j].score !== remoteTeam.members[j].score) {
+                              const mDiff = remoteTeam.members[j].score - localTeam.members[j].score;
+                              const mType = mDiff > 0 ? 'add' : 'sub';
+                              updateMemberScoreUI(localTeam.id, j, remoteTeam.members[j].score, mType, mDiff);
+                          }
+                      }
+                  }
+              }
+          }
+          
+          scoreState.teams = data.teams;
+          if (structureChanged) {
+              renderScoreboard();
+          }
        } else if (data.type === 'draw_path') {
           boardState.paths.push(data.path);
           redrawBoard();
@@ -4122,6 +4615,12 @@
           irsEls.studentOptions.classList.add('hidden');
           irsEls.studentWaiting.innerHTML = '<i data-lucide="check-circle" class="w-16 h-16 text-emerald-400 mx-auto"></i><p class="text-xl font-bold text-slate-300">本題已結束作答</p>';
           lucide.createIcons();
+       } else if (data.type === 'approve_screen_share') {
+          startStudentCasting();
+       } else if (data.type === 'deny_screen_share') {
+          alert('老師拒絕了您的投影申請。');
+       } else if (data.type === 'stop_screen_share') {
+          closeScreenViewModal();
        }
     };
 
@@ -4557,7 +5056,200 @@
             modal.classList.remove('flex');
         }
     };
+
+    // ==========================================
+    // Screen Sharing Logic (WebRTC Media)
+    // ==========================================
+    let localScreenStream = null;
+    let isBroadcasting = false;
+
+    // 老師：廣播螢幕給全班
+    window.toggleTeacherBroadcast = async () => {
+        if (isBroadcasting) {
+            window.stopTeacherBroadcast();
+            return;
+        }
+
+        try {
+            localScreenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+            isBroadcasting = true;
+
+            const btn = document.getElementById('teacher-broadcast-btn');
+            const icon = document.getElementById('broadcast-icon');
+            const text = document.getElementById('broadcast-text');
+            if(btn) {
+                btn.classList.replace('bg-emerald-600/20', 'bg-rose-600/20');
+                btn.classList.replace('hover:bg-emerald-600', 'hover:bg-rose-600');
+                btn.classList.replace('border-emerald-500/30', 'border-rose-500/30');
+                btn.classList.replace('text-emerald-300', 'text-rose-300');
+            }
+            if(text) text.textContent = '停止廣播';
+            if(icon) icon.setAttribute('data-lucide', 'monitor-x');
+            lucide.createIcons();
+
+            localScreenStream.getVideoTracks()[0].addEventListener('ended', () => {
+                window.stopTeacherBroadcast();
+            });
+
+            // 播打給目前所有連線的學生
+            Object.keys(irsState.connections).forEach(peerId => {
+                if(irsState.peer) irsState.peer.call(peerId, localScreenStream);
+            });
+            
+            showGlobalToast("正在廣播螢幕畫面給全班", "monitor-up", "text-emerald-400");
+        } catch (err) {
+            console.error("Error sharing screen:", err);
+            // 用戶取消或無權限
+        }
+    };
+
+    window.stopTeacherBroadcast = () => {
+        if (localScreenStream) {
+            localScreenStream.getTracks().forEach(t => t.stop());
+            localScreenStream = null;
+        }
+        isBroadcasting = false;
+
+        const btn = document.getElementById('teacher-broadcast-btn');
+        const icon = document.getElementById('broadcast-icon');
+        const text = document.getElementById('broadcast-text');
+        if(btn) {
+            btn.classList.replace('bg-rose-600/20', 'bg-emerald-600/20');
+            btn.classList.replace('hover:bg-rose-600', 'hover:bg-emerald-600');
+            btn.classList.replace('border-rose-500/30', 'border-emerald-500/30');
+            btn.classList.replace('text-rose-300', 'text-emerald-300');
+        }
+        if(text) text.textContent = '廣播螢幕';
+        if(icon) icon.setAttribute('data-lucide', 'monitor-up');
+        lucide.createIcons();
+
+        // 通知學生停止顯示
+        Object.values(irsState.connections).forEach(conn => {
+            conn.send({ type: 'stop_screen_share' });
+        });
+    };
+
+    // 學生：申請投影畫面給老師
+    window.requestCastToTeacher = () => {
+        if(irsState.hostConn) {
+            irsState.hostConn.send({ type: 'request_screen_share', name: irsEls.myName?.textContent || '學生' });
+            showGlobalToast("已發送投影申請，等待老師同意...", "clock", "text-cyan-400");
+        }
+    };
+
+    let studentCastStream = null;
+    window.startStudentCasting = async () => {
+        try {
+            studentCastStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+            if(irsState.peer && irsState.hostId) {
+                irsState.peer.call(irsState.hostId, studentCastStream);
+            }
+            showGlobalToast("您正在投影畫面給老師", "monitor-up", "text-emerald-400");
+            
+            studentCastStream.getVideoTracks()[0].addEventListener('ended', () => {
+                if(irsState.hostConn) irsState.hostConn.send({ type: 'stop_screen_share' });
+                studentCastStream = null;
+            });
+        } catch (err) {
+            console.error("Error casting screen:", err);
+            if(irsState.hostConn) irsState.hostConn.send({ type: 'stop_screen_share' });
+        }
+    };
+
+    // 關閉檢視視窗
+    window.closeScreenViewModal = () => {
+        const modal = document.getElementById('screen-view-modal');
+        const video = document.getElementById('screen-view-video');
+        if(modal) modal.classList.add('hidden');
+        if(video && video.srcObject) {
+            // 如果這不是自己的 localScreenStream，則關閉串流 (適用於老師收學生的串流)
+            if (video.srcObject !== localScreenStream && video.srcObject !== studentCastStream) {
+                video.srcObject.getTracks().forEach(t => t.stop());
+            }
+            video.srcObject = null;
+        }
+        
+        // 推播停止事件
+        if(!window._irsIsStudentMode) {
+            Object.values(irsState.connections).forEach(conn => {
+                conn.send({ type: 'stop_screen_share' });
+            });
+        } else if (irsState.hostConn && studentCastStream) {
+            studentCastStream.getTracks().forEach(t => t.stop());
+            studentCastStream = null;
+            irsState.hostConn.send({ type: 'stop_screen_share' });
+        }
+    };
+
+    // 開啟畫面播放
+    window.openScreenViewModal = (stream, titleText) => {
+        const modal = document.getElementById('screen-view-modal');
+        const video = document.getElementById('screen-view-video');
+        const title = document.getElementById('screen-view-title');
+        if(modal && video && title) {
+            title.textContent = titleText;
+            video.srcObject = stream;
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+    };
+
+    window.showShareRequestModal = (studentId, studentName) => {
+        const modal = document.getElementById('share-request-modal');
+        const nameEl = document.getElementById('share-request-name');
+        const confirmBtn = document.getElementById('share-request-confirm');
+        const denyBtn = document.getElementById('share-request-deny');
+        
+        if(modal && nameEl) {
+            nameEl.textContent = studentName;
+            
+            confirmBtn.onclick = () => {
+                modal.classList.add('hidden');
+                if(irsState.connections[studentId]) {
+                    irsState.connections[studentId].send({ type: 'approve_screen_share' });
+                }
+            };
+            
+            denyBtn.onclick = () => {
+                modal.classList.add('hidden');
+                if(irsState.connections[studentId]) {
+                    irsState.connections[studentId].send({ type: 'deny_screen_share' });
+                }
+            };
+            
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+    };
   </script>
+
+  <!-- 學生投影請求 Modal (Teacher Only) -->
+  <div id="share-request-modal" class="fixed inset-0 z-[120] bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center p-4">
+     <div class="bg-slate-900 border border-indigo-500/30 rounded-2xl shadow-2xl p-6 max-w-sm w-full text-center animate-pop-in">
+        <div class="w-16 h-16 bg-indigo-500/20 rounded-full flex items-center justify-center mx-auto mb-4 border border-indigo-500/50">
+           <i data-lucide="monitor-up" class="w-8 h-8 text-indigo-400 animate-pulse"></i>
+        </div>
+        <h3 class="text-xl font-bold text-white mb-2">投影請求</h3>
+        <p class="text-slate-300 mb-6">學生 <span id="share-request-name" class="font-bold text-emerald-400 text-lg"></span> 請求分享畫面給您，是否同意？</p>
+        <div class="flex gap-3 justify-center">
+           <button id="share-request-deny" class="px-6 py-2.5 rounded-xl bg-slate-800 hover:bg-rose-500/20 text-slate-300 hover:text-rose-400 border border-white/5 transition-all font-bold">拒絕</button>
+           <button id="share-request-confirm" class="px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold shadow-lg shadow-indigo-500/30 transition-all">同意投影</button>
+        </div>
+     </div>
+  </div>
+
+  <!-- 共用全螢幕影片視窗 (Teacher & Student) -->
+  <div id="screen-view-modal" class="fixed inset-0 z-[120] bg-slate-950/90 backdrop-blur-md hidden items-center justify-center p-4">
+     <div class="w-full h-full max-w-6xl max-h-[90vh] bg-black border border-white/20 rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-pop-in">
+        <div class="p-3 bg-slate-900 border-b border-white/10 flex justify-between items-center shrink-0">
+           <h3 id="screen-view-title" class="text-lg font-bold text-white flex items-center gap-2"><i data-lucide="monitor-play" class="w-5 h-5 text-emerald-400"></i> 即時投影畫面</h3>
+           <button onclick="closeScreenViewModal()" class="text-slate-400 hover:text-rose-400 p-1.5 rounded-lg hover:bg-white/5 transition-colors bg-slate-800 border border-white/10"><i data-lucide="x" class="w-5 h-5"></i> 關閉觀看</button>
+        </div>
+        <div class="flex-1 w-full bg-black relative flex items-center justify-center">
+           <video id="screen-view-video" autoplay playsinline controls class="w-full h-full object-contain"></video>
+        </div>
+     </div>
+  </div>
 
   <!-- 學生加入通知容器 -->
   <div id="join-toast-container" class="fixed top-24 right-6 z-[100] flex flex-col gap-3 pointer-events-none items-end w-72"></div>
