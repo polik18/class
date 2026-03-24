@@ -1415,8 +1415,8 @@
           }
 
           if (m === 'irs') {
-              if (typeof irsState !== 'undefined' && !irsState.roomId && !irsState.hostConn) {
-                  // 如果尚未建立過連線，自動以老師身分初始化
+              if (typeof irsState !== 'undefined' && !irsState.roomId && !irsState.hostConn && !window._irsIsStudentMode) {
+                  // 如果尚未建立過連線，且不是學生掃碼進入的模式，自動以老師身分初始化
                   if (typeof initIRSTeacher === 'function') initIRSTeacher();
               }
           }
@@ -3299,7 +3299,12 @@
       const newUrl = window.location.href.split('?')[0];
       window.history.replaceState({}, document.title, newUrl);
       
-      initIRSTeacher(); // Return to default Teacher mode
+      // 若為學生掃碼進入的模式，返回後顯示學生登入畫面；否則進入老師視圖
+      if (window._irsIsStudentMode) {
+          showIRSStudentLogin();
+      } else {
+          initIRSTeacher();
+      }
     };
 
     // ===== 老師端邏輯 =====
@@ -4290,6 +4295,8 @@
         const urlParams = new URLSearchParams(window.location.search);
         const roomParam = urlParams.get('room');
         if (roomParam) {
+            // 標記此頁面以學生模式開啟，避免 switchAppMode 或 leaveIRS 誤觸老師初始化
+            window._irsIsStudentMode = true;
             // 設定標記，避免 Welcome Modal 被其他 load 事件觸發顯示
             localStorage.setItem('classroom_assistant_pro_seen', 'true');
             // 強制隱藏 Welcome Modal
