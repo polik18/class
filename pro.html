@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>智慧課堂助手</title>
+  <link rel="icon" href="data:;base64,iVBORw0KGgo=">
   
   <!-- 引入 Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -1082,22 +1083,25 @@
           <div class="space-y-4">
             <div>
                <label class="block text-sm font-medium text-slate-400 mb-1">教室代碼 (Room ID)</label>
-               <input type="text" id="irs-join-id" class="w-full bg-slate-950 border border-white/10 rounded-xl px-4 py-3 text-white font-mono focus:outline-none focus:border-cyan-500 transition-colors uppercase" placeholder="例如: XXX-YYY">
+               <input type="text" id="irs-join-id" onkeydown="if(event.key==='Enter') joinIRS()" class="w-full bg-slate-950 border border-white/10 rounded-xl px-4 py-3 text-white font-mono focus:outline-none focus:border-cyan-500 transition-colors uppercase" placeholder="例如: XXX-YYY">
             </div>
             <div>
-               <label class="block text-sm font-medium text-slate-400 mb-1">你的名字 (暱稱)</label>
-               <input type="text" id="irs-join-name" class="w-full bg-slate-950 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-cyan-500 transition-colors" placeholder="輸入姓名">
+               <label class="block text-sm font-medium text-slate-400 mb-1 flex items-center justify-between">
+                 <span>你的名字 (暱稱)</span>
+                 <span class="text-xs text-rose-500 font-bold bg-rose-500/10 px-1.5 py-0.5 rounded">*必填</span>
+               </label>
+               <input type="text" id="irs-join-name" onkeydown="if(event.key==='Enter') joinIRS()" class="w-full bg-slate-950 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-cyan-500 transition-colors" placeholder="輸入姓名">
             </div>
             <div>
                <label class="block text-sm font-medium text-slate-400 mb-2">你的性別 (分組用)</label>
                <div class="flex gap-6 bg-slate-950 border border-white/10 rounded-xl px-4 py-3 shadow-inner">
                   <label class="flex items-center gap-2 text-white cursor-pointer flex-1 justify-center transition-all hover:scale-105">
-                     <input type="radio" name="irs-gender" value="男" class="w-4 h-4 text-cyan-500 focus:ring-cyan-500 bg-slate-800 border-white/20"> 
+                     <input type="radio" name="irs-gender" value="男" onkeydown="if(event.key==='Enter') joinIRS()" class="w-4 h-4 text-cyan-500 focus:ring-cyan-500 bg-slate-800 border-white/20"> 
                      <span class="font-bold text-cyan-400">男生 <i data-lucide="mars" class="w-4 h-4 inline"></i></span>
                   </label>
                   <div class="w-px bg-white/10"></div>
                   <label class="flex items-center gap-2 text-white cursor-pointer flex-1 justify-center transition-all hover:scale-105">
-                     <input type="radio" name="irs-gender" value="女" class="w-4 h-4 text-rose-500 focus:ring-rose-500 bg-slate-800 border-white/20"> 
+                     <input type="radio" name="irs-gender" value="女" onkeydown="if(event.key==='Enter') joinIRS()" class="w-4 h-4 text-rose-500 focus:ring-rose-500 bg-slate-800 border-white/20"> 
                      <span class="font-bold text-rose-400">女生 <i data-lucide="venus" class="w-4 h-4 inline"></i></span>
                   </label>
                </div>
@@ -1340,8 +1344,14 @@
       irs: document.getElementById('app-irs')
     };
 
-    // 音效系統
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    // 音效系統 (利用 Proxy 延遲建立 AudioContext，以符合瀏覽器避免自動播放的政策)
+    const audioCtx = new Proxy({}, {
+        get: (target, prop) => {
+            if (!target._ctx) target._ctx = new (window.AudioContext || window.webkitAudioContext)();
+            let val = target._ctx[prop];
+            return typeof val === 'function' ? val.bind(target._ctx) : val;
+        }
+    });
     
     // 共用靜音切換
     navEls.muteBtn.addEventListener('click', () => {
@@ -3299,6 +3309,7 @@
               'iceServers': [
                   { urls: 'stun:stun.l.google.com:19302' },
                   { urls: 'stun:stun1.l.google.com:19302' },
+                  { urls: 'stun:stun.cloudflare.com:3478' },
                   { urls: 'stun:stun2.l.google.com:19302' },
                   { urls: 'turn:openrelay.metered.ca:80', username: 'openrelayproject', credential: 'openrelayproject' },
                   { urls: 'turn:openrelay.metered.ca:443', username: 'openrelayproject', credential: 'openrelayproject' },
@@ -3842,6 +3853,7 @@
               'iceServers': [
                   { urls: 'stun:stun.l.google.com:19302' },
                   { urls: 'stun:stun1.l.google.com:19302' },
+                  { urls: 'stun:stun.cloudflare.com:3478' },
                   { urls: 'stun:stun2.l.google.com:19302' },
                   { urls: 'turn:openrelay.metered.ca:80', username: 'openrelayproject', credential: 'openrelayproject' },
                   { urls: 'turn:openrelay.metered.ca:443', username: 'openrelayproject', credential: 'openrelayproject' },
@@ -3851,9 +3863,21 @@
       });
 
       irsState.peer.on('open', () => {
-         const conn = irsState.peer.connect(joinId);
+         const conn = irsState.peer.connect(joinId, { reliable: true });
          
+         // 設定連線逾時機制 (10秒)
+         const connTimeout = setTimeout(() => {
+             if (irsEls.joinBtn.disabled) {
+                 irsState.peer.destroy();
+                 irsEls.loginError.textContent = "連線逾時！此台電腦可能遭受防火牆阻擋，或瀏覽器禁用了WebRTC(防追蹤/擋廣告外掛)。請嘗試更換瀏覽器或網路。";
+                 irsEls.loginError.classList.remove('hidden');
+                 irsEls.joinBtn.innerHTML = '連線加入';
+                 irsEls.joinBtn.disabled = false;
+             }
+         }, 10000);
+
          conn.on('open', () => {
+            clearTimeout(connTimeout);
             irsState.hostConn = conn;
             conn.send({ type: 'join', name: joinName, gender: joinGender });
             
@@ -3877,7 +3901,17 @@
          });
 
          irsState.peer.on('error', (err) => {
-            irsEls.loginError.textContent = "連線失敗，請確認代碼是否正確！";
+            clearTimeout(connTimeout);
+            console.error("PeerJS Error:", err);
+            let errMsg = "連線發生未知的錯誤！";
+            if (err.type === 'peer-unavailable') {
+                errMsg = "連線失敗，請確認代碼是否正確或老師是否已開房！";
+            } else if (err.type === 'webrtc') {
+                errMsg = "WebRTC 建立失敗。請確認防火牆未阻擋，或更換 Chrome/Edge 瀏覽器。";
+            } else if (err.type === 'network') {
+                errMsg = "網路連線中斷，無法連接至訊號伺服器。";
+            }
+            irsEls.loginError.textContent = errMsg;
             irsEls.loginError.classList.remove('hidden');
             irsEls.joinBtn.innerHTML = '連線加入';
             irsEls.joinBtn.disabled = false;
