@@ -1385,6 +1385,13 @@
              viewEls[m].classList.add((m === 'clock' || m === 'score' || m === 'board' || m === 'irs') ? 'flex' : 'grid');
           }
 
+          if (m === 'irs') {
+              if (typeof irsState !== 'undefined' && !irsState.roomId && !irsState.hostConn) {
+                  // 如果尚未建立過連線，自動以老師身分初始化
+                  if (typeof initIRSTeacher === 'function') initIRSTeacher();
+              }
+          }
+
           // 觸發特定模式的重新計算/排版
           if (m === 'clock') updateClock(); 
           if (m === 'timer') updateTimerDisplay();
