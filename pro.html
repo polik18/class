@@ -397,19 +397,7 @@
         <!-- 錯誤訊息 -->
         <div id="error-msg" class="hidden p-3 bg-red-500/20 border border-red-500/30 rounded-lg text-red-400 text-sm text-center"></div>
 
-        <!-- 核心操作按鈕 -->
-        <div class="pt-2 flex gap-3">
-          <button id="draw-btn" class="flex-1 group relative py-4 rounded-2xl font-black text-2xl flex items-center justify-center gap-3 transition-all duration-300 overflow-hidden bg-indigo-600 hover:bg-indigo-500 text-white shadow-[0_0_30px_rgba(79,70,229,0.4)] hover:shadow-[0_0_40px_rgba(79,70,229,0.6)] animate-glow">
-            <span id="draw-btn-content" class="flex items-center justify-center gap-2 relative z-10 pointer-events-none">
-              <i data-lucide="play" class="w-7 h-7 fill-current"></i> 開始抽籤
-            </span>
-            <div id="draw-btn-fx" class="absolute inset-0 -translate-x-full group-hover:animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none" style="transform-origin: left"></div>
-          </button>
-          
-          <button id="reset-btn" class="w-16 flex-none rounded-2xl py-4 bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors border border-white/10 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center shadow-md active:scale-95" title="重新開始 / 重置紀錄" disabled>
-            <i data-lucide="rotate-ccw" class="w-6 h-6 pointer-events-none"></i>
-          </button>
-        </div>
+        <!-- 核心操作按鈕移至上方顯示區 -->
 
         <!-- ✨ 進階：隨機分組模組 (Accordion) -->
         <div class="mt-4 border border-emerald-500/20 rounded-2xl overflow-hidden bg-slate-900 shadow-md transition-all duration-300">
@@ -465,41 +453,61 @@
         </div>
       </div>
 
-      <!-- 原右側：顯示區 (調整為 order-1 在上方) -->
-      <div class="order-1 w-full min-h-[400px] lg:min-h-[500px] flex flex-col relative bg-slate-900/40 backdrop-blur-sm rounded-3xl border border-white/10 shadow-2xl overflow-hidden p-8 group">
-        <!-- 背景裝飾 -->
-        <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-gradient-to-b from-indigo-500/20 to-transparent blur-[80px] rounded-full pointer-events-none transition-opacity duration-700 group-hover:opacity-70"></div>
-        
-        <div id="display-area" class="flex-1 flex flex-col items-center justify-center relative z-10 w-full">
-          <!-- 待命狀態 -->
-          <div id="standby-view" class="text-center space-y-6 opacity-80">
-            <div class="relative w-32 h-32 mx-auto animate-float">
-              <div class="absolute inset-0 bg-indigo-500/30 blur-2xl rounded-full animate-pulse"></div>
-              <i data-lucide="trophy" class="w-full h-full text-slate-500 relative z-10 drop-shadow-lg"></i>
+      <!-- 顯示區與抽籤按鈕 (order-1: 永遠保持在最上方) -->
+      <div class="order-1 w-full max-w-4xl mx-auto flex flex-col gap-4">
+        <!-- 顯示螢幕 -->
+        <div class="w-full min-h-[400px] lg:min-h-[450px] flex flex-col relative bg-slate-900/40 backdrop-blur-sm rounded-[2rem] border border-white/10 shadow-2xl overflow-hidden p-8 group">
+          <!-- 背景裝飾 -->
+          <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-gradient-to-b from-indigo-500/20 to-transparent blur-[80px] rounded-full pointer-events-none transition-opacity duration-700 group-hover:opacity-70"></div>
+          
+          <div id="display-area" class="flex-1 flex flex-col items-center justify-center relative z-10 w-full">
+            <!-- 待命狀態 (已改為可點擊跳轉設定) -->
+            <div id="standby-view" class="text-center space-y-6 opacity-80 cursor-pointer hover:scale-105 hover:opacity-100 transition-all duration-300 group/standby" onclick="document.querySelector('.order-2').scrollIntoView({behavior: 'smooth'})" title="點此滾動至設定區塊">
+              <div class="relative w-32 h-32 mx-auto animate-float">
+                <div class="absolute inset-0 bg-indigo-500/30 blur-2xl rounded-full animate-pulse group-hover/standby:bg-indigo-500/50 transition-colors"></div>
+                <i data-lucide="trophy" class="w-full h-full text-slate-500 relative z-10 drop-shadow-lg group-hover/standby:text-white transition-colors"></i>
+              </div>
+              <p class="text-2xl text-slate-400 font-medium tracking-widest animate-pulse group-hover/standby:text-white transition-colors">等待抽籤開始...</p>
+              <div class="opacity-0 group-hover/standby:opacity-100 transition-opacity flex items-center justify-center gap-1.5 text-indigo-400 font-bold text-sm mt-2">
+                 <i data-lucide="pointer" class="w-4 h-4"></i> 點此前往設定
+              </div>
             </div>
-            <p class="text-2xl text-slate-400 font-medium tracking-widest animate-pulse">等待抽籤開始...</p>
-          </div>
 
-          <!-- 抽籤中狀態 -->
-          <div id="rolling-view" class="hidden w-full max-w-4xl flex flex-wrap justify-center gap-4">
-            <!-- 跳動的選項會插在這裡 -->
-          </div>
-
-          <!-- 結果公佈狀態 -->
-          <div id="result-view" class="hidden w-full flex flex-col items-center">
-            <div id="result-title-container" class="inline-flex items-center justify-center flex-wrap gap-4 mb-10 px-8 py-3 rounded-full bg-gradient-to-r from-amber-500/10 via-orange-500/20 to-amber-500/10 border border-amber-500/30 animate-bounce-soft shadow-[0_0_30px_rgba(245,158,11,0.2)]">
-              <span id="result-title-text" class="text-amber-400 font-bold tracking-widest text-lg">🎉 恭喜以下得獎者 🎉</span>
+            <!-- 抽籤中狀態 -->
+            <div id="rolling-view" class="hidden w-full max-w-4xl flex flex-wrap justify-center gap-4">
+              <!-- 跳動的選項會插在這裡 -->
             </div>
-            <div id="winners-container" class="flex flex-wrap justify-center gap-6 w-full max-w-4xl">
-              <!-- 得獎者卡片會插在這裡 -->
+
+            <!-- 結果公佈狀態 -->
+            <div id="result-view" class="hidden w-full flex flex-col items-center">
+              <div id="result-title-container" class="inline-flex items-center justify-center flex-wrap gap-4 mb-4 md:mb-10 px-8 py-3 rounded-full bg-gradient-to-r from-amber-500/10 via-orange-500/20 to-amber-500/10 border border-amber-500/30 animate-bounce-soft shadow-[0_0_30px_rgba(245,158,11,0.2)]">
+                <span id="result-title-text" class="text-amber-400 font-bold tracking-widest text-lg">🎉 恭喜以下得獎者 🎉</span>
+              </div>
+              <div id="winners-container" class="flex flex-wrap justify-center gap-6 w-full max-w-4xl">
+                <!-- 得獎者卡片會插在這裡 -->
+              </div>
             </div>
           </div>
         </div>
 
-        <!-- 向下引導提示 -->
-        <div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 opacity-70 animate-bounce cursor-pointer hover:opacity-100 transition-opacity z-20" onclick="document.querySelector('.order-2').scrollIntoView({behavior: 'smooth'})">
-          <span class="text-[10px] text-slate-400 font-bold tracking-widest">向下滾動進行抽籤設定</span>
-          <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400"></i>
+        <!-- 移上來放在顯示畫面正下方的「核心操作按鈕」 -->
+        <div class="flex gap-3 w-full animate-pop-in">
+          <button id="draw-btn" class="flex-1 group relative py-4 sm:py-5 rounded-3xl font-black text-3xl flex items-center justify-center gap-3 transition-all duration-300 overflow-hidden bg-indigo-600 hover:bg-indigo-500 text-white shadow-[0_10px_40px_rgba(79,70,229,0.5)] hover:shadow-[0_15px_50px_rgba(79,70,229,0.7)] hover:-translate-y-1 active:scale-95 active:translate-y-0">
+            <span id="draw-btn-content" class="flex items-center justify-center gap-2 relative z-10 pointer-events-none tracking-widest">
+              <i data-lucide="play" class="w-8 h-8 fill-current"></i> 開始抽籤
+            </span>
+            <div id="draw-btn-fx" class="absolute inset-0 -translate-x-full group-hover:animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none" style="transform-origin: left"></div>
+          </button>
+          
+          <button id="reset-btn" class="w-20 sm:w-24 flex-none rounded-3xl py-4 sm:py-5 bg-slate-800 hover:bg-slate-700 text-slate-300 transition-all border border-white/10 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center shadow-lg hover:shadow-xl active:scale-95 hover:-translate-y-1" title="重新開始 / 重置紀錄" disabled>
+            <i data-lucide="rotate-ccw" class="w-7 h-7 pointer-events-none"></i>
+          </button>
+        </div>
+
+        <!-- 向下引導提示 (移到按鈕外圍) -->
+        <div class="mt-4 flex flex-col items-center gap-1.5 opacity-60 animate-bounce cursor-pointer hover:opacity-100 transition-opacity z-20" onclick="document.querySelector('.order-2').scrollIntoView({behavior: 'smooth'})">
+          <span class="text-xs text-slate-400 font-bold tracking-widest">向下滑動修改設定</span>
+          <i data-lucide="chevron-down" class="w-5 h-5 text-slate-400"></i>
         </div>
       </div>
     </div>
