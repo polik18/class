@@ -962,6 +962,11 @@
                    <i data-lucide="qr-code" class="w-4 h-4"></i> 顯示 QRCode
                  </button>
               </div>
+              <div class="mt-2">
+                 <button id="irs-chat-toggle-btn" onclick="toggleTeacherChat()" class="w-full py-2.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 font-bold transition-all flex items-center justify-center gap-2 border border-emerald-500/30 shadow-sm text-sm">
+                   <i data-lucide="message-circle" class="w-4 h-4"></i> <span id="irs-chat-toggle-text">聊天室：已開啟</span>
+                 </button>
+              </div>
               <div class="flex items-center justify-between text-sm mt-2 border-t border-white/5 pt-3">
                 <span class="text-slate-400">在線學生數</span>
                 <span id="irs-student-count" class="font-bold text-emerald-400 bg-emerald-500/20 px-2.5 py-0.5 rounded-full">0</span>
@@ -3263,7 +3268,16 @@
       irsEls.roomIdMini.textContent = "建立中...";
       
       const newRoomId = generateRoomId();
-      irsState.peer = new Peer(newRoomId, { debug: 2 });
+      irsState.peer = new Peer(newRoomId, { 
+          debug: 2,
+          config: {
+              'iceServers': [
+                  { url: 'stun:stun.l.google.com:19302' },
+                  { url: 'stun:stun1.l.google.com:19302' },
+                  { url: 'stun:stun2.l.google.com:19302' }
+              ]
+          }
+      });
       
       irsState.peer.on('open', (id) => {
         irsState.roomId = id;
@@ -3787,7 +3801,15 @@
       irsEls.joinBtn.disabled = true;
 
       irsState.studentName = joinName;
-      irsState.peer = new Peer();
+      irsState.peer = new Peer({
+          config: {
+              'iceServers': [
+                  { url: 'stun:stun.l.google.com:19302' },
+                  { url: 'stun:stun1.l.google.com:19302' },
+                  { url: 'stun:stun2.l.google.com:19302' }
+              ]
+          }
+      });
 
       irsState.peer.on('open', () => {
          const conn = irsState.peer.connect(joinId, { reliable: true });
@@ -3854,6 +3876,17 @@
           boardState.offsetX = 0;
           boardState.offsetY = 0;
           redrawBoard();
+       } else if (data.type === 'chat_toggle') {
+          const chatInput = document.getElementById('chat-input');
+          if (data.enabled) {
+              chatInput.disabled = false;
+              chatInput.placeholder = "輸入訊息...";
+              appendChatMessage("系統", "老師已開啟聊天室", new Date().toLocaleTimeString('zh-TW', { hour12: false }), false);
+          } else {
+              chatInput.disabled = true;
+              chatInput.placeholder = "老師已關閉聊天室";
+              appendChatMessage("系統", "老師已關閉聊天室", new Date().toLocaleTimeString('zh-TW', { hour12: false }), false);
+          }
        } else if (data.type === 'chat_msg') {
           appendChatMessage(data.name, data.msg, data.timestamp, false);
        } else if (data.type === 'question') {
@@ -3962,23 +3995,44 @@
         document.getElementById('data-manage-modal').classList.add('hidden');
     };
 
-    function parseCSVLine(text) {
-        let ret = [], col = "", inQuote = false;
+    function parseCSV(text) {
+        let result = [];
+        let col = "";
+        let row = [];
+        let inQuote = false;
         for (let i = 0; i < text.length; i++) {
             let c = text[i];
             if (inQuote) {
                 if (c === '"') {
-                    if (i + 1 < text.length && text[i + 1] === '"') { col += '"'; i++; }
-                    else { inQuote = false; }
-                } else { col += c; }
+                    if (i + 1 < text.length && text[i+1] === '"') {
+                        col += '"'; i++;
+                    } else {
+                        inQuote = false;
+                    }
+                } else {
+                    col += c;
+                }
             } else {
-                if (c === '"') { inQuote = true; }
-                else if (c === ',') { ret.push(col); col = ""; }
-                else { col += c; }
+                if (c === '"') {
+                    inQuote = true;
+                } else if (c === ',') {
+                    row.push(col);
+                    col = "";
+                } else if (c === '\n') {
+                    row.push(col);
+                    result.push(row);
+                    row = [];
+                    col = "";
+                } else if (c !== '\r') {
+                    col += c;
+                }
             }
         }
-        ret.push(col);
-        return ret;
+        if (col !== "" || text[text.length - 1] === ',') {
+            row.push(col);
+        }
+        if (row.length > 0) result.push(row);
+        return result;
     }
 
     window.exportClassData = () => {
@@ -4048,16 +4102,13 @@
         const reader = new FileReader();
         reader.onload = (e) => {
             try {
-                const lines = e.target.result.split(/\r?\n/);
+                const rows = parseCSV(e.target.result);
                 let importedNames = [];
                 let importedTeams = [];
                 
-                for (let i = 1; i < lines.length; i++) {
-                    const line = lines[i].trim();
-                    if (!line) continue;
-                    
-                    const cols = parseCSVLine(line);
-                    if (cols.length < 2) continue;
+                for (let i = 1; i < rows.length; i++) {
+                    const cols = rows[i];
+                    if (!cols || cols.length < 2) continue;
                     
                     const type = cols[0];
                     if (type === '名單') {
@@ -4112,6 +4163,34 @@
 
     // 初始載入時設定一次畫布大小與解析網址參數
     window.addEventListener('load', () => {
+        const navContainer = document.getElementById('main-nav-container');
+        if (navContainer) {
+            let isNavDown = false;
+            let navStartX;
+            let navScrollLeft;
+            navContainer.addEventListener('mousedown', (e) => {
+                isNavDown = true;
+                navContainer.style.cursor = 'grabbing';
+                navStartX = e.pageX - navContainer.offsetLeft;
+                navScrollLeft = navContainer.scrollLeft;
+            });
+            navContainer.addEventListener('mouseleave', () => {
+                isNavDown = false;
+                navContainer.style.cursor = 'grab';
+            });
+            navContainer.addEventListener('mouseup', () => {
+                isNavDown = false;
+                navContainer.style.cursor = 'grab';
+            });
+            navContainer.addEventListener('mousemove', (e) => {
+                if (!isNavDown) return;
+                e.preventDefault();
+                const x = e.pageX - navContainer.offsetLeft;
+                navContainer.scrollLeft = navScrollLeft - (x - navStartX) * 2;
+            });
+            navContainer.style.cursor = 'grab';
+        }
+
         if(appState.currentMode === 'board') resizeCanvas();
 
         // 偵測網址是否帶有 room 參數，供學生掃碼後自動進入即問即答
@@ -4152,6 +4231,22 @@
 
     // -- 聊天室功能邏輯 --
     let isChatOpen = false;
+    let isChatAllowed = true;
+
+    window.toggleTeacherChat = () => {
+        isChatAllowed = !isChatAllowed;
+        const btnText = document.getElementById('irs-chat-toggle-text');
+        const btn = document.getElementById('irs-chat-toggle-btn');
+        if (isChatAllowed) {
+            btnText.textContent = '聊天室：已開啟';
+            btn.className = "w-full py-2.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 font-bold transition-all flex items-center justify-center gap-2 border border-emerald-500/30 shadow-sm text-sm";
+        } else {
+            btnText.textContent = '聊天室：已關閉';
+            btn.className = "w-full py-2.5 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-400 font-bold transition-all flex items-center justify-center gap-2 border border-rose-500/30 shadow-sm text-sm";
+        }
+        sendToAllStudents({ type: 'chat_toggle', enabled: isChatAllowed });
+    };
+
     window.toggleChatPanel = () => {
         const panel = document.getElementById('chat-panel');
         const dot = document.getElementById('chat-unread-dot');
@@ -4193,6 +4288,7 @@
 
     window.sendChatMessage = () => {
         const input = document.getElementById('chat-input');
+        if (input.disabled) return;
         const msg = input.value.trim();
         if (!msg) return;
         
