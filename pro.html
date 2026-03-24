@@ -7,6 +7,13 @@
   <link rel="icon" href="data:;base64,iVBORw0KGgo=">
   
   <!-- 引入 Tailwind CSS -->
+  <script>
+    const originalWarn = console.warn;
+    console.warn = function(...args) {
+        if (args[0] && typeof args[0] === 'string' && args[0].includes('cdn.tailwindcss.com should not be used in production')) return;
+        originalWarn.apply(console, args);
+    };
+  </script>
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- 設定 Tailwind 自訂動畫 -->
   <script>
@@ -58,9 +65,9 @@
   </script>
   
   <!-- 引入 Lucide Icons -->
-  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="./lucide.min.js"></script>
   <!-- 引入 PeerJS (WebRTC) 用於 即問即答 系統 -->
-  <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+  <script src="./peerjs.min.js"></script>
   <!-- 引入 QRCode.js 用於生成掃描加入條碼 -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
@@ -1063,7 +1070,11 @@
            <!-- 學生名單列表 -->
            <div>
              <div class="flex justify-between items-center mb-3">
-               <h4 class="text-sm font-bold text-slate-400">連線名單 & 狀態</h4>
+               <h4 class="text-sm font-bold text-slate-400 flex items-center gap-2">連線名單 & 狀態
+                  <button onclick="showStudentListModal()" class="ml-2 text-indigo-400 hover:text-white bg-indigo-500/10 hover:bg-indigo-500/30 px-2 py-0.5 rounded text-xs transition-colors border border-indigo-500/20 shadow-sm flex items-center gap-1">
+                     <i data-lucide="external-link" class="w-3 h-3"></i> 放大檢視
+                  </button>
+               </h4>
                <span class="text-xs text-slate-500">🟢 已答 | ⚪ 未答</span>
              </div>
              <div id="irs-student-list" class="flex flex-wrap gap-2 max-h-32 overflow-y-auto no-scrollbar">
@@ -3212,6 +3223,7 @@
       hostConn: null, // connection to host (Student side)
       studentsInfo: {}, // peerId => { name: string, gender: string, hasAnswered: boolean, answer: string }
       currentQ: null, // 'ABCD' | 'OX' | 'BUZZER' | 'VOTE' | 'TEXT' | null
+      isQuestionActive: false,
       buzzerList: [], // Track buzzer order
       studentName: ''
     };
@@ -3282,9 +3294,16 @@
       irsEls.studentLogin.classList.remove('flex');
       irsEls.studentView.classList.add('hidden');
       irsEls.studentView.classList.remove('flex');
+      
       // 清除網址列上的 room 參數，避免重新整理後又自動進入學生端
       const newUrl = window.location.href.split('?')[0];
       window.history.replaceState({}, document.title, newUrl);
+      
+      // 恢復頂部導覽列與靜音按鈕顯示
+      const navContainer = document.getElementById('main-nav-container');
+      if (navContainer) navContainer.classList.remove('hidden');
+      const muteBtn = document.getElementById('mute-btn');
+      if (muteBtn) muteBtn.classList.remove('hidden');
       
       initIRSTeacher(); // Return to default Teacher mode
     };
@@ -3523,6 +3542,11 @@
         irsState.connections[peerId] = conn;
         irsState.studentsInfo[peerId] = { name: data.name, gender: data.gender, hasAnswered: false, answer: null };
         updateTeacherUI();
+        
+        // --- 新增：浮動通知 ---
+        if (typeof showJoinNotification === 'function') {
+            showJoinNotification(data.name, data.gender);
+        }
 
         // --- 新增：自動將 IRS 學生加入抽籤機的姓名名單中 (帶有性別標記) ---
         const formattedName = data.gender ? `${data.name}(${data.gender})` : data.name;
@@ -3545,7 +3569,7 @@
            conn.send({ type: 'question', qType: irsState.currentQ });
         }
       } else if (data.type === 'answer') {
-        if (irsState.studentsInfo[peerId]) {
+        if (irsState.studentsInfo[peerId] && irsState.isQuestionActive) {
            if (!irsState.studentsInfo[peerId].hasAnswered) {
                irsState.studentsInfo[peerId].hasAnswered = true;
                irsState.studentsInfo[peerId].answer = data.val;
@@ -3619,7 +3643,7 @@
 
       // 繪製結果圖表
       if (irsState.currentQ === 'BUZZER') {
-         irsEls.answerStatus.textContent = `搶答人數: ${answeredCount} / ${totalStudents}`;
+         irsEls.answerStatus.textContent = irsState.isQuestionActive ? `搶答人數: ${answeredCount} / ${totalStudents}` : `搶答結算: ${answeredCount} / ${totalStudents}`;
          irsEls.chartPlaceholder.classList.add('hidden');
          
          if (irsState.buzzerList.length === 0) {
@@ -3641,7 +3665,7 @@
          }
       } else if (irsState.currentQ === 'TEXT') {
          // ===== 開放式問答：動態文字雲渲染 =====
-         irsEls.answerStatus.textContent = `作答進度: ${answeredCount} / ${totalStudents}`;
+         irsEls.answerStatus.textContent = irsState.isQuestionActive ? `作答進度: ${answeredCount} / ${totalStudents}` : `作答結算: ${answeredCount} / ${totalStudents}`;
          irsEls.chartPlaceholder.classList.add('hidden');
          
          const counts = {};
@@ -3690,7 +3714,7 @@
             irsEls.chartArea.innerHTML = `<div class="w-full h-full flex flex-wrap content-start justify-center overflow-y-auto no-scrollbar p-2 gap-2 relative z-10">` + wordsHTML + `</div>`;
          }
       } else if (irsState.currentQ) {
-         irsEls.answerStatus.textContent = `作答進度: ${answeredCount} / ${totalStudents}`;
+         irsEls.answerStatus.textContent = irsState.isQuestionActive ? `作答進度: ${answeredCount} / ${totalStudents}` : `作答結算: ${answeredCount} / ${totalStudents}`;
          irsEls.chartPlaceholder.classList.add('hidden');
          
          let opts = [];
@@ -3764,6 +3788,7 @@
 
     window.sendIRSQuestion = (type) => {
       irsState.currentQ = type;
+      irsState.isQuestionActive = true;
       irsState.buzzerList = []; // 發佈新題目時清空搶答榜單
       // 重置所有學生作答狀態
       Object.keys(irsState.studentsInfo).forEach(k => {
@@ -3801,7 +3826,7 @@
     };
 
     window.stopIRSQuestion = () => {
-      irsState.currentQ = null;
+      irsState.isQuestionActive = false;
       Object.values(irsState.connections).forEach(conn => {
          conn.send({ type: 'stop' });
       });
@@ -3826,9 +3851,14 @@
       irsEls.teacherView.classList.remove('flex');
       irsEls.studentLogin.classList.replace('hidden', 'flex');
       irsEls.loginError.classList.add('hidden');
-      // 確保欄位為可編輯狀態 (若之前透過網址加入被鎖定)
       irsEls.joinId.readOnly = false;
       irsEls.joinId.classList.remove('opacity-60', 'cursor-not-allowed', 'bg-slate-800/50');
+      
+      // 隱藏頂部導覽列，避免學生隨意切換功能
+      const navContainer = document.getElementById('main-nav-container');
+      if (navContainer) navContainer.classList.add('hidden');
+      const muteBtn = document.getElementById('mute-btn');
+      if (muteBtn) muteBtn.classList.add('hidden');
     };
 
     window.joinIRS = () => {
@@ -4289,6 +4319,13 @@
             irsEls.joinId.value = roomParam;
             irsEls.joinId.readOnly = true;
             irsEls.joinId.classList.add('opacity-60', 'cursor-not-allowed', 'bg-slate-800/50');
+            
+            // 隱藏返回與登出按鈕，避免學生切換回老師介面
+            const returnBtn = document.querySelector('#irs-student-login button[onclick="leaveIRS()"]');
+            if (returnBtn) returnBtn.classList.add('hidden');
+            const logoutBtn = document.querySelector('#irs-student-view button[onclick="leaveIRS()"]');
+            if (logoutBtn) logoutBtn.classList.add('hidden');
+            
             // 延遲聚焦到姓名輸入框，提升使用者體驗
             setTimeout(() => {
                 irsEls.joinName.focus();
@@ -4401,7 +4438,79 @@
         const w = document.getElementById('global-room-widget');
         if(w) { w.classList.add('hidden'); w.classList.remove('flex'); }
     };
+
+    window.showJoinNotification = (name, gender) => {
+        const container = document.getElementById('join-toast-container');
+        if (!container) return;
+        const toast = document.createElement('div');
+        toast.className = "bg-emerald-500/90 backdrop-blur-md text-white px-4 py-3 rounded-xl shadow-lg flex items-center gap-3 animate-pop-in w-full text-sm font-bold border border-emerald-400/50 pointer-events-auto";
+        let iconClass = "user";
+        let displayGender = "";
+        if (gender === '男') { displayGender = "(男)"; }
+        else if (gender === '女') { displayGender = "(女)"; }
+        toast.innerHTML = `<i data-lucide="${iconClass}" class="w-5 h-5 opacity-80 shrink-0"></i> <div class="truncate flex-1">學生 ${escapeHTML(name)}${displayGender} 已加入課堂</div>`;
+        container.appendChild(toast);
+        if (window.lucide) lucide.createIcons({root: toast});
+        setTimeout(() => {
+            toast.classList.replace('animate-pop-in', 'opacity-0');
+            toast.style.transform = 'translateY(-10px)';
+            toast.style.transition = 'all 0.3s ease';
+            setTimeout(() => {
+                if (toast.parentNode === container) container.removeChild(toast);
+            }, 300);
+        }, 3000);
+    };
+
+    window.showStudentListModal = () => {
+        const modal = document.getElementById('irs-student-list-modal');
+        const content = document.getElementById('modal-student-list-content');
+        const count = document.getElementById('modal-student-count');
+        if (!modal || !content || !count) return;
+        const students = Object.values(irsState.studentsInfo);
+        count.textContent = students.length;
+        if (students.length === 0) {
+            content.innerHTML = '<div class="text-slate-500 text-center w-full py-8 font-bold">目前尚無學生連線</div>';
+        } else {
+            content.innerHTML = students.map(s => {
+                const displayName = s.gender ? `${s.name}(${s.gender})` : s.name;
+                const statusClass = s.hasAnswered ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300' : 'bg-slate-800 border-white/10 text-slate-300';
+                return `<div class="px-3 py-2 rounded-lg border ${statusClass} font-medium flex items-center justify-between gap-3 w-full sm:w-[calc(50%-0.25rem)]">
+                   <div class="truncate flex-1" title="${displayName}">${escapeHTML(displayName)}</div>
+                   ${s.hasAnswered ? '<i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-500 shrink-0"></i>' : ''}
+                </div>`;
+            }).join('');
+        }
+        if (window.lucide) lucide.createIcons({root: content});
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    };
+
+    window.hideStudentListModal = () => {
+        const modal = document.getElementById('irs-student-list-modal');
+        if (modal) {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+    };
   </script>
+
+  <!-- 學生加入通知容器 -->
+  <div id="join-toast-container" class="fixed top-24 right-6 z-[100] flex flex-col gap-3 pointer-events-none items-end w-72"></div>
+
+  <!-- 連線學生名單 Modal -->
+  <div id="irs-student-list-modal" class="fixed inset-0 z-[110] bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center p-4">
+     <div class="bg-slate-900 border border-indigo-500/30 rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[80vh] animate-pop-in">
+        <div class="p-4 border-b border-white/10 flex justify-between items-center bg-slate-800/50">
+           <h3 class="text-lg font-bold text-white flex items-center gap-2"><i data-lucide="users" class="w-5 h-5 text-indigo-400"></i> 已連線學生名單 (<span id="modal-student-count">0</span>)</h3>
+           <button onclick="hideStudentListModal()" class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-700 transition-colors"><i data-lucide="x" class="w-5 h-5"></i></button>
+        </div>
+        <div class="p-4 overflow-y-auto no-scrollbar flex-1 bg-slate-900/50">
+           <div id="modal-student-list-content" class="flex flex-wrap gap-2">
+              <div class="text-slate-500 text-center w-full py-4 font-bold">目前尚無學生連線</div>
+           </div>
+        </div>
+     </div>
+  </div>
 
   <!-- 全域教室代碼浮動視窗 (預設隱藏) -->
   <div id="global-room-widget" class="hidden fixed top-24 right-6 z-[90] bg-slate-900/90 backdrop-blur-md border border-indigo-500/50 rounded-2xl shadow-[0_10px_30px_rgba(99,102,241,0.3)] p-4 pr-10 flex-col gap-2 animate-pop-in group max-w-xs transition-all duration-300 pointer-events-auto">
