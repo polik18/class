@@ -3299,12 +3299,6 @@
       const newUrl = window.location.href.split('?')[0];
       window.history.replaceState({}, document.title, newUrl);
       
-      // 恢復頂部導覽列與靜音按鈕顯示
-      const navContainer = document.getElementById('main-nav-container');
-      if (navContainer) navContainer.classList.remove('hidden');
-      const muteBtn = document.getElementById('mute-btn');
-      if (muteBtn) muteBtn.classList.remove('hidden');
-      
       initIRSTeacher(); // Return to default Teacher mode
     };
 
@@ -3851,14 +3845,9 @@
       irsEls.teacherView.classList.remove('flex');
       irsEls.studentLogin.classList.replace('hidden', 'flex');
       irsEls.loginError.classList.add('hidden');
+      // 確保欄位為可編輯狀態 (若之前透過網址加入被鎖定)
       irsEls.joinId.readOnly = false;
       irsEls.joinId.classList.remove('opacity-60', 'cursor-not-allowed', 'bg-slate-800/50');
-      
-      // 隱藏頂部導覽列，避免學生隨意切換功能
-      const navContainer = document.getElementById('main-nav-container');
-      if (navContainer) navContainer.classList.add('hidden');
-      const muteBtn = document.getElementById('mute-btn');
-      if (muteBtn) muteBtn.classList.add('hidden');
     };
 
     window.joinIRS = () => {
