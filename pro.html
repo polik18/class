@@ -279,9 +279,9 @@
     <!-- ========================================== -->
     <!-- 模組 1: 抽籤機 (DRAW MODE) -->
     <!-- ========================================== -->
-    <div id="app-draw" class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start animate-pop-in h-full flex-1">
-      <!-- 左側：設定區 -->
-      <div class="lg:col-span-4 space-y-6 bg-slate-900/60 p-6 rounded-3xl border border-white/10 backdrop-blur-sm shadow-xl">
+    <div id="app-draw" class="flex flex-col gap-8 animate-pop-in h-full flex-1">
+      <!-- 原左側：設定區 (調整為 order-2 在下方) -->
+      <div class="order-2 w-full max-w-4xl mx-auto space-y-6 bg-slate-900/60 p-6 rounded-3xl border border-white/10 backdrop-blur-sm shadow-xl">
         <div class="flex items-center gap-2 mb-2">
           <i data-lucide="settings" class="w-5 h-5 text-indigo-400"></i>
           <h2 class="text-xl font-semibold">抽籤設定</h2>
@@ -465,8 +465,8 @@
         </div>
       </div>
 
-      <!-- 右側：顯示區 -->
-      <div class="lg:col-span-8 h-full min-h-[500px] flex flex-col relative bg-slate-900/40 backdrop-blur-sm rounded-3xl border border-white/10 shadow-2xl overflow-hidden p-8 group">
+      <!-- 原右側：顯示區 (調整為 order-1 在上方) -->
+      <div class="order-1 w-full min-h-[400px] lg:min-h-[500px] flex flex-col relative bg-slate-900/40 backdrop-blur-sm rounded-3xl border border-white/10 shadow-2xl overflow-hidden p-8 group">
         <!-- 背景裝飾 -->
         <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-gradient-to-b from-indigo-500/20 to-transparent blur-[80px] rounded-full pointer-events-none transition-opacity duration-700 group-hover:opacity-70"></div>
         
@@ -494,6 +494,12 @@
               <!-- 得獎者卡片會插在這裡 -->
             </div>
           </div>
+        </div>
+
+        <!-- 向下引導提示 -->
+        <div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 opacity-70 animate-bounce cursor-pointer hover:opacity-100 transition-opacity z-20" onclick="document.querySelector('.order-2').scrollIntoView({behavior: 'smooth'})">
+          <span class="text-[10px] text-slate-400 font-bold tracking-widest">向下滾動進行抽籤設定</span>
+          <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400"></i>
         </div>
       </div>
     </div>
@@ -782,7 +788,7 @@
       <div class="absolute bottom-4 sm:bottom-6 left-1/2 transform -translate-x-1/2 z-20 flex flex-col items-center pointer-events-none w-[95%] max-w-2xl transition-transform duration-500 ease-out" id="board-toolbar-wrapper">
           
           <!-- 工具列主體 -->
-          <div id="board-toolbar" class="pointer-events-auto w-full bg-slate-950/90 backdrop-blur-xl border border-white/10 p-3 sm:p-4 rounded-[2rem] shadow-2xl flex flex-col sm:flex-row flex-wrap items-center justify-center gap-3 sm:gap-4 transition-all duration-300 origin-bottom transform scale-y-100 opacity-100 mb-2 sm:mb-4">
+          <div id="board-toolbar" class="pointer-events-auto w-full bg-slate-950/90 backdrop-blur-xl border border-white/10 rounded-[2rem] shadow-2xl flex flex-col sm:flex-row flex-wrap items-center justify-center gap-3 sm:gap-4 transition-all duration-300 origin-bottom transform scale-y-0 opacity-0 h-0 pointer-events-none py-0 px-0 mb-0">
               <!-- 顏色選擇 -->
               <div class="flex items-center justify-between w-full sm:w-auto gap-2 sm:gap-3 bg-slate-900 p-2 rounded-xl border border-white/5 shadow-inner">
                 <button class="color-btn w-8 h-8 md:w-10 md:h-10 rounded-full bg-white border-2 border-indigo-500 shadow-[0_0_10px_rgba(255,255,255,0.5)] transition-all hover:scale-110" data-color="#ffffff" title="白色"></button>
@@ -818,9 +824,11 @@
           </div>
           
           <!-- 開關按鈕 (Floating Action Button) -->
-          <button onclick="toggleBoardToolbar()" id="board-toolbar-toggle" class="pointer-events-auto bg-slate-800 hover:bg-slate-700 text-white rounded-full px-6 py-3 font-bold shadow-[0_10px_20px_rgba(0,0,0,0.4)] flex items-center justify-center gap-2 hover:-translate-y-1 transition-all border border-white/10 shrink-0 group">
-              <i data-lucide="chevron-down" id="board-toolbar-icon" class="w-5 h-5 text-slate-300 group-hover:text-white transition-colors"></i>
-              <span id="board-toolbar-text" class="text-sm tracking-wide">收合工具</span>
+          <button onclick="toggleBoardToolbar()" id="board-toolbar-toggle" class="relative pointer-events-auto bg-indigo-600 hover:bg-indigo-500 text-white rounded-full px-6 py-3 font-bold shadow-[0_10px_20px_rgba(79,70,229,0.4)] flex items-center justify-center gap-2 hover:-translate-y-1 transition-all border border-indigo-400/50 shrink-0 group">
+              <!-- 提示框 -->
+              <div id="board-toolbar-hint" class="absolute -top-12 left-1/2 -translate-x-1/2 xs:whitespace-nowrap w-max text-xs text-indigo-100 font-bold bg-indigo-600 px-3 py-1.5 rounded-lg border border-indigo-500/50 animate-bounce pointer-events-none shadow-lg after:content-[''] after:absolute after:-bottom-1.5 after:left-1/2 after:-translate-x-1/2 after:border-t-[6px] after:border-t-indigo-600 after:border-x-[6px] after:border-x-transparent transition-opacity duration-300">畫筆工具在這喔</div>
+              <i data-lucide="pen-tool" id="board-toolbar-icon" class="w-5 h-5 text-white transition-colors"></i>
+              <span id="board-toolbar-text" class="text-sm tracking-wide">展開工具</span>
           </button>
       </div>
 
@@ -874,45 +882,21 @@
          </div>
       </div>
       
-      <!-- 角色選擇畫面 -->
-      <div id="irs-role-select" class="flex-1 flex flex-col items-center justify-center space-y-8 bg-slate-900/60 rounded-[2rem] border border-white/10 backdrop-blur-sm shadow-xl p-8">
-        <div class="text-center space-y-3 relative">
-          <h2 class="text-3xl md:text-4xl font-black bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">即問即答 系統</h2>
-          <button onclick="showIRSInfo()" class="inline-flex items-center justify-center gap-1.5 px-4 py-1.5 mt-2 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 hover:bg-cyan-500/20 transition-colors text-sm font-bold shadow-sm cursor-pointer">
-             <i data-lucide="help-circle" class="w-4 h-4"></i> 查看使用須知
-          </button>
-        </div>
-        <div class="flex flex-col md:flex-row gap-6 w-full max-w-2xl">
-          <button onclick="initIRSTeacher()" class="flex-1 group relative p-8 rounded-3xl bg-gradient-to-br from-slate-800 to-slate-900 border border-emerald-500/30 hover:border-emerald-400 transition-all shadow-lg hover:shadow-emerald-500/20 overflow-hidden flex flex-col items-center gap-4">
-            <div class="absolute inset-0 bg-emerald-500/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-            <div class="w-16 h-16 rounded-full bg-emerald-500/20 flex items-center justify-center group-hover:scale-110 transition-transform">
-              <i data-lucide="presentation" class="w-8 h-8 text-emerald-400"></i>
-            </div>
-            <div class="text-center relative z-10">
-              <h3 class="text-xl font-bold text-white mb-1">我是老師</h3>
-              <p class="text-sm text-slate-400">建立教室，接收學生反饋</p>
-            </div>
-          </button>
-
-          <button onclick="showIRSStudentLogin()" class="flex-1 group relative p-8 rounded-3xl bg-gradient-to-br from-slate-800 to-slate-900 border border-cyan-500/30 hover:border-cyan-400 transition-all shadow-lg hover:shadow-cyan-500/20 overflow-hidden flex flex-col items-center gap-4">
-            <div class="absolute inset-0 bg-cyan-500/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-            <div class="w-16 h-16 rounded-full bg-cyan-500/20 flex items-center justify-center group-hover:scale-110 transition-transform">
-              <i data-lucide="smartphone" class="w-8 h-8 text-cyan-400"></i>
-            </div>
-            <div class="text-center relative z-10">
-              <h3 class="text-xl font-bold text-white mb-1">我是學生</h3>
-              <p class="text-sm text-slate-400">輸入代碼，加入課堂互動與抽籤</p>
-            </div>
-          </button>
-        </div>
-      </div>
-
       <!-- 老師端視角 -->
       <div id="irs-teacher-view" class="hidden flex-1 flex-col lg:flex-row gap-6">
         <!-- 左側：控制面板 -->
         <div class="lg:w-1/3 flex flex-col gap-6">
           <!-- 教室資訊 (折疊面板) -->
           <div class="bg-slate-900/60 rounded-3xl border border-white/10 backdrop-blur-sm shadow-xl transition-all duration-300 flex-shrink-0 relative">
+            
+            <!-- 學生模式切換快捷鍵 -->
+            <button onclick="leaveIRS(); showIRSStudentLogin();" class="absolute -top-3 -right-2 z-10 text-[11px] font-bold text-slate-300 hover:text-white px-3 py-1.5 bg-slate-800 hover:bg-cyan-600 rounded-lg transition-colors border border-white/10 flex items-center gap-1.5 shadow-md" title="學生點此輸入代碼加入">
+               <i data-lucide="smartphone" class="w-3.5 h-3.5"></i> 切換學生模式
+            </button>
+            <button onclick="showIRSInfo()" class="absolute -top-3 left-4 z-10 text-[11px] font-bold text-cyan-400 hover:text-white px-3 py-1.5 bg-slate-800 hover:bg-cyan-600 rounded-lg transition-colors border border-cyan-500/30 flex items-center gap-1.5 shadow-md">
+               <i data-lucide="help-circle" class="w-3.5 h-3.5"></i> 使用須知
+            </button>
+
             <!-- 面板標題列 (點擊折疊/展開) -->
             <button onclick="toggleIRSInfoPanel()" class="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors group rounded-3xl">
               <div class="flex items-center gap-3">
@@ -3015,6 +2999,8 @@
             // 展開
             toolbar.classList.remove('scale-y-0', 'opacity-0', 'h-0', 'pointer-events-none', 'py-0', 'px-0', 'mb-0');
             toolbar.classList.add('p-3', 'sm:p-4', 'scale-y-100', 'opacity-100', 'mb-2', 'sm:mb-4');
+            const hint = document.getElementById('board-toolbar-hint');
+            if (hint) hint.classList.add('opacity-0');
             
             icon.setAttribute('data-lucide', 'chevron-down');
             text.textContent = '收合工具';
@@ -3189,7 +3175,7 @@
     };
 
     const irsEls = {
-      roleSelect: document.getElementById('irs-role-select'),
+      roomId: document.getElementById('irs-room-id'),
       teacherView: document.getElementById('irs-teacher-view'),
       studentLogin: document.getElementById('irs-student-login'),
       studentView: document.getElementById('irs-student-view'),
@@ -3246,13 +3232,19 @@
     // 共用：離開 IRS
     window.leaveIRS = () => {
       cleanupIRS();
-      irsEls.roleSelect.classList.remove('hidden');
+      if(window.hideGlobalRoomWidget) window.hideGlobalRoomWidget();
+      
       irsEls.teacherView.classList.add('hidden');
+      irsEls.teacherView.classList.remove('flex');
       irsEls.studentLogin.classList.add('hidden');
+      irsEls.studentLogin.classList.remove('flex');
       irsEls.studentView.classList.add('hidden');
+      irsEls.studentView.classList.remove('flex');
       // 清除網址列上的 room 參數，避免重新整理後又自動進入學生端
       const newUrl = window.location.href.split('?')[0];
       window.history.replaceState({}, document.title, newUrl);
+      
+      initIRSTeacher(); // Return to default Teacher mode
     };
 
     // ===== 老師端邏輯 =====
@@ -3262,7 +3254,8 @@
 
     window.initIRSTeacher = () => {
       if (audioCtx.state === 'suspended') audioCtx.resume();
-      irsEls.roleSelect.classList.add('hidden');
+      irsEls.studentLogin.classList.add('hidden');
+      irsEls.studentLogin.classList.remove('flex');
       irsEls.teacherView.classList.replace('hidden', 'flex');
       irsEls.roomId.textContent = "建立中...";
       irsEls.roomIdMini.textContent = "建立中...";
@@ -3274,7 +3267,10 @@
               'iceServers': [
                   { urls: 'stun:stun.l.google.com:19302' },
                   { urls: 'stun:stun1.l.google.com:19302' },
-                  { urls: 'stun:stun2.l.google.com:19302' }
+                  { urls: 'stun:stun2.l.google.com:19302' },
+                  { urls: 'turn:openrelay.metered.ca:80', username: 'openrelayproject', credential: 'openrelayproject' },
+                  { urls: 'turn:openrelay.metered.ca:443', username: 'openrelayproject', credential: 'openrelayproject' },
+                  { urls: 'turn:openrelay.metered.ca:443?transport=tcp', username: 'openrelayproject', credential: 'openrelayproject' }
               ]
           }
       });
@@ -3702,6 +3698,7 @@
         if (panel.classList.contains('hidden')) {
             panel.classList.remove('hidden');
             icon.classList.add('rotate-180');
+            if (window.showGlobalRoomWidget) window.showGlobalRoomWidget();
         } else {
             panel.classList.add('hidden');
             icon.classList.remove('rotate-180');
@@ -3782,9 +3779,13 @@
     // ===== 學生端邏輯 =====
     
     window.showIRSStudentLogin = () => {
-      irsEls.roleSelect.classList.add('hidden');
+      irsEls.teacherView.classList.add('hidden');
+      irsEls.teacherView.classList.remove('flex');
       irsEls.studentLogin.classList.replace('hidden', 'flex');
       irsEls.loginError.classList.add('hidden');
+      // 確保欄位為可編輯狀態 (若之前透過網址加入被鎖定)
+      irsEls.joinId.readOnly = false;
+      irsEls.joinId.classList.remove('opacity-60', 'cursor-not-allowed', 'bg-slate-800/50');
     };
 
     window.joinIRS = () => {
@@ -3809,7 +3810,10 @@
               'iceServers': [
                   { urls: 'stun:stun.l.google.com:19302' },
                   { urls: 'stun:stun1.l.google.com:19302' },
-                  { urls: 'stun:stun2.l.google.com:19302' }
+                  { urls: 'stun:stun2.l.google.com:19302' },
+                  { urls: 'turn:openrelay.metered.ca:80', username: 'openrelayproject', credential: 'openrelayproject' },
+                  { urls: 'turn:openrelay.metered.ca:443', username: 'openrelayproject', credential: 'openrelayproject' },
+                  { urls: 'turn:openrelay.metered.ca:443?transport=tcp', username: 'openrelayproject', credential: 'openrelayproject' }
               ]
           }
       });
@@ -4215,8 +4219,10 @@
             switchAppMode('irs');
             // 自動開啟學生登入畫面
             showIRSStudentLogin();
-            // 自動填入代碼
+            // 自動填入代碼並鎖定，避免學生誤改
             irsEls.joinId.value = roomParam;
+            irsEls.joinId.readOnly = true;
+            irsEls.joinId.classList.add('opacity-60', 'cursor-not-allowed', 'bg-slate-800/50');
             // 延遲聚焦到姓名輸入框，提升使用者體驗
             setTimeout(() => {
                 irsEls.joinName.focus();
@@ -4316,7 +4322,40 @@
         }
         input.value = "";
     };
+
+    window.showGlobalRoomWidget = () => {
+        if (typeof irsState === 'undefined' || !irsState.roomId) return;
+        const w = document.getElementById('global-room-widget');
+        const d = document.getElementById('global-room-id-display');
+        if(d) d.textContent = irsState.roomId;
+        if(w) { w.classList.remove('hidden'); w.classList.add('flex'); }
+    };
+    
+    window.hideGlobalRoomWidget = () => {
+        const w = document.getElementById('global-room-widget');
+        if(w) { w.classList.add('hidden'); w.classList.remove('flex'); }
+    };
   </script>
+
+  <!-- 全域教室代碼浮動視窗 (預設隱藏) -->
+  <div id="global-room-widget" class="hidden fixed top-24 right-6 z-[90] bg-slate-900/90 backdrop-blur-md border border-indigo-500/50 rounded-2xl shadow-[0_10px_30px_rgba(99,102,241,0.3)] p-4 pr-10 flex-col gap-2 animate-pop-in group max-w-xs transition-all duration-300 pointer-events-auto">
+     <button onclick="hideGlobalRoomWidget()" class="absolute top-2 right-2 text-slate-400 hover:text-white bg-slate-800 hover:bg-rose-500/80 rounded-full p-1 transition-colors">
+       <i data-lucide="x" class="w-3.5 h-3.5"></i>
+     </button>
+     
+     <div class="flex items-center gap-3">
+        <div class="p-2 bg-indigo-500/20 rounded-xl text-indigo-400">
+           <i data-lucide="radio" class="w-5 h-5 animate-pulse"></i>
+        </div>
+        <div>
+           <div class="text-[10px] text-indigo-400 font-bold tracking-widest uppercase mb-0.5">即問即答 教室代碼</div>
+           <div id="global-room-id-display" class="text-2xl font-black font-mono tracking-widest text-white drop-shadow-md">------</div>
+        </div>
+     </div>
+     <div class="text-xs text-slate-400 mt-1 pl-1 relative z-10 font-bold border-t border-white/5 pt-2 flex items-center gap-1">
+        <i data-lucide="mouse-pointer-click" class="w-3 h-3 text-indigo-400"></i> 學生可輸入此代碼加入
+     </div>
+  </div>
 
   <!-- 全域聊天室 Widget -->
   <div id="global-chat-widget" class="fixed bottom-6 right-6 z-[100] flex flex-col items-end pointer-events-none">
