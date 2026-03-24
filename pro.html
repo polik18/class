@@ -1611,16 +1611,33 @@
     const validateInputs = () => {
       let hasGlobalError = false;
       let hasDrawCountError = false;
+      let hasGenderError = false;
+      let errMsg = "";
 
       if (drawState.mode === 'number' && drawState.startNum > drawState.endNum) {
-        showError("起始編號不能大於結束編號！"); hasGlobalError = true;
+        errMsg = "起始編號不能大於結束編號！"; hasGlobalError = true;
       } else if (drawState.availableList.length === 0 && !drawState.isDrawing) {
-        showError(drawState.mode === 'number' ? "沒有可抽的號碼了！" : "名單為空或已抽完！"); hasGlobalError = true;
-      } else if (drawState.drawCount < 1 || drawState.drawCount > drawState.availableList.length) {
-        showError(`單次抽出數量必須介於 1 到 ${drawState.availableList.length} 之間！`); hasDrawCountError = true;
-      } else {
-        showError("");
+        errMsg = drawState.mode === 'number' ? "沒有可抽的號碼了！" : "名單為空或已抽完！"; hasGlobalError = true;
+      } 
+      
+      if (!hasGlobalError) {
+          if (drawState.drawCount < 1 || drawState.drawCount > drawState.availableList.length) {
+              errMsg = `單次抽出數量必須介於 1 到 ${drawState.availableList.length} 之間！`; hasDrawCountError = true;
+          }
+          
+          const groupRule = drawEls.groupRule ? drawEls.groupRule.value : 'random';
+          if (drawState.availableList.length >= 2 && (groupRule === 'mixed' || groupRule === 'separated')) {
+              const hasGenderData = drawState.availableList.some(name => name.includes('(男)') || name.includes('(女)'));
+              if (!hasGenderData) {
+                  hasGenderError = true;
+                  // 若單抽規則無誤，優先顯示分組的性別錯誤
+                  if (!hasDrawCountError) {
+                      errMsg = "名單內沒有性別標記，無法依男女分組！請更改【進階規則】或在字尾輸入 (男) 或 (女)。";
+                  }
+              }
+          }
       }
+      showError(errMsg);
 
       // 單抽按鈕狀態
       if (hasGlobalError || hasDrawCountError || drawState.isDrawing) {
@@ -1635,8 +1652,8 @@
         drawEls.drawBtn.disabled = false; drawEls.drawBtnFx.classList.remove('hidden');
       }
 
-      // 分組按鈕狀態 (分組只需要總人數 >= 2 即可，不受單抽數量影響)
-      if (hasGlobalError || drawState.isDrawing || drawState.availableList.length < 2) {
+      // 分組按鈕狀態 (分組只需要總人數 >= 2 且性別資料有效)
+      if (hasGlobalError || drawState.isDrawing || drawState.availableList.length < 2 || hasGenderError) {
         drawEls.groupBtn.classList.replace('bg-emerald-600', 'bg-slate-800');
         drawEls.groupBtn.classList.remove('hover:bg-emerald-500', 'text-white', 'shadow-lg');
         drawEls.groupBtn.classList.add('text-slate-500', 'cursor-not-allowed');
