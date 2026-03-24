@@ -967,6 +967,16 @@
                    <i data-lucide="message-circle" class="w-4 h-4"></i> <span id="irs-chat-toggle-text">聊天室：已開啟</span>
                  </button>
               </div>
+              <!-- ✨ 校內/校外連線模式切換 -->
+              <div class="mt-2 bg-slate-950/50 rounded-xl border border-white/5 p-3 flex items-center justify-between gap-3">
+                 <div class="flex flex-col min-w-0">
+                    <span class="text-xs font-bold text-slate-300 flex items-center gap-1.5"><i data-lucide="wifi" class="w-3 h-3 text-cyan-400"></i> 連線模式</span>
+                    <span id="irs-mode-desc" class="text-[10px] text-slate-500 mt-0.5 leading-tight">校外：支援不同 Wi-Fi 跨網域連線</span>
+                 </div>
+                 <button id="irs-network-mode-btn" onclick="toggleIRSNetworkMode()" class="shrink-0 px-3 py-1.5 rounded-lg text-xs font-black transition-all bg-indigo-600/30 hover:bg-indigo-600 text-indigo-300 hover:text-white border border-indigo-500/40 whitespace-nowrap">
+                    🌐 校外模式
+                 </button>
+              </div>
               <div class="flex items-center justify-between text-sm mt-2 border-t border-white/5 pt-3">
                 <span class="text-slate-400">在線學生數</span>
                 <span id="irs-student-count" class="font-bold text-emerald-400 bg-emerald-500/20 px-2.5 py-0.5 rounded-full">0</span>
@@ -3187,9 +3197,10 @@
         const container = document.getElementById('qrcode-container');
         document.getElementById('qr-modal-room-id').textContent = irsState.roomId;
 
-        // 產生帶有 room 參數的網址
+        // 產生帶有 room 參數的網址（校內模式加上 &lan=1）
         const baseUrl = window.location.href.split('?')[0];
-        const joinUrl = `${baseUrl}?room=${irsState.roomId}`;
+        const lanSuffix = window._irsNetworkMode === 'lan' ? '&lan=1' : '';
+        const joinUrl = `${baseUrl}?room=${irsState.roomId}${lanSuffix}`;
 
         if (!qrCodeInstance) {
             qrCodeInstance = new QRCode(container, {
@@ -3213,6 +3224,56 @@
         if (modal) {
             modal.classList.add('hidden');
         }
+    };
+
+    // ===== 校內 / 校外連線模式 =====
+    window._irsNetworkMode = (() => {
+        const p = new URLSearchParams(window.location.search);
+        return p.get('lan') === '1' ? 'lan' : 'internet';
+    })();
+
+    const getIrsIceServers = () => {
+        if (window._irsNetworkMode === 'lan') {
+            // 校內模式：僅用本地 host candidate，不走 STUN/TURN，可突破 10 台連線限制
+            return [];
+        }
+        // 校外模式：完整 STUN + TURN
+        return [
+            { urls: 'stun:stun.l.google.com:19302' },
+            { urls: 'stun:stun1.l.google.com:19302' },
+            { urls: 'stun:stun.cloudflare.com:3478' },
+            { urls: 'stun:stun2.l.google.com:19302' },
+            { urls: 'turn:openrelay.metered.ca:80', username: 'openrelayproject', credential: 'openrelayproject' },
+            { urls: 'turn:openrelay.metered.ca:443', username: 'openrelayproject', credential: 'openrelayproject' },
+            { urls: 'turn:openrelay.metered.ca:443?transport=tcp', username: 'openrelayproject', credential: 'openrelayproject' }
+        ];
+    };
+
+    window.updateNetworkModeUI = () => {
+        const btn = document.getElementById('irs-network-mode-btn');
+        const desc = document.getElementById('irs-mode-desc');
+        if (!btn) return;
+        if (window._irsNetworkMode === 'lan') {
+            btn.textContent = '校內模式';
+            btn.className = 'shrink-0 px-3 py-1.5 rounded-lg text-xs font-black transition-all bg-emerald-600/40 hover:bg-emerald-600 text-emerald-300 hover:text-white border border-emerald-500/40 whitespace-nowrap';
+            if (desc) desc.textContent = '校內：師生須同 Wi-Fi，可突破 10 台連線限制';
+        } else {
+            btn.textContent = '校外模式';
+            btn.className = 'shrink-0 px-3 py-1.5 rounded-lg text-xs font-black transition-all bg-indigo-600/30 hover:bg-indigo-600 text-indigo-300 hover:text-white border border-indigo-500/40 whitespace-nowrap';
+            if (desc) desc.textContent = '校外：支援不同 Wi-Fi 跨網域連線';
+        }
+    };
+
+    window.toggleIRSNetworkMode = () => {
+        const newMode = window._irsNetworkMode === 'internet' ? 'lan' : 'internet';
+        const modeLabel = newMode === 'lan' ? '校內模式（師生須同 Wi-Fi）' : '校外模式（支援跨網域）';
+        if (irsState.roomId) {
+            if (!confirm('切換為「' + modeLabel + '」需要重新建立教室，目前所有學生將斷線。\\n\\n確定切換嗎？')) return;
+            cleanupIRS();
+        }
+        window._irsNetworkMode = newMode;
+        updateNetworkModeUI();
+        setTimeout(() => initIRSTeacher(), 100);
     };
 
     const irsState = {
@@ -3321,19 +3382,9 @@
       irsEls.roomIdMini.textContent = "建立中...";
       
       const newRoomId = generateRoomId();
-      irsState.peer = new Peer(newRoomId, { 
+      irsState.peer = new Peer(newRoomId, {
           debug: 2,
-          config: {
-              'iceServers': [
-                  { urls: 'stun:stun.l.google.com:19302' },
-                  { urls: 'stun:stun1.l.google.com:19302' },
-                  { urls: 'stun:stun.cloudflare.com:3478' },
-                  { urls: 'stun:stun2.l.google.com:19302' },
-                  { urls: 'turn:openrelay.metered.ca:80', username: 'openrelayproject', credential: 'openrelayproject' },
-                  { urls: 'turn:openrelay.metered.ca:443', username: 'openrelayproject', credential: 'openrelayproject' },
-                  { urls: 'turn:openrelay.metered.ca:443?transport=tcp', username: 'openrelayproject', credential: 'openrelayproject' }
-              ]
-          }
+          config: { 'iceServers': getIrsIceServers() }
       });
       
       irsState.peer.on('open', (id) => {
@@ -3342,6 +3393,7 @@
         irsEls.roomId.textContent = id;
         irsEls.roomIdMini.textContent = id;
         updateTeacherUI();
+        if (typeof updateNetworkModeUI === 'function') updateNetworkModeUI();
       });
 
       irsState.peer.on('connection', (conn) => {
@@ -3364,7 +3416,8 @@
        if(!irsState.roomId) return;
        
        const baseUrl = window.location.href.split('?')[0];
-       const joinUrl = `${baseUrl}?room=${irsState.roomId}`;
+       const lanSuffix = window._irsNetworkMode === 'lan' ? '&lan=1' : '';
+       const joinUrl = `${baseUrl}?room=${irsState.roomId}${lanSuffix}`;
        
        const showSuccessUI = () => {
           if (audioCtx.state === 'suspended') audioCtx.resume();
@@ -3873,17 +3926,7 @@
       irsState.studentName = joinName;
       const studentId = 'irs_' + Math.random().toString(36).substring(2, 10);
       irsState.peer = new Peer(studentId, {
-          config: {
-              'iceServers': [
-                  { urls: 'stun:stun.l.google.com:19302' },
-                  { urls: 'stun:stun1.l.google.com:19302' },
-                  { urls: 'stun:stun.cloudflare.com:3478' },
-                  { urls: 'stun:stun2.l.google.com:19302' },
-                  { urls: 'turn:openrelay.metered.ca:80', username: 'openrelayproject', credential: 'openrelayproject' },
-                  { urls: 'turn:openrelay.metered.ca:443', username: 'openrelayproject', credential: 'openrelayproject' },
-                  { urls: 'turn:openrelay.metered.ca:443?transport=tcp', username: 'openrelayproject', credential: 'openrelayproject' }
-              ]
-          }
+          config: { 'iceServers': getIrsIceServers() }
       });
 
       irsState.peer.on('open', () => {
