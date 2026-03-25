@@ -675,13 +675,16 @@
                  100% { transform: rotate(12deg); }
               }
               .cuckoo-active {
-                 transform: translateY(0) !important;
-                 animation: cuckoo-bounce 0.5s ease-in-out infinite alternate;
-              }
+                  transform: translateY(0) !important;
+               }
+               .cuckoo-active .cuckoo-inner {
+                  animation: cuckoo-bounce 0.5s ease-in-out 6 alternate;
+                  display: inline-block;
+               }
               @keyframes cuckoo-bounce {
-                 0% { transform: translateY(0) scale(1); }
-                 100% { transform: translateY(-3px) scale(1.1); }
-              }
+                  0% { transform: translateY(0) scale(1); }
+                  100% { transform: translateY(-12px) scale(1.1); }
+               }
               .pinecone {
                  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
                  transform: scaleY(1.3);
@@ -698,7 +701,7 @@
                  
                  <!-- 布穀鳥的窗體 -->
                  <div class="absolute top-[40px] left-[-30px] w-[60px] h-[55px] bg-[#3E2723] rounded-t-full flex justify-center items-end overflow-hidden shadow-inner border-b text-center border-[#5D4037]">
-                    <div id="cuckoo-bird" class="text-3xl transition-transform duration-500 translate-y-full mb-1 drop-shadow-md z-10 w-full text-center">🕊️</div>
+                    <div id="cuckoo-bird" class="text-3xl transition-transform duration-500 translate-y-full mb-1 drop-shadow-md z-10 w-full text-center"><span class="cuckoo-inner">🕊️</span></div>
                     <!-- 兩扇小門 -->
                     <div id="cuckoo-door-l" class="absolute left-0 top-0 bottom-0 w-1/2 bg-[#8D6E63] border border-[#5D4037] transform origin-left transition-transform duration-500 shadow-lg"></div>
                     <div id="cuckoo-door-r" class="absolute right-0 top-0 bottom-0 w-1/2 bg-[#8D6E63] border border-[#5D4037] transform origin-right transition-transform duration-500 shadow-lg"></div>
@@ -2377,6 +2380,10 @@
     // --- 上下課鐘功能 (Class Bell) ---
     // 使用 Web Audio API 合成極度真實的雙音校園鐘聲
     window.playSchoolBell = (type) => {
+        if (window._irsIsStudentMode) {
+            showGlobalToast("學生模式下無法播放鐘聲", "bell-off", "text-rose-400");
+            return;
+        }
         if (audioCtx.state === 'suspended') audioCtx.resume();
         
         const mainGain = audioCtx.createGain();
@@ -2463,6 +2470,10 @@
     };
 
     window.startQuickBreakCountdown = () => {
+        if (window._irsIsStudentMode) {
+            showGlobalToast("學生模式下無法使用快速上下課倒數", "bell-off", "text-rose-400");
+            return;
+        }
         quickBreakTargetMode = 'class';
         runQuickBreakPhase();
     };
@@ -2564,6 +2575,10 @@
     window.addEventListener('load', () => { setTimeout(loadSchedule, 300); });
 
     window.toggleScheduleBell = () => {
+        if (window._irsIsStudentMode) {
+            showGlobalToast("學生模式下無法使用自動校園響鈴", "bell-off", "text-rose-400");
+            return;
+        }
         isScheduleBellActive = !isScheduleBellActive;
         const btn = document.getElementById('schedule-bell-btn');
         const status = document.getElementById('schedule-bell-status');
@@ -5482,6 +5497,10 @@
 
     // 學生：申請投影畫面給老師
     window.requestCastToTeacher = () => {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
+            showGlobalToast("您的裝置或瀏覽器不支援螢幕畫面分享 (多數手機不支援)", "monitor-x", "text-rose-400");
+            return;
+        }
         if(irsState.hostConn) {
             irsState.hostConn.send({ type: 'request_screen_share', name: irsEls.myName?.textContent || '學生' });
             showGlobalToast("已發送投影申請，等待老師同意...", "clock", "text-cyan-400");
@@ -5490,6 +5509,10 @@
 
     let studentCastStream = null;
     window.startStudentCasting = async () => {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
+            showGlobalToast("您的裝置或瀏覽器不支援螢幕畫面分享 (多數手機不支援)", "monitor-x", "text-rose-400");
+            return;
+        }
         try {
             studentCastStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
             if(irsState.peer && irsState.hostId) {
