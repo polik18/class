@@ -2381,7 +2381,7 @@
     // 使用 Web Audio API 合成極度真實的雙音校園鐘聲
     window.playSchoolBell = (type) => {
         if (window._irsIsStudentMode) {
-            showGlobalToast("學生模式下無法播放鐘聲", "bell-off", "text-rose-400");
+            alert("⚠️ 此功能僅限老師使用。\n\n學生模式下无法播放上下課鐘聲，請聯繫老師操作。");
             return;
         }
         if (audioCtx.state === 'suspended') audioCtx.resume();
@@ -2471,7 +2471,7 @@
 
     window.startQuickBreakCountdown = () => {
         if (window._irsIsStudentMode) {
-            showGlobalToast("學生模式下無法使用快速上下課倒數", "bell-off", "text-rose-400");
+            alert("⚠️ 此功能僅限老師使用。\n\n學生模式下無法啟動快速上下課倒數計時，請聯繫老師操作。");
             return;
         }
         quickBreakTargetMode = 'class';
@@ -2576,7 +2576,7 @@
 
     window.toggleScheduleBell = () => {
         if (window._irsIsStudentMode) {
-            showGlobalToast("學生模式下無法使用自動校園響鈴", "bell-off", "text-rose-400");
+            alert("⚠️ 此功能僅限老師使用。\n\n學生模式下無法啟動自動校園響鈴功能，請聯繫老師操作。");
             return;
         }
         isScheduleBellActive = !isScheduleBellActive;
@@ -4064,7 +4064,45 @@
       currentQ: null, // 'ABCD' | 'OX' | 'BUZZER' | 'VOTE' | 'TEXT' | null
       isQuestionActive: false,
       buzzerList: [], // Track buzzer order
+      history: [], // Array of { questionNo, qType, qTypeName, timestamp, records: [{name, gender, answer, status}] }
       studentName: ''
+    };
+
+    // 下載作答結果 CSV (Fix 4: now exports ALL historical questions)
+    window.exportIRSResults = () => {
+        if (irsState.history.length === 0 && Object.keys(irsState.studentsInfo).length === 0) {
+            alert("目前沒有學生連線或問答紀錄可供下載。");
+            return;
+        }
+        if (irsState.history.length === 0) {
+            alert("目前尚未結束任何一道題目，請先結束作答再下載紀錄。");
+            return;
+        }
+
+        // CSV 表頭 (加上 BOM 解決 Excel 中文亂碼問題)
+        let csvContent = "\ufeff";
+        csvContent += "題次,題型,時間,學生姓名,性別,作答內容,狀態\n";
+
+        irsState.history.forEach(rec => {
+            rec.records.forEach(s => {
+                const safeName = (s.name || '').replace(/"/g, '""');
+                const safeAns = String(s.answer || '').replace(/"/g, '""');
+                csvContent += `"Q${rec.questionNo} ${rec.qTypeName}","${rec.qTypeName}","${rec.timestamp}","${safeName}","${s.gender || ''}","${safeAns}","${s.status}"\n`;
+            });
+        });
+
+        // 建立 Blob 並觸發下載
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        const dateStr = new Date().toISOString().slice(0, 10);
+        link.setAttribute("href", url);
+        link.setAttribute("download", `智慧助手_IRS全部紀錄_${irsState.roomId}_${dateStr}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        showGlobalToast(`已下載 ${irsState.history.length} 道題目的完整紀錄！`, "check-circle", "text-emerald-400");
     };
 
     const irsEls = {
@@ -4072,7 +4110,6 @@
       teacherView: document.getElementById('irs-teacher-view'),
       studentLogin: document.getElementById('irs-student-login'),
       studentView: document.getElementById('irs-student-view'),
-      roomId: document.getElementById('irs-room-id'),
       roomIdMini: document.getElementById('irs-room-id-mini'),
       studentCount: document.getElementById('irs-student-count'),
       studentCountMini: document.getElementById('irs-student-count-mini'),
@@ -4332,49 +4369,8 @@
        }
     };
 
-    // 下載作答結果 CSV
-    window.exportIRSResults = () => {
-        const students = Object.values(irsState.studentsInfo);
-        if (students.length === 0) {
-            alert("目前沒有學生連線或數據可供下載。");
-            return;
-        }
 
-        // CSV 表頭 (加上 BOM 解決 Excel 中文亂碼問題)
-        let csvContent = "\ufeff";
-        csvContent += "學生姓名,性別,作答內容,狀態\n";
 
-        students.forEach(s => {
-            // 在 CSV 匯出中，名字和答案也要安全處理雙引號
-            const safeName = s.name.replace(/"/g, '""');
-            let ans = s.answer || "";
-            
-            if (irsState.currentQ === 'BUZZER' && s.hasAnswered) {
-                // 尋找此人在搶答列表中的順位
-                const peerId = Object.keys(irsState.studentsInfo).find(key => irsState.studentsInfo[key] === s);
-                const rank = irsState.buzzerList.indexOf(peerId) + 1;
-                ans = rank > 0 ? `第 ${rank} 位搶答` : "已答";
-            }
-            
-            const safeAns = String(ans).replace(/"/g, '""');
-            const status = s.hasAnswered ? "已答" : "未答";
-            csvContent += `"${safeName}","${s.gender || ''}","${safeAns}","${status}"\n`;
-        });
-
-        // 建立 Blob 並觸發下載
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        const dateStr = new Date().toISOString().slice(0, 10);
-        const typeStr = irsState.currentQ || "互動";
-        
-        link.setAttribute("href", url);
-        link.setAttribute("download", `智慧助手_IRS結果_${typeStr}_${irsState.roomId}_${dateStr}.csv`);
-        link.style.visibility = 'hidden';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    };
 
     const handleTeacherReceive = (peerId, data, conn) => {
       if (data.type === 'join') {
@@ -4682,6 +4678,29 @@
     };
 
     window.stopIRSQuestion = () => {
+      // Fix 4: Snapshot current question's answers into history BEFORE resetting
+      if (irsState.currentQ && irsState.isQuestionActive) {
+          const qNum = irsState.history.length + 1;
+          const typeNames = {
+              'ABCD': '單選(ABCD)', 'OX': '是非(OX)', 'VOTE': '投票', 'BUZZER': '搶答', 'TEXT': '開放問答'
+          };
+          const snapshot = {
+              questionNo: qNum,
+              qType: irsState.currentQ,
+              qTypeName: typeNames[irsState.currentQ] || irsState.currentQ,
+              timestamp: new Date().toLocaleTimeString('zh-TW', { hour12: false }),
+              records: Object.entries(irsState.studentsInfo).map(([peerId, s]) => {
+                  let ans = s.answer || '';
+                  if (irsState.currentQ === 'BUZZER' && s.hasAnswered) {
+                      const rank = irsState.buzzerList.indexOf(peerId) + 1;
+                      ans = rank > 0 ? `第 ${rank} 位搶答` : '已答';
+                  }
+                  return { name: s.name, gender: s.gender || '', answer: ans, status: s.hasAnswered ? '已答' : '未答' };
+              })
+          };
+          irsState.history.push(snapshot);
+      }
+
       irsState.isQuestionActive = false;
       Object.values(irsState.connections).forEach(conn => {
          conn.send({ type: 'stop' });
@@ -5066,26 +5085,41 @@
         if (exportScores) {
             scoreState.teams.forEach(team => {
                 const teamName = team.name.replace(/"/g, '""');
-                const members = (team.members || []).join(',').replace(/"/g, '""');
+                // Fix: members are objects {name, score}, serialize only names
+                const members = (team.members || []).map(m => (typeof m === 'object' ? m.name : m)).join(',').replace(/"/g, '""');
                 csvContent += `小組,"${teamName}","${team.score}","${members}",""\n`;
             });
         }
 
         if (exportIRS) {
-            const students = Object.values(irsState.studentsInfo);
-            students.forEach(s => {
-                const safeName = s.name.replace(/"/g, '""');
-                let ans = s.answer || "";
-                if (irsState.currentQ === 'BUZZER' && s.hasAnswered) {
-                    const peerId = Object.keys(irsState.studentsInfo).find(key => irsState.studentsInfo[key] === s);
-                    const rank = irsState.buzzerList.indexOf(peerId) + 1;
-                    ans = rank > 0 ? `第 ${rank} 位搶答` : "已答";
-                }
-                const safeAns = String(ans).replace(/"/g, '""');
-                const status = s.hasAnswered ? "已答" : "未答";
-                const gender = s.gender || '';
-                csvContent += `IRS紀錄,"${safeName}","${gender}","${safeAns}","${status}"\n`;
+            // Export all history records (each ended question)
+            irsState.history.forEach(rec => {
+                const timeStr = rec.timestamp || '';
+                rec.records.forEach(s => {
+                    const safeName = (s.name || '').replace(/"/g, '""');
+                    const safeAns = String(s.answer || '').replace(/"/g, '""');
+                    csvContent += `IRS紀錄,"${safeName}","${s.gender || ''}","${safeAns}","${s.status || ''}"\n`;
+                });
             });
+            // Also export current active session answers if question is active / just ended
+            const currentStudents = Object.values(irsState.studentsInfo);
+            if (currentStudents.length > 0 && !irsState.isQuestionActive && irsState.currentQ) {
+                // already snapshotted in history on stop – skip to avoid duplicates
+            } else if (irsState.isQuestionActive) {
+                // Export current live question state
+                currentStudents.forEach(s => {
+                    const safeName = s.name.replace(/"/g, '""');
+                    let ans = s.answer || "";
+                    if (irsState.currentQ === 'BUZZER' && s.hasAnswered) {
+                        const peerId = Object.keys(irsState.studentsInfo).find(key => irsState.studentsInfo[key] === s);
+                        const rank = irsState.buzzerList.indexOf(peerId) + 1;
+                        ans = rank > 0 ? `第 ${rank} 位搶答` : "已答";
+                    }
+                    const safeAns = String(ans).replace(/"/g, '""');
+                    const status = s.hasAnswered ? "已答" : "未答";
+                    csvContent += `IRS紀錄,"${safeName}","${s.gender || ''}","${safeAns}","${status}"\n`;
+                });
+            }
         }
 
         const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -5125,7 +5159,8 @@
                         importedTeams.push({
                             name: cols[1] || '未命名小組',
                             score: parseInt(cols[2]) || 0,
-                            members: cols[3] ? cols[3].split(',').map(n => n.trim()).filter(n => n) : []
+                            // Fix: reconstruct members as objects {name, score}
+                            members: cols[3] ? cols[3].split(',').map(n => n.trim()).filter(n => n && n !== '[object Object]').map(n => ({ name: n, score: 0 })) : []
                         });
                     }
                 }
@@ -5497,8 +5532,9 @@
 
     // 學生：申請投影畫面給老師
     window.requestCastToTeacher = () => {
+        // Fix 2: Use alert instead of toast so mobile users clearly see the limitation
         if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
-            showGlobalToast("您的裝置或瀏覽器不支援螢幕畫面分享 (多數手機不支援)", "monitor-x", "text-rose-400");
+            alert("您的裝置或瀏覽器不支援螢幕畫面分享功能。\n\n造成原因：大多數手機、平板或非 Chrome/Edge 瀏覽器不支持此 API。\n請改用電腦，並以 Chrome 或 Edge 瀏覽器開啟。");
             return;
         }
         if(irsState.hostConn) {
