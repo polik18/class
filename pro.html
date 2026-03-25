@@ -1230,6 +1230,11 @@
               <div class="flex items-center justify-between text-sm mt-2 border-t border-white/5 pt-3">
                 <span class="text-slate-400">在線學生數</span>
                 <span id="irs-student-count" class="font-bold text-emerald-400 bg-emerald-500/20 px-2.5 py-0.5 rounded-full">0</span>
+               <!-- 校外模式10台上限警告 (由 JS 依人數動態顯示) -->
+               <div id="irs-capacity-warning" class="hidden mt-2 p-2.5 bg-amber-500/15 border border-amber-500/40 rounded-xl flex items-start gap-2 text-xs text-amber-200">
+                 <i data-lucide="alert-triangle" class="w-4 h-4 shrink-0 mt-0.5 text-amber-400"></i>
+                 <span>⚠️ <strong>校外模式建議最多 10 台</strong>同時連線。目前已接近上限，建議剩餘學生切換至「校內模式」或改用個人熱點。</span>
+               </div>
               </div>
             </div>
           </div>
@@ -1351,6 +1356,20 @@
             <h2 class="text-2xl font-bold text-cyan-400">加入互動課堂</h2>
             <p class="text-sm text-slate-400 mt-1">請輸入老師提供的代碼，參與互動與抽籤</p>
           </div>
+
+          <!-- ✨ 掃碼加入區塊 (可折疊) -->
+          <div class="border border-cyan-500/20 rounded-2xl overflow-hidden bg-slate-950/40">
+            <button onclick="toggleStudentQRSection()" class="w-full flex items-center justify-between p-3 px-4 text-cyan-400 hover:bg-cyan-500/10 transition-colors group">
+              <span class="flex items-center gap-2 font-bold text-sm"><i data-lucide="qr-code" class="w-4 h-4"></i> 掃描 QR Code 加入（快速）</span>
+              <i data-lucide="chevron-down" id="student-qr-chevron" class="w-4 h-4 transition-transform duration-300"></i>
+            </button>
+            <div id="student-qr-section" class="hidden border-t border-cyan-500/20 p-4 flex flex-col items-center gap-3">
+              <p class="text-xs text-slate-400 text-center">請同學掃描以下 QR Code，即可直接開啟此頁面</p>
+              <div id="student-join-qrcode" class="bg-white p-3 rounded-xl shadow-inner flex justify-center items-center min-h-[160px] min-w-[160px]"></div>
+              <p class="text-[10px] text-slate-500 text-center">掃碼後仍需輸入代碼和姓名才能加入</p>
+            </div>
+          </div>
+
           <div class="space-y-4">
             <div>
                <label class="block text-sm font-medium text-slate-400 mb-1">教室代碼 (Room ID)</label>
@@ -2037,6 +2056,11 @@
           <div class="relative px-12 py-10 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 border border-amber-400/50 rounded-2xl flex flex-col items-center gap-4 hover:scale-110 hover:-translate-y-4 transition-all animate-float shadow-2xl overflow-hidden">
             <i data-lucide="trophy" class="w-12 h-12 text-amber-400 drop-shadow-[0_0_15px_rgba(251,191,36,0.8)]"></i>
             <span class="text-4xl md:text-6xl font-black bg-gradient-to-b from-yellow-200 via-amber-400 to-orange-500 bg-clip-text text-transparent drop-shadow-md break-all">${renderName(name, true)}</span>
+            <!-- ✨ 六：加分至計分板按鈕 -->
+            <button onclick="event.stopPropagation(); addScoreToWinnerPrompt('${escapeHTML(name)}')"
+              class="mt-2 flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-500/20 hover:bg-emerald-500 text-emerald-400 hover:text-white text-sm font-bold border border-emerald-500/40 hover:border-emerald-400 transition-all shadow-md active:scale-95 group-hover:opacity-100 pointer-events-auto">
+              <i data-lucide="plus-circle" class="w-4 h-4"></i> 加分至計分板
+            </button>
           </div>
         </div>
       `).join('');
@@ -4012,10 +4036,14 @@
 
     const getIrsIceServers = () => {
         if (window._irsNetworkMode === 'lan') {
-            // 校內模式：僅用本地 host candidate，不走 STUN/TURN，可突破 10 台連線限制
-            return [];
+            // 校內模式：加入基本 STUN 提升相容性，師生需在同一 Wi-Fi
+            // 空陣列在部分瀏覽器中可能導致 ICE 候選完全失敗
+            return [
+                { urls: 'stun:stun.l.google.com:19302' },
+                { urls: 'stun:stun1.l.google.com:19302' }
+            ];
         }
-        // 校外模式：完整 STUN + TURN
+        // 校外模式：完整 STUN + TURN (建議最多 10 台同時連線)
         return [
             { urls: 'stun:stun.l.google.com:19302' },
             { urls: 'stun:stun1.l.google.com:19302' },
@@ -4758,6 +4786,9 @@
               openScreenViewModal(remoteStream, '老師畫面廣播中...');
           });
       });
+
+      // Fix 2a: 儲存老師的 Peer ID，以便學生端 peer.call() 時使用
+      irsState.hostId = joinId;
 
       irsState.peer.on('open', () => {
          const conn = irsState.peer.connect(joinId, { reliable: true });
@@ -5530,17 +5561,17 @@
         });
     };
 
-    // 學生：申請投影畫面給老師
+    // 學生：申請投影畫面給老師 (Fix 2c: 直接開始投影，不需老師同意的中間步驟)
     window.requestCastToTeacher = () => {
-        // Fix 2: Use alert instead of toast so mobile users clearly see the limitation
         if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
             alert("您的裝置或瀏覽器不支援螢幕畫面分享功能。\n\n造成原因：大多數手機、平板或非 Chrome/Edge 瀏覽器不支持此 API。\n請改用電腦，並以 Chrome 或 Edge 瀏覽器開啟。");
             return;
         }
+        // 直接開始投影，同時通知老師
         if(irsState.hostConn) {
             irsState.hostConn.send({ type: 'request_screen_share', name: irsEls.myName?.textContent || '學生' });
-            showGlobalToast("已發送投影申請，等待老師同意...", "clock", "text-cyan-400");
         }
+        startStudentCasting();
     };
 
     let studentCastStream = null;
@@ -5631,6 +5662,142 @@
             modal.classList.add('flex');
         }
     };
+
+    // ===========================================================================
+    // ✨ 四：學生登入頁 QR Code 切換功能
+    // ===========================================================================
+    let _studentQRGenerated = false;
+    window.toggleStudentQRSection = () => {
+        const section = document.getElementById('student-qr-section');
+        const chevron = document.getElementById('student-qr-chevron');
+        if (!section) return;
+        const isHidden = section.classList.contains('hidden');
+        section.classList.toggle('hidden', !isHidden);
+        if (chevron) chevron.style.transform = isHidden ? 'rotate(180deg)' : '';
+        // 初次展開時生成 QR Code
+        if (isHidden && !_studentQRGenerated && typeof QRCode !== 'undefined') {
+            const container = document.getElementById('student-join-qrcode');
+            if (container) {
+                container.innerHTML = '';
+                new QRCode(container, {
+                    text: window.location.href.split('?')[0],
+                    width: 160, height: 160,
+                    colorDark: '#000000', colorLight: '#ffffff',
+                    correctLevel: QRCode.CorrectLevel.M
+                });
+                _studentQRGenerated = true;
+            }
+        }
+    };
+
+    // ===========================================================================
+    // ✨ 六：抽籤得獎者加分至計分板
+    // ===========================================================================
+    window.addScoreToWinnerPrompt = (winnerName) => {
+        if (!scoreState || !scoreState.teams || scoreState.teams.length === 0) {
+            alert('計分板目前沒有組別，請先在「計分板」建立組別後再使用此功能。');
+            return;
+        }
+        const existing = document.getElementById('winner-score-modal');
+        if (existing) existing.remove();
+
+        const modal = document.createElement('div');
+        modal.id = 'winner-score-modal';
+        modal.className = 'fixed inset-0 z-[200] bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4';
+        modal.innerHTML = `
+          <div class="bg-slate-900 border border-amber-500/30 rounded-3xl shadow-2xl w-full max-w-sm animate-pop-in overflow-hidden">
+            <div class="p-5 border-b border-white/10 flex justify-between items-center bg-gradient-to-r from-amber-900/30 to-slate-800/60">
+              <h3 class="font-bold text-amber-400 flex items-center gap-2 text-lg">
+                <i data-lucide="award" class="w-5 h-5"></i> 加分至計分板
+              </h3>
+              <button onclick="document.getElementById('winner-score-modal').remove()" class="text-slate-400 hover:text-rose-400 transition-colors p-1">
+                <i data-lucide="x" class="w-5 h-5"></i>
+              </button>
+            </div>
+            <div class="p-5 space-y-2">
+              <p class="text-sm text-slate-400 mb-3">替 <strong class="text-amber-300">${escapeHTML(winnerName)}</strong> 選擇加分的組別：</p>
+              ${scoreState.teams.map(t => `
+                <button onclick="doAddScoreToTeam(${t.id}, '${escapeHTML(t.name)}')"
+                  class="w-full py-3 px-4 rounded-xl bg-slate-800 hover:bg-amber-500/20 text-white hover:text-amber-300 font-bold transition-all flex items-center justify-between border border-white/10 hover:border-amber-500/40 active:scale-95 text-left">
+                  <span>${escapeHTML(t.name)}</span>
+                  <span class="text-xs text-slate-400 bg-slate-700 px-2 py-0.5 rounded-full">${t.score} 分</span>
+                </button>
+              `).join('')}
+            </div>
+          </div>`;
+        document.body.appendChild(modal);
+        if (window.lucide) lucide.createIcons({ root: modal });
+    };
+
+    window.doAddScoreToTeam = (teamId, teamName) => {
+        const modal = document.getElementById('winner-score-modal');
+        if (modal) modal.remove();
+        const team = scoreState.teams.find(t => t.id === teamId);
+        if (!team) return;
+        team.score += 1;
+        renderScoreboard();
+        if (typeof sendToAllStudents === 'function') {
+            sendToAllStudents({ type: 'sync_score', teams: scoreState.teams });
+        }
+        showToast(`🏆 已幫 ${team.name} +1 分！`, 'amber');
+    };
+
+    // ===========================================================================
+    // ✨ 七：手機左右滑動切換功能分頁
+    // ===========================================================================
+    (() => {
+        const modes = ['draw', 'clock', 'timer', 'score', 'board', 'irs'];
+        let touchStartX = 0;
+        let touchStartY = 0;
+        const mainEl = document.querySelector('main');
+        if (!mainEl) return;
+
+        mainEl.addEventListener('touchstart', (e) => {
+            touchStartX = e.touches[0].clientX;
+            touchStartY = e.touches[0].clientY;
+        }, { passive: true });
+
+        mainEl.addEventListener('touchend', (e) => {
+            const dx = e.changedTouches[0].clientX - touchStartX;
+            const dy = e.changedTouches[0].clientY - touchStartY;
+            // 只有水平滑動 > 80px 且垂直位移 < 60px 才觸發切換
+            if (Math.abs(dx) < 80 || Math.abs(dy) > 60) return;
+            const cur = appState.currentMode;
+            const idx = modes.indexOf(cur);
+            if (idx === -1) return;
+            const nextIdx = dx < 0
+                ? (idx + 1) % modes.length              // 向左滑：下一分頁
+                : (idx - 1 + modes.length) % modes.length;  // 向右滑：上一分頁
+            switchAppMode(modes[nextIdx]);
+            // 顯示滑動提示
+            const modeNames = { draw: '抽籤機', clock: '時鐘', timer: '計時器', score: '計分板', board: '無限畫板', irs: '即時問答' };
+            showToast(`<i data-lucide="${dx < 0 ? 'chevron-right' : 'chevron-left'}" class="w-4 h-4"></i> ${modeNames[modes[nextIdx]] || modes[nextIdx]}`, 'indigo');
+        }, { passive: true });
+    })();
+
+    // ===========================================================================
+    // ✨ 三(JS)：MutationObserver 自動更新10台上限警告
+    // ===========================================================================
+    (() => {
+        const countEl = document.getElementById('irs-student-count');
+        if (!countEl) return;
+        const observer = new MutationObserver(() => {
+            const w = document.getElementById('irs-capacity-warning');
+            if (!w) return;
+            const count = parseInt(countEl.textContent || '0');
+            const isInternet = window._irsNetworkMode !== 'lan';
+            if (isInternet && count >= 8) {
+                w.classList.remove('hidden');
+                w.classList.add('flex');
+                if (window.lucide) lucide.createIcons({ root: w });
+            } else {
+                w.classList.add('hidden');
+                w.classList.remove('flex');
+            }
+        });
+        observer.observe(countEl, { childList: true, characterData: true, subtree: true });
+    })();
+
   </script>
 
   <!-- 學生投影請求 Modal (Teacher Only) -->
@@ -5666,15 +5833,28 @@
 
   <!-- 連線學生名單 Modal -->
   <div id="irs-student-list-modal" class="fixed inset-0 z-[110] bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center p-4">
-     <div class="bg-slate-900 border border-indigo-500/30 rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[80vh] animate-pop-in">
-        <div class="p-4 border-b border-white/10 flex justify-between items-center bg-slate-800/50">
-           <h3 class="text-lg font-bold text-white flex items-center gap-2"><i data-lucide="users" class="w-5 h-5 text-indigo-400"></i> 已連線學生名單 (<span id="modal-student-count">0</span>)</h3>
-           <button onclick="hideStudentListModal()" class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-700 transition-colors"><i data-lucide="x" class="w-5 h-5"></i></button>
+     <div class="bg-slate-900 border border-indigo-500/30 rounded-3xl shadow-[0_0_60px_rgba(99,102,241,0.3)] w-full max-w-3xl overflow-hidden flex flex-col max-h-[90vh] animate-pop-in">
+        <!-- 標題列 -->
+        <div class="p-6 border-b border-white/10 flex justify-between items-center bg-gradient-to-r from-indigo-900/40 to-slate-800/60">
+           <h3 class="text-2xl font-bold text-white flex items-center gap-3">
+             <div class="p-2 bg-indigo-500/20 rounded-xl border border-indigo-500/30"><i data-lucide="users" class="w-7 h-7 text-indigo-400"></i></div>
+             已連線學生名單 
+             <span class="bg-indigo-500/30 text-indigo-200 text-base px-3 py-1 rounded-full border border-indigo-400/40 font-black ml-1"><span id="modal-student-count">0</span> 人</span>
+           </h3>
+           <button onclick="hideStudentListModal()" class="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-rose-500/20 hover:bg-rose-500 text-rose-400 hover:text-white font-bold transition-all border border-rose-500/30 hover:border-rose-400 text-base shadow-lg active:scale-95">
+             <i data-lucide="x" class="w-5 h-5"></i> 關閉視窗
+           </button>
         </div>
-        <div class="p-4 overflow-y-auto no-scrollbar flex-1 bg-slate-900/50">
-           <div id="modal-student-list-content" class="flex flex-wrap gap-2">
-              <div class="text-slate-500 text-center w-full py-4 font-bold">目前尚無學生連線</div>
+        <div class="p-5 overflow-y-auto no-scrollbar flex-1 bg-slate-900/50">
+           <div id="modal-student-list-content" class="flex flex-wrap gap-3">
+              <div class="text-slate-500 text-center w-full py-8 font-bold text-lg">目前尚無學生連線</div>
            </div>
+        </div>
+        <!-- 底部關閉按鈕 (重複一個讓使用者更容易找到) -->
+        <div class="p-4 border-t border-white/10 bg-slate-800/30 flex justify-center">
+          <button onclick="hideStudentListModal()" class="flex items-center gap-2 px-10 py-3 rounded-xl bg-rose-500 hover:bg-rose-400 text-white font-black text-lg transition-all shadow-lg shadow-rose-500/30 active:scale-95">
+            <i data-lucide="x" class="w-6 h-6"></i> 結束 / 關閉名單視窗
+          </button>
         </div>
      </div>
   </div>

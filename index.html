@@ -91,46 +91,73 @@
   <canvas id="confetti-canvas" class="fixed inset-0 pointer-events-none z-50"></canvas>
 
   <!-- 頂部導覽列 -->
-  <header class="p-4 md:p-6 flex flex-col md:flex-row justify-between items-center gap-4 border-b border-white/10 bg-slate-900/50 backdrop-blur-md sticky top-0 z-40 shadow-lg shadow-black/20">
-    <div class="flex items-center gap-3">
-      <div class="p-2 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl shadow-lg shadow-indigo-500/30 animate-float shrink-0">
-        <i data-lucide="sparkles" class="w-6 h-6 text-white"></i>
-      </div>
-      <div class="flex flex-col">
-        <h1 class="text-2xl md:text-3xl font-black bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent drop-shadow-sm whitespace-nowrap leading-tight">
-          智慧課堂助手
-        </h1>
-        <div id="header-time" class="text-sm font-mono text-slate-400 flex items-center gap-1.5 mt-0.5">
-          <i data-lucide="clock" class="w-3.5 h-3.5"></i> <span>00:00:00</span>
+  <header class="px-4 py-3 md:px-6 md:py-4 border-b border-white/10 bg-slate-900/50 backdrop-blur-md sticky top-0 z-40 shadow-lg shadow-black/20 flex flex-col gap-2">
+    <!-- 第一列：Logo + 時鐘 + Pro 按鈕 (永遠同列) -->
+    <div class="flex items-center justify-between gap-3">
+      <!-- 左：Logo + 時鐘 -->
+      <div class="flex items-center gap-3 min-w-0">
+        <div class="p-2 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl shadow-lg shadow-indigo-500/30 animate-float shrink-0">
+          <i data-lucide="sparkles" class="w-6 h-6 text-white"></i>
         </div>
+        <div class="flex flex-col min-w-0">
+          <h1 class="text-xl md:text-3xl font-black bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent drop-shadow-sm whitespace-nowrap leading-tight">
+            智慧課堂助手
+          </h1>
+          <div id="header-time" class="text-xs md:text-sm font-mono text-slate-400 flex items-center gap-1.5 mt-0.5">
+            <i data-lucide="clock" class="w-3 h-3 md:w-3.5 md:h-3.5"></i> <span>00:00:00</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 右：Pro 按鈕 + 靜音按鈕 (shrink-0 確保永遠不被擠壓) -->
+      <div class="flex items-center gap-2 shrink-0">
+        <!-- ✨ Pro 版連結 -->
+        <a href="pro.html"
+           class="group relative flex items-center gap-1.5 px-3 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-900 font-black text-sm transition-all shadow-lg shadow-amber-500/40 hover:scale-105 active:scale-95 border border-amber-300/50 whitespace-nowrap">
+          <i data-lucide="sparkles" class="w-4 h-4 shrink-0"></i>
+          <span class="hidden sm:inline">Pro 進階版</span>
+          <span class="sm:hidden">Pro</span>
+          <!-- Tooltip -->
+          <div class="absolute top-full mt-2 right-0 w-72 p-4 bg-slate-800 text-white text-xs rounded-2xl shadow-2xl border border-amber-500/30 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-[200] pointer-events-none text-left leading-relaxed">
+            <div class="font-black text-amber-400 text-sm mb-2 flex items-center gap-1.5"><i data-lucide="sparkles" class="w-4 h-4"></i> ✨ Pro 版專屬功能</div>
+            <ul class="space-y-1.5 text-slate-300">
+              <li class="flex items-center gap-2"><span class="text-cyan-400">📡</span> <strong>即時問答 (IRS)</strong>：學生掃碼加入、發題、答題統計</li>
+              <li class="flex items-center gap-2"><span class="text-purple-400">🖼️</span> <strong>無限協作畫板</strong>：師生共同作畫即時同步</li>
+              <li class="flex items-center gap-2"><span class="text-emerald-400">💬</span> <strong>課堂聊天室</strong>：老師可控制開關</li>
+              <li class="flex items-center gap-2"><span class="text-rose-400">📺</span> <strong>螢幕廣播</strong>：老師廣播給全班 / 學生投影給老師</li>
+              <li class="flex items-center gap-2"><span class="text-amber-400">⏰</span> <strong>排程上下課鈴聲</strong>：自動準時響鈴</li>
+            </ul>
+            <div class="mt-3 pt-2 border-t border-white/10 text-slate-400 text-[10px]">點擊即可前往 Pro 版 →</div>
+            <!-- 向上的三角箭頭 -->
+            <div class="absolute -top-1.5 right-6 w-3 h-3 bg-slate-800 border-l border-t border-amber-500/30 rotate-45"></div>
+          </div>
+        </a>
+        <button id="mute-btn" class="p-2.5 rounded-full bg-white/5 hover:bg-white/20 transition-all duration-300 border border-white/10 hover:scale-110 hidden md:flex shrink-0 items-center justify-center">
+          <i data-lucide="volume-2" id="mute-icon" class="w-5 h-5 text-indigo-400 transition-colors"></i>
+        </button>
       </div>
     </div>
 
-    <!-- 主功能切換導覽列 -->
-    <div class="flex bg-slate-950/60 p-1.5 rounded-2xl border border-white/10 shadow-inner w-full md:w-auto overflow-x-auto no-scrollbar">
-      <button onclick="switchAppMode('draw')" id="nav-draw" class="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-indigo-600 text-white font-bold transition-all shadow-md whitespace-nowrap">
+    <!-- 第二列：主功能切換導覽列 (全寬) -->
+    <div class="flex bg-slate-950/60 p-1.5 rounded-2xl border border-white/10 shadow-inner w-full overflow-x-auto no-scrollbar">
+      <button onclick="switchAppMode('draw')" id="nav-draw" class="flex-1 flex items-center justify-center gap-2 px-3 md:px-5 py-2 rounded-xl bg-indigo-600 text-white font-bold transition-all shadow-md whitespace-nowrap text-sm">
         <i data-lucide="users" class="w-4 h-4"></i> 抽籤機
       </button>
-      <button onclick="switchAppMode('clock')" id="nav-clock" class="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-white/5 font-bold transition-all whitespace-nowrap">
+      <button onclick="switchAppMode('clock')" id="nav-clock" class="flex-1 flex items-center justify-center gap-2 px-3 md:px-5 py-2 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-white/5 font-bold transition-all whitespace-nowrap text-sm">
         <i data-lucide="clock" class="w-4 h-4"></i> 考試大鐘
       </button>
-      <button onclick="switchAppMode('timer')" id="nav-timer" class="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-white/5 font-bold transition-all relative whitespace-nowrap">
+      <button onclick="switchAppMode('timer')" id="nav-timer" class="flex-1 flex items-center justify-center gap-2 px-3 md:px-5 py-2 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-white/5 font-bold transition-all relative whitespace-nowrap text-sm">
         <i data-lucide="timer" class="w-4 h-4"></i> 小組計時
-        <!-- 計時器運行中小紅點指示 -->
-        <span id="timer-running-dot" class="hidden absolute top-2 right-4 w-2 h-2 rounded-full bg-red-500 animate-ping"></span>
-        <span id="timer-running-dot-static" class="hidden absolute top-2 right-4 w-2 h-2 rounded-full bg-red-500"></span>
+        <span id="timer-running-dot" class="hidden absolute top-2 right-2 w-2 h-2 rounded-full bg-red-500 animate-ping"></span>
+        <span id="timer-running-dot-static" class="hidden absolute top-2 right-2 w-2 h-2 rounded-full bg-red-500"></span>
       </button>
-      <button onclick="switchAppMode('score')" id="nav-score" class="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-white/5 font-bold transition-all whitespace-nowrap">
+      <button onclick="switchAppMode('score')" id="nav-score" class="flex-1 flex items-center justify-center gap-2 px-3 md:px-5 py-2 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-white/5 font-bold transition-all whitespace-nowrap text-sm">
         <i data-lucide="award" class="w-4 h-4"></i> 計分板
       </button>
-      <button onclick="switchAppMode('board')" id="nav-board" class="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-white/5 font-bold transition-all whitespace-nowrap">
+      <button onclick="switchAppMode('board')" id="nav-board" class="flex-1 flex items-center justify-center gap-2 px-3 md:px-5 py-2 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-white/5 font-bold transition-all whitespace-nowrap text-sm">
         <i data-lucide="edit-3" class="w-4 h-4"></i> 互動白板
       </button>
     </div>
-
-    <button id="mute-btn" class="p-3 rounded-full bg-white/5 hover:bg-white/20 transition-all duration-300 border border-white/10 hover:scale-110 hidden md:block shrink-0">
-      <i data-lucide="volume-2" id="mute-icon" class="w-5 h-5 text-indigo-400 transition-colors"></i>
-    </button>
   </header>
 
   <!-- 主要內容區 -->
