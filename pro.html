@@ -109,7 +109,8 @@
     body.is-student button[data-action^="sub"],
     body.is-student button[data-action^="add"],
     body.is-student #board-toolbar,
-    body.is-student #board-clear-btn {
+    body.is-student #board-clear-btn,
+    body.is-student #nav-draw {
       display: none !important;
     }
     body.is-student .team-name-input {
@@ -4811,6 +4812,8 @@
             
             // 只有在學生模式且進入別人教室的時候才鎖住教師功能
             document.body.classList.add('is-student');
+            // 學生模式下不應顯示抽籤機，若目前在抽籤機頁面則切換到時間管理
+            if (appState.currentMode === 'draw') switchAppMode('clock');
             
             // UI 切換
             irsEls.studentLogin.classList.add('hidden');
@@ -5758,6 +5761,8 @@
         }, { passive: true });
 
         mainEl.addEventListener('touchend', (e) => {
+            // 在無限畫板模式下，觸控手勢保留給畫畫使用，不觸發頁面切換
+            if (appState.currentMode === 'board') return;
             const dx = e.changedTouches[0].clientX - touchStartX;
             const dy = e.changedTouches[0].clientY - touchStartY;
             // 只有水平滑動 > 80px 且垂直位移 < 60px 才觸發切換
