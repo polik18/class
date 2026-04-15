@@ -692,6 +692,9 @@
              <button id="exam-fullscreen-btn" onclick="toggleExamFullscreen()" class="px-6 py-3 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-all font-bold border border-white/10 flex items-center gap-2 shadow-sm active:scale-95 group">
                 <i data-lucide="maximize" class="w-4 h-4 group-hover:scale-110 transition-transform"></i> 進入全螢幕廣播模式
              </button>
+             <button id="exam-switch-hub-btn" onclick="switchToAdvancedExam()" class="px-6 py-3 rounded-full bg-indigo-600/20 hover:bg-indigo-600 text-indigo-300 hover:text-white transition-all font-bold border border-indigo-500/30 flex items-center gap-2 shadow-sm active:scale-95 group ml-3">
+                <i data-lucide="layout-grid" class="w-4 h-4 group-hover:rotate-90 transition-transform"></i> 切換至進階：智慧考場系統
+             </button>
           </div>
           <!-- 取消全螢幕按鈕：固定在右下角，不占文件流 -->
           <button id="exam-exit-fullscreen-btn" onclick="toggleExamFullscreen(true)" class="hidden absolute bottom-6 right-6 z-50 px-6 py-3 rounded-full bg-rose-600/30 hover:bg-rose-600 text-rose-300 hover:text-white transition-all font-bold border border-rose-500/40 items-center gap-2 shadow-lg active:scale-95 group backdrop-blur-sm">
@@ -2572,6 +2575,28 @@
         const proctor = document.getElementById('exam-proctor-input')?.value || '';
         try { localStorage.setItem('proExamInfo', JSON.stringify({ subject, expected, actual, timeStart, timeEnd, proctor })); } catch(e) {}
         updateAbsentCount();
+    };
+
+    window.switchToAdvancedExam = () => {
+        saveExamInfo();
+        const data = JSON.parse(localStorage.getItem('proExamInfo')) || {};
+        const examSchedule = [{
+            id: Date.now(),
+            startH: (data.timeStart && data.timeStart.includes(':')) ? data.timeStart.split(':')[0] : '08',
+            startM: (data.timeStart && data.timeStart.includes(':')) ? data.timeStart.split(':')[1] : '30',
+            endH: (data.timeEnd && data.timeEnd.includes(':')) ? data.timeEnd.split(':')[0] : '09',
+            endM: (data.timeEnd && data.timeEnd.includes(':')) ? data.timeEnd.split(':')[1] : '20',
+            subject: data.subject || '',
+            proctor: data.proctor || 'OOO老師'
+        }];
+        const examAttendance = {
+            expected: parseInt(data.expected) || 28,
+            actual: parseInt(data.actual) || 28,
+            absentNumbers: ''
+        };
+        localStorage.setItem('examSchedule', JSON.stringify(examSchedule));
+        localStorage.setItem('examAttendance', JSON.stringify(examAttendance));
+        window.location.href = 'exam.html';
     };
 
     function loadExamInfo() {
