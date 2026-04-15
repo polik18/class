@@ -612,7 +612,7 @@
       <div class="w-full flex-1 flex flex-col relative overflow-hidden p-4 sm:p-10 text-center">
         
         <!-- 子功能 1：考試大鐘 -->
-        <div id="clock-sub-exam" class="w-full h-full flex flex-col items-center justify-center transition-opacity duration-300 ease-in-out opacity-100 py-10">
+        <div id="clock-sub-exam" class="w-full h-full flex flex-col items-center justify-center transition-opacity duration-300 ease-in-out opacity-100 py-10 relative">
           <div id="clock-date" class="text-[clamp(1.5rem,4vw,3.5rem)] font-medium text-indigo-300/80 tracking-widest drop-shadow-md">
             載入日期中...
           </div>
@@ -622,6 +622,81 @@
           <div class="w-full max-w-2xl mx-auto h-2 bg-slate-800 rounded-full overflow-hidden mt-4 sm:mt-10 shadow-inner border border-white/5 flex-shrink-0">
             <div id="clock-seconds-bar" class="h-full bg-gradient-to-r from-indigo-500 to-purple-500 transition-all duration-1000 ease-linear shadow-[0_0_10px_rgba(99,102,241,0.8)]" style="width: 0%"></div>
           </div>
+
+          <!-- 考試資訊面板 -->
+          <div id="exam-info-panel-container" class="w-full max-w-3xl mx-auto mt-6 sm:mt-10 bg-slate-900/60 backdrop-blur-md rounded-2xl border border-white/10 p-4 sm:p-6 shadow-xl flex-shrink-0 transition-all duration-500 origin-center">
+            <!-- 考試科目 -->
+            <div class="flex items-center justify-center gap-3 mb-3">
+              <i data-lucide="book-open" class="w-5 h-5 text-amber-400 shrink-0"></i>
+              <input type="text" id="exam-subject-input" placeholder="點此輸入考試科目（如：數學第三冊期中考）" 
+                class="bg-transparent border-none text-center text-xl sm:text-2xl font-black text-amber-300 placeholder-slate-600 focus:outline-none focus:placeholder-slate-500 w-full transition-colors"
+                oninput="saveExamInfo()">
+            </div>
+            <!-- 考試時間 & 監考老師 -->
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-6 mb-4">
+              <!-- 考試時間 -->
+              <div class="flex items-center gap-2 bg-slate-800/60 px-4 py-2 rounded-xl border border-purple-500/20 shadow-inner hover:border-purple-500/40 transition-colors">
+                <i data-lucide="clock" class="w-4 h-4 text-purple-400 shrink-0"></i>
+                <span class="text-sm font-bold text-slate-400 whitespace-nowrap">時間</span>
+                <input type="text" id="exam-time-start" placeholder="08:30" maxlength="5"
+                  class="bg-transparent border-none text-base font-bold text-purple-300 placeholder-slate-600 focus:outline-none w-[4rem] text-center"
+                  oninput="formatTimeInput(this); saveExamInfo()">
+                <span class="text-slate-500 font-bold">~</span>
+                <input type="text" id="exam-time-end" placeholder="09:20" maxlength="5"
+                  class="bg-transparent border-none text-base font-bold text-purple-300 placeholder-slate-600 focus:outline-none w-[4rem] text-center"
+                  oninput="formatTimeInput(this); saveExamInfo()">
+              </div>
+              <!-- 監考老師 -->
+              <div class="flex items-center gap-2 bg-slate-800/60 px-4 py-2 rounded-xl border border-cyan-500/20 shadow-inner hover:border-cyan-500/40 transition-colors">
+                <i data-lucide="user" class="w-4 h-4 text-cyan-400 shrink-0"></i>
+                <span class="text-sm font-bold text-slate-400 whitespace-nowrap">監考</span>
+                <input type="text" id="exam-proctor-input" placeholder="輸入監考老師" 
+                  class="bg-transparent border-none text-base font-bold text-cyan-300 placeholder-slate-600 focus:outline-none w-32 text-center"
+                  oninput="saveExamInfo()">
+              </div>
+            </div>
+            <div class="h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent mb-4"></div>
+            <!-- 人數區 -->
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-8">
+              <!-- 應到人數 -->
+              <div class="flex items-center gap-2.5 bg-slate-800/60 px-4 py-2.5 rounded-xl border border-indigo-500/20 shadow-inner group hover:border-indigo-500/40 transition-colors">
+                <i data-lucide="users" class="w-4 h-4 text-indigo-400 shrink-0"></i>
+                <span class="text-sm font-bold text-slate-400 whitespace-nowrap">應到</span>
+                <input type="number" id="exam-expected-input" placeholder="--" min="0"
+                  class="w-16 bg-transparent border-none text-center text-xl font-black text-indigo-300 placeholder-slate-600 focus:outline-none appearance-none"
+                  oninput="saveExamInfo()">
+                <span class="text-sm text-slate-500">人</span>
+              </div>
+              <!-- 實到人數 -->
+              <div class="flex items-center gap-2.5 bg-slate-800/60 px-4 py-2.5 rounded-xl border border-emerald-500/20 shadow-inner group hover:border-emerald-500/40 transition-colors">
+                <i data-lucide="user-check" class="w-4 h-4 text-emerald-400 shrink-0"></i>
+                <span class="text-sm font-bold text-slate-400 whitespace-nowrap">實到</span>
+                <input type="number" id="exam-actual-input" placeholder="--" min="0"
+                  class="w-16 bg-transparent border-none text-center text-xl font-black text-emerald-300 placeholder-slate-600 focus:outline-none appearance-none"
+                  oninput="saveExamInfo()">
+                <span class="text-sm text-slate-500">人</span>
+              </div>
+              <!-- 缺考人數 (自動計算) -->
+              <div class="flex items-center gap-2.5 bg-slate-800/60 px-4 py-2.5 rounded-xl border border-rose-500/20 shadow-inner">
+                <i data-lucide="user-x" class="w-4 h-4 text-rose-400 shrink-0"></i>
+                <span class="text-sm font-bold text-slate-400 whitespace-nowrap">缺考</span>
+                <span id="exam-absent-display" class="text-xl font-black text-rose-400 w-16 text-center">--</span>
+                <span class="text-sm text-slate-500">人</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 全螢幕按鈕區 -->
+          <!-- 全螢幕按鈕區 -->
+          <div class="mt-8 flex justify-center w-full max-w-3xl">
+             <button id="exam-fullscreen-btn" onclick="toggleExamFullscreen()" class="px-6 py-3 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-all font-bold border border-white/10 flex items-center gap-2 shadow-sm active:scale-95 group">
+                <i data-lucide="maximize" class="w-4 h-4 group-hover:scale-110 transition-transform"></i> 進入全螢幕廣播模式
+             </button>
+          </div>
+          <!-- 取消全螢幕按鈕：固定在右下角，不占文件流 -->
+          <button id="exam-exit-fullscreen-btn" onclick="toggleExamFullscreen(true)" class="hidden absolute bottom-6 right-6 z-50 px-6 py-3 rounded-full bg-rose-600/30 hover:bg-rose-600 text-rose-300 hover:text-white transition-all font-bold border border-rose-500/40 items-center gap-2 shadow-lg active:scale-95 group backdrop-blur-sm">
+             <i data-lucide="minimize" class="w-4 h-4 group-hover:scale-110 transition-transform"></i> 取消全螢幕
+          </button>
         </div>
 
         <!-- 子功能 2：上下課鐘 -->
@@ -2449,6 +2524,180 @@
             }
         }
     };
+
+    // --- 考試資訊面板功能 (Exam Info Panel) ---
+    window.formatTimeInput = (elem) => {
+        let val = elem.value.replace(/\D/g, ''); // 移除非數字
+        let invalid = false;
+
+        // 1. 小時十位數：大於 2 (如 3-9)，自動前方補 0
+        if (val.length >= 1 && parseInt(val[0]) > 2) {
+            val = '0' + val;
+        }
+        // 2. 小時個位數：如果十位數是 2，個位數只能 0-3 (24小時制)
+        if (val.length >= 2 && val[0] === '2' && parseInt(val[1]) > 3) {
+            val = val.substring(0, 1);
+            invalid = true;
+        }
+        // 3. 分鐘十位數：不能大於 5 (每小時60分)
+        if (val.length >= 3 && parseInt(val[2]) > 5) {
+            val = val.substring(0, 2);
+            invalid = true;
+        }
+        // 限制最多 4 個數字
+        if (val.length > 4) {
+            val = val.substring(0, 4);
+        }
+
+        // 組合成 HH:MM 格式
+        elem.value = val.length > 2 ? val.substring(0, 2) + ':' + val.substring(2) : val;
+
+        // 錯誤輸入提示：文字閃爍紅燈
+        if (invalid) {
+            elem.classList.add('text-rose-400');
+            elem.classList.remove('text-purple-300');
+            setTimeout(() => {
+                elem.classList.remove('text-rose-400');
+                elem.classList.add('text-purple-300');
+            }, 300);
+        }
+    };
+
+    window.saveExamInfo = () => {
+        const subject = document.getElementById('exam-subject-input')?.value || '';
+        const expected = document.getElementById('exam-expected-input')?.value || '';
+        const actual = document.getElementById('exam-actual-input')?.value || '';
+        const timeStart = document.getElementById('exam-time-start')?.value || '';
+        const timeEnd = document.getElementById('exam-time-end')?.value || '';
+        const proctor = document.getElementById('exam-proctor-input')?.value || '';
+        try { localStorage.setItem('proExamInfo', JSON.stringify({ subject, expected, actual, timeStart, timeEnd, proctor })); } catch(e) {}
+        updateAbsentCount();
+    };
+
+    function loadExamInfo() {
+        try {
+            const data = JSON.parse(localStorage.getItem('proExamInfo'));
+            if (data) {
+                const subjectEl = document.getElementById('exam-subject-input');
+                const expectedEl = document.getElementById('exam-expected-input');
+                const actualEl = document.getElementById('exam-actual-input');
+                const timeStartEl = document.getElementById('exam-time-start');
+                const timeEndEl = document.getElementById('exam-time-end');
+                const proctorEl = document.getElementById('exam-proctor-input');
+                if (subjectEl && data.subject) subjectEl.value = data.subject;
+                if (expectedEl && data.expected) expectedEl.value = data.expected;
+                if (actualEl && data.actual) actualEl.value = data.actual;
+                if (timeStartEl && data.timeStart) timeStartEl.value = data.timeStart;
+                if (timeEndEl && data.timeEnd) timeEndEl.value = data.timeEnd;
+                if (proctorEl && data.proctor) proctorEl.value = data.proctor;
+                updateAbsentCount();
+            }
+        } catch(e) {}
+    }
+
+    function updateAbsentCount() {
+        const expected = parseInt(document.getElementById('exam-expected-input')?.value);
+        const actual = parseInt(document.getElementById('exam-actual-input')?.value);
+        const display = document.getElementById('exam-absent-display');
+        if (display) {
+            if (!isNaN(expected) && !isNaN(actual)) {
+                const absent = expected - actual;
+                display.textContent = absent >= 0 ? absent : 0;
+            } else {
+                display.textContent = '--';
+            }
+        }
+    }
+
+    loadExamInfo();
+
+    // --- 考試資訊面板全螢幕功能 ---
+    window.toggleExamFullscreen = (forceExit = false) => {
+        const elem = document.getElementById('clock-sub-exam');
+        if (!elem) return;
+
+        if (!document.fullscreenElement && !forceExit) {
+            // 進入全螢幕
+            elem.classList.add('bg-slate-950'); // 加上背景色避免黑屏
+            if (elem.requestFullscreen) {
+                elem.requestFullscreen();
+            } else if (elem.webkitRequestFullscreen) { /* Safari */
+                elem.webkitRequestFullscreen();
+            }
+        } else {
+            // 退出全螢幕
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            } else if (document.webkitExitFullscreen) { /* Safari */
+                document.webkitExitFullscreen();
+            }
+        }
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+
+    function handleFullscreenChange() {
+        const elem = document.getElementById('clock-sub-exam');
+        const enterBtn = document.getElementById('exam-fullscreen-btn');
+        const exitBtn = document.getElementById('exam-exit-fullscreen-btn');
+        const clockDate = document.getElementById('clock-date');
+        const clockTime = document.getElementById('clock-time');
+        const infoPanel = document.getElementById('exam-info-panel-container');
+
+        if (document.fullscreenElement || document.webkitFullscreenElement) {
+            // 取得實際螢幕尺寸
+            const sw = screen.width;
+            const sh = screen.height;
+
+            // 水平限制：HH:MM:SS 共 8 個等寬字元，每字元約 0.6em
+            const timeSize_h = Math.floor(sw * 0.95 / 4.8);
+            // 垂直限制：扣掉日期列、進度條、考試面板、按鈕、內距後剩餘空間
+            const timeSize_v = Math.floor((sh - 360) / 1.31);
+            const timeSize = Math.min(timeSize_h, timeSize_v);
+            const dateSize = Math.floor(timeSize * 0.22);
+            const infoPanelScale = Math.min(sw / 900, sh / 560, 1.6);
+
+            // 套用動態大小
+            clockDate.style.fontSize = dateSize + 'px';
+            clockTime.style.fontSize = timeSize + 'px';
+            clockTime.style.transition = 'font-size 0.5s ease';
+            clockDate.style.transition = 'font-size 0.5s ease';
+
+            // 縮放資訊面板
+            if (infoPanel) {
+                infoPanel.style.transform = `scale(${infoPanelScale})`;
+                infoPanel.style.transformOrigin = 'top center';
+                infoPanel.style.marginTop = `${Math.floor(timeSize * 0.4)}px`;
+            }
+
+            // 顯示/隱藏按鈕
+            enterBtn.classList.add('hidden');
+            exitBtn.classList.remove('hidden');
+            exitBtn.classList.add('flex');
+            elem.classList.add('p-6');
+            elem.classList.remove('py-10');
+
+        } else {
+            // 退出全螢幕：還原所有動態樣式
+            clockDate.style.fontSize = '';
+            clockTime.style.fontSize = '';
+            clockDate.style.transition = '';
+            clockTime.style.transition = '';
+
+            if (infoPanel) {
+                infoPanel.style.transform = '';
+                infoPanel.style.transformOrigin = '';
+                infoPanel.style.marginTop = '';
+            }
+
+            elem.classList.remove('bg-slate-950', 'p-6');
+            elem.classList.add('py-10');
+            enterBtn.classList.remove('hidden');
+            exitBtn.classList.add('hidden');
+            exitBtn.classList.remove('flex');
+        }
+    }
 
     // --- 上下課鐘功能 (Class Bell) ---
     // 使用 Web Audio API 合成極度真實的雙音校園鐘聲
