@@ -58,6 +58,13 @@
         /* 隱藏卷軸但保留滾動功能 */
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* 優雅的自訂卷軸 */
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background-color: rgba(156, 163, 175, 0.4); border-radius: 10px; }
+        .dark .custom-scrollbar::-webkit-scrollbar-thumb { background-color: rgba(82, 82, 91, 0.5); }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background-color: rgba(156, 163, 175, 0.6); }
     </style>
 </head>
 <body class="bg-slate-200 dark:bg-zinc-950 transition-colors duration-500 text-slate-800 dark:text-zinc-200 min-h-screen overflow-hidden">
@@ -596,50 +603,50 @@
 
                 <div className="flex-1 min-h-0 flex flex-col lg:flex-row gap-4 lg:gap-6 p-4 lg:p-6 relative z-10">
                   {/* 左側考程表 */}
-                  <div className="w-full lg:w-[44%] flex flex-col bg-white dark:bg-zinc-900 rounded-[2rem] shadow-sm border border-slate-200/60 dark:border-zinc-800/60 overflow-hidden print:border-none print:shadow-none">
+                  <div className="w-full lg:w-[44%] h-full min-h-0 flex flex-col bg-white dark:bg-zinc-900 rounded-[2rem] shadow-sm border border-slate-200/60 dark:border-zinc-800/60 overflow-hidden print:border-none print:shadow-none">
                     
                     {/* 表頭：統一為單行顯示，確保「時間、科目、監考」對齊在同一排 */}
                     <div className="print-header flex w-full px-4 lg:px-6 py-3 lg:py-4 border-b border-slate-100 dark:border-zinc-800 shrink-0 bg-slate-50/50 dark:bg-zinc-950/50 items-center justify-between">
-                      <div className={`text-sm lg:text-base font-black text-slate-400 dark:text-zinc-500 tracking-widest text-center uppercase ${bopomofoMode ? 'flex-1' : 'w-[45%]'}`}>
+                      <div className="flex-1 text-sm lg:text-base font-black text-slate-400 dark:text-zinc-500 tracking-widest text-center uppercase">
                           <ZY active={bopomofoMode}>時間</ZY>
                       </div>
-                      <div className={`text-sm lg:text-base font-black text-slate-400 dark:text-zinc-500 tracking-widest text-center uppercase ${bopomofoMode ? 'flex-1' : 'w-[25%]'}`}>
+                      <div className="flex-1 text-sm lg:text-base font-black text-slate-400 dark:text-zinc-500 tracking-widest text-center uppercase">
                           <ZY active={bopomofoMode}>科目</ZY>
                       </div>
-                      <div className={`text-sm lg:text-base font-black text-slate-400 dark:text-zinc-500 tracking-widest text-center uppercase ${bopomofoMode ? 'flex-1' : 'w-[30%]'}`}>
+                      <div className="flex-1 text-sm lg:text-base font-black text-slate-400 dark:text-zinc-500 tracking-widest text-center uppercase">
                           <ZY active={bopomofoMode}>{bopomofoMode ? '監考' : '監考老師'}</ZY>
                       </div>
                     </div>
 
-                    <div className="flex-1 overflow-y-auto flex flex-col w-full p-2 lg:p-3 scrollbar-hide">
+                    <div className="flex-1 overflow-y-auto custom-scrollbar flex flex-col w-full p-2 lg:p-3 relative">
                       {schedule.map((exam, index) => (
                         <div key={exam.id} draggable="true" onDragStart={e=>handleDragStart(e,index)} onDragOver={e=>handleDragOver(e,index)} onDragLeave={()=>setDragOverItemIndex(null)} onDrop={e=>handleDrop(e,index)} onDragEnd={()=>setDraggedItemIndex(null)}
-                          className={`group flex w-full items-center px-2 rounded-2xl border border-transparent transition-all relative cursor-move ${index%2===0 ? 'bg-transparent' : 'bg-slate-50/50 dark:bg-zinc-800/20'} hover:bg-slate-100/80 dark:hover:bg-zinc-800/80 hover:border-slate-200/80 dark:hover:border-zinc-700/80 ${draggedItemIndex===index?'dragging':''} ${dragOverItemIndex===index?'drag-over':''} ${bopomofoMode ? 'flex-col py-4 gap-3 min-h-[90px]' : 'min-h-[65px] lg:min-h-[75px]'}`}>
-                          <div className={`drag-handle absolute text-slate-300 dark:text-zinc-600 opacity-0 group-hover:opacity-100 transition-opacity ${bopomofoMode ? 'top-2 left-2' : 'left-0'}`}><GripVertical className="w-5 h-5" /></div>
+                          className={`group flex flex-col w-full items-center py-4 lg:py-6 gap-3 lg:gap-4 px-2 rounded-2xl border border-transparent transition-all relative cursor-move shrink-0 ${index%2===0 ? 'bg-transparent' : 'bg-slate-50/50 dark:bg-zinc-800/20'} hover:bg-slate-100/80 dark:hover:bg-zinc-800/80 hover:border-slate-200/80 dark:hover:border-zinc-700/80 ${draggedItemIndex===index?'dragging':''} ${dragOverItemIndex===index?'drag-over':''} min-h-[90px] lg:min-h-[110px]`}>
+                          <div className="drag-handle absolute top-3 left-2 lg:top-4 lg:left-4 text-slate-300 dark:text-zinc-600 opacity-0 group-hover:opacity-100 transition-opacity"><GripVertical className="w-5 h-5 lg:w-6 lg:h-6" /></div>
                           
                           {/* 考程時間區塊 */}
-                          <div className={`px-0 flex items-center justify-center font-bold font-num tabular-nums text-slate-700 dark:text-zinc-200 tracking-tight gap-0.5 ${bopomofoMode ? 'w-full text-2xl lg:text-4xl' : 'w-[45%] text-xl lg:text-[1.7rem] xl:text-[1.9rem]'}`}>
+                          <div className="w-full px-0 flex items-center justify-center font-bold font-num tabular-nums text-slate-700 dark:text-zinc-200 tracking-tight gap-0.5 text-3xl lg:text-[2.5rem]">
                             <select value={exam.startH} onChange={e=>handleExamChange(exam.id,'startH',e.target.value)} className="bg-transparent hover:bg-white dark:hover:bg-zinc-700 rounded-lg focus:outline-none text-center no-arrow transition-colors">{hours.map(h=><option key={h} value={h} className="text-slate-800">{h}</option>)}</select>
-                            <span className="opacity-50 pb-1">:</span>
+                            <span className="opacity-50 pb-1 lg:pb-2">:</span>
                             <select value={exam.startM} onChange={e=>handleExamChange(exam.id,'startM',e.target.value)} className="bg-transparent hover:bg-white dark:hover:bg-zinc-700 rounded-lg focus:outline-none text-center no-arrow transition-colors">{minutes.map(m=><option key={m} value={m} className="text-slate-800">{m}</option>)}</select>
-                            <span className="mx-1 opacity-30 font-sans pb-1">-</span>
+                            <span className="mx-2 opacity-30 font-sans pb-1 lg:pb-2">-</span>
                             <select value={exam.endH} onChange={e=>handleExamChange(exam.id,'endH',e.target.value)} className="bg-transparent hover:bg-white dark:hover:bg-zinc-700 rounded-lg focus:outline-none text-center no-arrow transition-colors">{hours.map(h=><option key={h} value={h} className="text-slate-800">{h}</option>)}</select>
-                            <span className="opacity-50 pb-1">:</span>
+                            <span className="opacity-50 pb-1 lg:pb-2">:</span>
                             <select value={exam.endM} onChange={e=>handleExamChange(exam.id,'endM',e.target.value)} className="bg-transparent hover:bg-white dark:hover:bg-zinc-700 rounded-lg focus:outline-none text-center no-arrow transition-colors">{minutes.map(m=><option key={m} value={m} className="text-slate-800">{m}</option>)}</select>
                           </div>
                           
                           {/* 科目與監考區塊 */}
-                          <div className={`${bopomofoMode ? 'w-full flex items-center justify-center gap-2' : 'contents'}`}>
-                            <div className={`px-0 flex items-center justify-center ${bopomofoMode ? 'w-1/2' : 'w-[25%]'}`}>
-                              <ZYInput active={bopomofoMode} type="text" list="subject-list" value={exam.subject} onChange={e=>handleExamChange(exam.id,'subject',e.target.value)} placeholder="科目" className={`w-full shrink-0 text-center font-black font-tc tracking-widest bg-transparent hover:bg-white dark:hover:bg-zinc-700 rounded-xl focus:outline-none py-1 transition-colors placeholder:text-slate-300 dark:placeholder:text-zinc-600 ${getTextColor(exam.subject, '')} ${bopomofoMode ? 'text-3xl lg:text-4xl' : 'text-2xl lg:text-[1.7rem] xl:text-[1.9rem]'}`} />
+                          <div className="w-full flex items-center justify-center gap-2 lg:gap-4">
+                            <div className="w-1/2 px-0 flex items-center justify-center">
+                              <ZYInput active={bopomofoMode} type="text" list="subject-list" value={exam.subject} onChange={e=>handleExamChange(exam.id,'subject',e.target.value)} placeholder="科目" className={`w-full shrink-0 text-center font-black font-tc tracking-widest bg-transparent hover:bg-white dark:hover:bg-zinc-700 rounded-xl focus:outline-none py-1 transition-colors placeholder:text-slate-300 dark:placeholder:text-zinc-600 ${getTextColor(exam.subject, '')} text-3xl lg:text-[2.2rem] xl:text-[2.5rem]`} />
                             </div>
-                            <div className={`px-0 flex items-center justify-center font-black tracking-wider text-slate-500 dark:text-zinc-400 ${bopomofoMode ? 'w-1/2 text-2xl lg:text-3xl' : 'w-[30%] text-xl lg:text-[1.4rem] xl:text-[1.6rem]'}`}>
+                            <div className="w-1/2 px-0 flex items-center justify-center font-black tracking-wider text-slate-500 dark:text-zinc-400 text-2xl lg:text-[1.8rem] xl:text-[2rem]">
                               <ZYInput active={bopomofoMode} type="text" value={exam.proctor} onChange={e=>handleExamChange(exam.id,'proctor',e.target.value)} className={`w-full shrink-0 text-center bg-transparent hover:bg-white dark:hover:bg-zinc-700 rounded-xl focus:outline-none py-1 transition-colors ${getTextColor(exam.proctor, 'OOO老師')}`} />
                             </div>
                           </div>
 
-                          <div className={`absolute opacity-0 group-hover:opacity-100 print:hidden transition-opacity ${bopomofoMode ? 'top-2 right-2' : 'right-1'}`}>
-                            <button onClick={()=>removeExam(exam.id)} className="p-1.5 text-rose-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-zinc-700 rounded-full transition-colors"><Trash2 className="w-6 h-6" /></button>
+                          <div className="absolute top-2 right-2 lg:top-4 lg:right-4 opacity-0 group-hover:opacity-100 print:hidden transition-opacity">
+                            <button onClick={()=>removeExam(exam.id)} className="p-1.5 text-rose-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-zinc-700 rounded-full transition-colors"><Trash2 className="w-6 h-6 lg:w-7 lg:h-7" /></button>
                           </div>
                         </div>
                       ))}
