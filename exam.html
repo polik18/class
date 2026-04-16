@@ -84,6 +84,7 @@
         const VolumeX = ({className}) => (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>);
         const Palette = ({className}) => (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.9 0 1.6-.5 2-1.3.4.8 1.1 1.3 2 1.3 3.3 0 6-2.7 6-6 0-3.3-2.7-6-6-6-2.5 0-4.5-2-4.5-4.5 0-.4 0-.8.1-1.2"/></svg>);
         const ChevronLeft = ({className}) => (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="15 18 9 12 15 6"/></svg>);
+        const XIcon = ({className}) => (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>);
 
         const IconButton = ({ icon: Icon, label, description, onClick, isActive, activeColor, inactiveColor }) => (
             <div className="relative group flex justify-center">
@@ -117,11 +118,72 @@
           '年': 'ㄋㄧㄢˊ', '月': 'ㄩㄝˋ', '日': 'ㄖˋ', '星': 'ㄒㄧㄥ', '一': 'ㄧ', '二': 'ㄦˋ', '三': 'ㄙㄢ', '四': 'ㄙˋ', '六': 'ㄌㄧㄡˋ',
           '準': 'ㄓㄨㄣˇ', '備': 'ㄅㄟˋ', '開': 'ㄎㄞ', '始': 'ㄕˇ', '收': 'ㄕㄡ', '卷': 'ㄐㄩㄢˋ', '即': 'ㄐㄧˊ', '將': 'ㄐㄧㄤ',
           '離': 'ㄌㄧˊ', '距': 'ㄐㄩˋ', '全': 'ㄑㄩㄢˊ', '部': 'ㄅㄨˋ', '末': 'ㄇㄛˋ', '下': 'ㄒㄧㄚˋ', '節': 'ㄐㄧㄝˊ', '本': 'ㄅㄣˇ',
-          '今': 'ㄐㄧㄣ', '已': 'ㄧˇ', '最': 'ㄗㄨㄟˋ', '後': 'ㄏㄡˋ'
+          '今': 'ㄐㄧㄣ', '已': 'ㄧˇ', '最': 'ㄗㄨㄟˋ', '後': 'ㄏㄡˋ',
+          '健': 'ㄐㄧㄢˋ', '體': 'ㄊㄧˇ', '藝': 'ㄧˋ', '術': 'ㄕㄨˋ', '綜': 'ㄗㄨㄥ', '合': 'ㄏㄜˊ',
+          '閩': 'ㄇㄧㄣˇ', '南': 'ㄋㄢˊ', '客': 'ㄎㄜˋ', '家': 'ㄐㄧㄚ', '原': 'ㄩㄢˊ', '住': 'ㄓㄨˋ',
+          '段': 'ㄉㄨㄢˋ', '模': 'ㄇㄛˊ', '擬': 'ㄋㄧˇ', '平': 'ㄆㄧㄥˊ', '測': 'ㄘㄜˋ', '驗': 'ㄧㄢˋ',
+          '複': 'ㄈㄨˋ', '習': 'ㄒㄧˊ', '班': 'ㄅㄢ', '略': 'ㄌㄩㄝˋ',
+          '七': 'ㄑㄧ', '八': 'ㄅㄚ', '九': 'ㄐㄧㄡˇ', '十': 'ㄕˊ', '零': 'ㄌㄧㄥˊ',
+          '陳': 'ㄔㄣˊ', '林': 'ㄌㄧㄣˊ', '黃': 'ㄏㄨㄤˊ', '張': 'ㄓㄤ', '李': 'ㄌㄧˇ', '王': 'ㄨㄤˊ',
+          '吳': 'ㄨˊ', '劉': 'ㄌㄧㄡˊ', '蔡': 'ㄘㄞˋ', '楊': 'ㄧㄤˊ', '許': 'ㄒㄩˇ', '鄭': 'ㄓㄥˋ',
+          '謝': 'ㄒㄧㄝˋ', '洪': 'ㄏㄨㄥˊ', '郭': 'ㄍㄨㄛ', '邱': 'ㄑㄧㄡ', '曾': 'ㄗㄥ', '廖': 'ㄌㄧㄠˋ',
+          '賴': 'ㄌㄞˋ', '徐': 'ㄒㄩˊ', '周': 'ㄓㄡ', '葉': 'ㄧㄝˋ', '蘇': 'ㄙㄨ', '莊': 'ㄓㄨㄤ',
+          '呂': 'ㄌㄩˇ', '江': 'ㄐㄧㄤ', '何': 'ㄏㄜˊ', '蕭': 'ㄒㄧㄠ', '羅': 'ㄌㄨㄛˊ', '高': 'ㄍㄠ',
+          '潘': 'ㄆㄢ', '簡': 'ㄐㄧㄢˇ', '朱': 'ㄓㄨ', '鍾': 'ㄓㄨㄥ', '彭': 'ㄆㄥˊ', '游': 'ㄧㄡˊ', 
+          '詹': 'ㄓㄢ', '胡': 'ㄏㄨˊ', '施': 'ㄕ', '沈': 'ㄕㄣˇ', '余': 'ㄩˊ', '趙': 'ㄓㄠˋ',
+          '雅': 'ㄧㄚˇ', '婷': 'ㄊㄧㄥˊ', '宗': 'ㄗㄨㄥ', '翰': 'ㄏㄢˋ', '佳': 'ㄐㄧㄚ', '玲': 'ㄌㄧㄥˊ', 
+          '俊': 'ㄐㄩㄣˋ', '傑': 'ㄐㄧㄝˊ', '冠': 'ㄍㄨㄢˋ', '宇': 'ㄩˇ', '欣': 'ㄒㄧㄣ', '怡': 'ㄧˊ', 
+          '淑': 'ㄕㄨˊ', '芬': 'ㄈㄣ', '建': 'ㄐㄧㄢˋ', '宏': 'ㄏㄨㄥˊ', '志': 'ㄓˋ', '明': 'ㄇㄧㄥˊ', 
+          '嘉': 'ㄐㄧㄚ', '哲': 'ㄓㄜˊ', '瑋': 'ㄨㄟˇ', '萱': 'ㄒㄩㄢ', '瑜': 'ㄩˊ', '珊': 'ㄕㄢ', 
+          '琪': 'ㄑㄧˊ', '豪': 'ㄏㄠˊ', '恩': 'ㄣ', '睿': 'ㄖㄨㄟˋ', '婕': 'ㄐㄧㄝˊ', '涵': 'ㄏㄢˊ', 
+          '霖': 'ㄌㄧㄣˊ', '曉': 'ㄒㄧㄠˇ', '倩': 'ㄑㄧㄢˋ', '安': 'ㄢ', '子': 'ㄗˇ', '柏': 'ㄅㄛˊ', 
+          '勳': 'ㄒㄩㄣ', '翔': 'ㄒㄧㄤˊ', '辰': 'ㄔㄣˊ', '廷': 'ㄊㄧㄥˊ', '軒': 'ㄒㄩㄢ', '凱': 'ㄎㄞˇ', 
+          '鈞': 'ㄐㄩㄣ', '信': 'ㄒㄧㄣˋ', '倫': 'ㄌㄨㄣˊ', '心': 'ㄒㄧㄣ', '如': 'ㄖㄨˊ', 
+          '真': 'ㄓㄣ', '慧': 'ㄏㄨㄟˋ', '靜': 'ㄐㄧㄥˋ', '美': 'ㄇㄟˇ', '敏': 'ㄇㄧㄣˇ', '秀': 'ㄒㄧㄡˋ', 
+          '娟': 'ㄐㄩㄢ', '華': 'ㄏㄨㄚˊ', '玉': 'ㄩˋ', '蘭': 'ㄌㄢˊ', '梅': 'ㄇㄟˊ', '萍': 'ㄆㄧㄥˊ', 
+          '燕': 'ㄧㄢˋ', '秋': 'ㄑㄧㄡ', '菊': 'ㄐㄩˊ', '花': 'ㄏㄨㄚ', '智': 'ㄓˋ', '仁': 'ㄖㄣˊ', '勇': 'ㄩㄥˇ',
+          '詠': 'ㄩㄥˇ', '綾': 'ㄌㄧㄥˊ', '陽': 'ㄧㄤˊ', '碧': 'ㄅㄧˋ', '照': 'ㄓㄠˋ', '祖': 'ㄗㄨˇ', '修': 'ㄒㄧㄡ', '馨': 'ㄒㄧㄣ', '儀': 'ㄧˊ',
+          '偉': 'ㄨㄟˇ', '銘': 'ㄇㄧㄥˊ', '浩': 'ㄏㄠˋ', '威': 'ㄨㄟ', '誠': 'ㄔㄥˊ', '輝': 'ㄏㄨㄟ', '達': 'ㄉㄚˊ', '群': 'ㄑㄩㄣˊ',
+          '德': 'ㄉㄜˊ', '慶': 'ㄑㄧㄥˋ', '榮': 'ㄖㄨㄥˊ', '祥': 'ㄒㄧㄤˊ', '龍': 'ㄌㄨㄥˊ', '源': 'ㄩㄢˊ', '清': 'ㄑㄧㄥ', '正': 'ㄓㄥˋ',
+          '吉': 'ㄐㄧˊ', '勝': 'ㄕㄥˋ', '春': 'ㄔㄨㄣ', '金': 'ㄐㄧㄣ', '政': 'ㄓㄥˋ', '憲': 'ㄒㄧㄢˋ', '緯': 'ㄨㄟˇ', '佑': 'ㄧㄡˋ',
+          '丞': 'ㄔㄥˊ', '叡': 'ㄖㄨㄟˋ', '碩': 'ㄕㄨㄛˋ', '愷': 'ㄎㄞˇ', '澤': 'ㄗㄜˊ', '駿': 'ㄐㄩㄣˋ', '謙': 'ㄑㄧㄢ', '齊': 'ㄑㄧˊ',
+          '晉': 'ㄐㄧㄣˋ', '熙': 'ㄒㄧ', '晴': 'ㄑㄧㄥˊ', '品': 'ㄆㄧㄣˇ', '妍': 'ㄧㄢˊ', '彤': 'ㄊㄨㄥˊ', '瑄': 'ㄒㄩㄢ', '昕': 'ㄒㄧㄣ',
+          '妤': 'ㄩˊ', '晨': 'ㄔㄣˊ', '芯': 'ㄒㄧㄣ', '柔': 'ㄖㄡˊ', '筠': 'ㄩㄣˊ', '寧': 'ㄋㄧㄥˊ', '潔': 'ㄐㄧㄝˊ', '惠': 'ㄏㄨㄟˋ',
+          '珠': 'ㄓㄨ', '君': 'ㄐㄩㄣ', '佩': 'ㄆㄟˋ', '芳': 'ㄈㄤ', '瑩': 'ㄧㄥˊ', '雪': 'ㄒㄩㄝˇ', '微': 'ㄨㄟˊ', '雲': 'ㄩㄣˊ',
+          '琴': 'ㄑㄧㄣˊ', '姿': 'ㄗ', '婉': 'ㄨㄢˇ', '亞': 'ㄧㄚˋ', '立': 'ㄌㄧˋ', '寶': 'ㄅㄠˇ', '岑': 'ㄘㄣˊ', '蓁': 'ㄓㄣ',
+          '霏': 'ㄈㄟ', '霓': 'ㄋㄧˊ', '筑': 'ㄓㄨˊ', '芮': 'ㄖㄨㄟˋ', '貞': 'ㄓㄣ', '桂': 'ㄍㄨㄟˋ', '枝': 'ㄓ', '彩': 'ㄘㄞˇ',
+          '霞': 'ㄒㄧㄚˊ', '鳳': 'ㄈㄥˋ', '嬌': 'ㄐㄧㄠ', '洋': 'ㄧㄤˊ', '珍': 'ㄓㄣ', '男': 'ㄋㄢˊ', '煌': 'ㄏㄨㄤˊ',
+          '福': 'ㄈㄨˊ', '財': 'ㄘㄞˊ', '發': 'ㄈㄚ', '富': 'ㄈㄨˋ', '貴': 'ㄍㄨㄟˋ', '順': 'ㄕㄨㄣˋ', '康': 'ㄎㄤ', '泰': 'ㄊㄞˋ',
+          '典': 'ㄉㄧㄢˇ', '望': 'ㄨㄤˋ', '愛': 'ㄞˋ', '慈': 'ㄘˊ', '善': 'ㄕㄢˋ', '聖': 'ㄕㄥˋ', '神': 'ㄕㄣˊ', '主': 'ㄓㄨˇ',
+          '以': 'ㄧˇ', '諾': 'ㄋㄨㄛˋ', '琳': 'ㄌㄧㄣˊ', '撒': 'ㄙㄚ', '伯': 'ㄅㄛˊ', '加': 'ㄐㄧㄚ', '列': 'ㄌㄧㄝˋ', '迦': 'ㄐㄧㄚ',
+          '勒': 'ㄌㄜˋ', '約': 'ㄩㄝ', '瑟': 'ㄙㄜˋ', '馬': 'ㄇㄚˇ', '可': 'ㄎㄜˇ', '太': 'ㄊㄞˋ', '利': 'ㄌㄧˋ', '瑪': 'ㄇㄚˇ',
+          '路': 'ㄌㄨˋ', '保': 'ㄅㄠˇ', '彼': 'ㄅㄧˇ', '得': 'ㄉㄜˊ', '各': 'ㄍㄜˋ', '提': 'ㄊㄧˊ', '摩': 'ㄇㄛˊ', '西': 'ㄒㄧ',
+          '大': 'ㄉㄚˋ', '衛': 'ㄨㄟˋ', '母': 'ㄇㄨˇ', '耳': 'ㄦˇ', '慕': 'ㄇㄨˋ', '義': 'ㄧˋ', '祈': 'ㄑㄧˊ', '禱': 'ㄉㄠˇ',
+          '頌': 'ㄙㄨㄥˋ', '讚': 'ㄗㄢˋ', '歌': 'ㄍㄜ', '詩': 'ㄕ', '篇': 'ㄆㄧㄢ', '音': 'ㄧㄣ', '牧': 'ㄇㄨˋ', '羊': 'ㄧㄤˊ',
+          '光': 'ㄍㄨㄤ', '鹽': 'ㄧㄢˊ', '磐': 'ㄆㄢˊ', '石': 'ㄕˊ', '水': 'ㄕㄨㄟˇ', '泉': 'ㄑㄩㄢˊ', '生': 'ㄕㄥ', '命': 'ㄇㄧㄥˋ',
+          '道': 'ㄉㄠˋ', '理': 'ㄌㄧˇ', '和': 'ㄏㄜˊ', '喜': 'ㄒㄧˇ', '樂': 'ㄌㄜˋ', '天': 'ㄊㄧㄢ', '使': 'ㄕˇ', '宣': 'ㄒㄩㄢ',
+          '教': 'ㄐㄧㄠˋ', '傳': 'ㄔㄨㄢˊ', '臨': 'ㄌㄧㄣˊ', '曼': 'ㄇㄢˋ', '紐': 'ㄋㄧㄡˇ', '賜': 'ㄘˋ', '箴': 'ㄓㄣ', '言': 'ㄧㄢˊ',
+          '恆': 'ㄏㄥˊ', '永': 'ㄩㄥˇ', '遠': 'ㄩㄢˇ', '耀': 'ㄧㄠˋ', '盼': 'ㄆㄢˋ', '沐': 'ㄇㄨˋ', '承': 'ㄔㄥˊ', '沛': 'ㄆㄟˋ'
         };
 
         const ZY = ({ children, active }) => {
             if (!active || typeof children !== 'string') return <>{children}</>;
+
+            // 檢查是否所有中文字都有對應的注音，若有缺漏則整段都不標示注音（All-or-nothing 規則）
+            let canConvertAll = true;
+            for (let char of children) {
+                // 使用正則表達式判定是否為中文字，若是中文且字典裡查不到，就判定為有缺漏
+                if (/[\u4e00-\u9fa5]/.test(char) && !rubyDict[char]) {
+                    canConvertAll = false;
+                    break;
+                }
+            }
+
+            if (!canConvertAll) {
+                // 若有缺字，直接回傳純文字，不進行任何注音渲染
+                return <span className="inline-flex items-center mx-[0.1em]">{children}</span>;
+            }
+
             const tones = ['ˊ', 'ˇ', 'ˋ', '˙'];
             return (
                 <span className="inline-flex flex-wrap items-center">
@@ -157,6 +219,56 @@
                         return <span key={i} className="mx-[0.05em]">{char}</span>;
                     })}
                 </span>
+            );
+        };
+
+        // 智慧注音輸入框 (自動切換編輯與注音展示)
+        const ZYInput = ({ value, onChange, active, className, style, list, placeholder, type = "text", maxLength, inputMode }) => {
+            const [focused, setFocused] = useState(false);
+            const inputRef = useRef(null);
+
+            useEffect(() => {
+                if (focused && inputRef.current) {
+                    inputRef.current.focus();
+                }
+            }, [focused]);
+
+            // 注音模式開啟且未聚焦時，顯示純注音文字元素
+            if (active && !focused) {
+                const displayValue = value || placeholder || '';
+                const isPlaceholder = !value && placeholder;
+                let finalClassName = `${className} cursor-text inline-flex items-center justify-center overflow-hidden whitespace-nowrap`;
+                if (isPlaceholder) {
+                    finalClassName += " opacity-50"; 
+                }
+                
+                return (
+                    <span
+                        onClick={() => setFocused(true)}
+                        style={style}
+                        className={finalClassName}
+                    >
+                        {displayValue ? <ZY active={true}>{displayValue}</ZY> : '\u00A0'}
+                    </span>
+                );
+            }
+
+            // 原始輸入框狀態
+            return (
+                <input
+                    ref={inputRef}
+                    type={type}
+                    list={list}
+                    placeholder={placeholder}
+                    value={value}
+                    onChange={onChange}
+                    onFocus={() => setFocused(true)}
+                    onBlur={() => setTimeout(() => setFocused(false), 150)} // 加入 150ms 延遲，防止 datalist 點擊失效
+                    maxLength={maxLength}
+                    inputMode={inputMode}
+                    style={style}
+                    className={className}
+                />
             );
         };
 
@@ -236,6 +348,9 @@
           const [draggedItemIndex, setDraggedItemIndex] = useState(null);
           const [dragOverItemIndex, setDragOverItemIndex] = useState(null);
 
+          const [showSizeWarning, setShowSizeWarning] = useState(false);
+          const [hasDismissedWarning, setHasDismissedWarning] = useState(false);
+
           useEffect(() => { localStorage.setItem('examSchedule', JSON.stringify(schedule)); }, [schedule]);
           useEffect(() => { localStorage.setItem('examAttendance', JSON.stringify(attendance)); }, [attendance]);
           useEffect(() => { localStorage.setItem('examTitle', JSON.stringify(titleData)); }, [titleData]);
@@ -261,6 +376,20 @@
           }, []);
 
           useEffect(() => {
+            const checkSize = () => {
+                // 當寬度小於 1100px 或高度小於 700px 時觸發提示
+                if (window.innerWidth < 1100 || window.innerHeight < 700) {
+                    setShowSizeWarning(true);
+                } else {
+                    setShowSizeWarning(false);
+                }
+            };
+            checkSize(); // 初始檢查
+            window.addEventListener('resize', checkSize);
+            return () => window.removeEventListener('resize', checkSize);
+          }, []);
+
+          useEffect(() => {
               if (!isBellEnabled) return;
               const currentMinutes = currentTime.getHours() * 60 + currentTime.getMinutes();
               const currentSeconds = currentTime.getSeconds();
@@ -276,7 +405,18 @@
                   const diff = customTimer.endTime - nowMs;
                   if (diff <= 0 && diff > -1000) { shouldRing = true; ringId = `custom-${customTimer.endTime}`; }
               }
-              if (shouldRing && lastRungId !== ringId) { playSchoolBell(); setLastRungId(ringId); }
+              
+              // 修復：正確處理敲鐘邏輯與重置，避免隔日不響
+              if (shouldRing) {
+                  if (lastRungId !== ringId) {
+                      playSchoolBell(); 
+                      setLastRungId(ringId);
+                  }
+              } else {
+                  if (lastRungId !== null) {
+                      setLastRungId(null);
+                  }
+              }
           }, [currentTime, schedule, customTimer, isBellEnabled, timeMode, lastRungId]);
 
           const toggleFullscreen = () => {
@@ -391,12 +531,30 @@
           };
 
           const { warning, displayTime, subText } = getWarningAndCountdown();
-          const missingCount = Math.max(0, attendance.expected - attendance.actual);
+          
+          // 修復：安全計算缺考人數，防止空字串變成 NaN
+          const expectedCount = parseInt(attendance.expected) || 0;
+          const actualCount = parseInt(attendance.actual) || 0;
+          const missingCount = Math.max(0, expectedCount - actualCount);
+          
           const hours = Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, '0'));
           const minutes = Array.from({ length: 60 }, (_, i) => i.toString().padStart(2, '0'));
 
           return (
             <div className={`min-h-screen flex items-center justify-center sm:p-4 lg:p-6 font-sans-tc transition-colors duration-500 ${isFullscreen ? 'p-0 bg-black' : 'bg-slate-200 dark:bg-zinc-950'}`}>
+              
+              {/* 全螢幕建議提示 */}
+              {showSizeWarning && !isFullscreen && !hasDismissedWarning && (
+                  <div className="fixed top-6 left-1/2 transform -translate-x-1/2 z-[100] bg-slate-900/90 dark:bg-slate-100/90 text-white dark:text-slate-900 px-5 py-3 rounded-full shadow-2xl backdrop-blur-xl flex items-center gap-3 print:hidden border border-slate-700/50 dark:border-slate-300/50">
+                      <Maximize className="w-5 h-5 opacity-80 shrink-0" />
+                      <span className="font-bold tracking-widest text-xs lg:text-sm whitespace-nowrap"><ZY active={bopomofoMode}>建議開啟全螢幕以獲得最佳顯示效果</ZY></span>
+                      <div className="flex items-center gap-2 border-l border-slate-700 dark:border-slate-300 pl-3 ml-1">
+                          <button onClick={toggleFullscreen} className="bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded-full transition-all font-black text-xs shadow-sm active:scale-95 whitespace-nowrap"><ZY active={bopomofoMode}>開啟</ZY></button>
+                          <button onClick={() => setHasDismissedWarning(true)} className="hover:bg-slate-800 dark:hover:bg-slate-200 p-1.5 rounded-full transition-colors opacity-80 hover:opacity-100"><XIcon className="w-4 h-4" /></button>
+                      </div>
+                  </div>
+              )}
+
               <div className={`w-full h-full max-w-[1920px] flex flex-col bg-slate-50 dark:bg-[#0a0a0a] shadow-2xl relative transition-all duration-500 ${isFullscreen ? 'h-screen max-h-screen max-w-none rounded-none border-none' : 'h-[94vh] max-h-[1080px] rounded-[2.5rem] border border-white/60 dark:border-zinc-800/80 overflow-hidden'}`}>
                 
                 {/* 頂部標題 */}
@@ -406,32 +564,52 @@
                     <span className="hidden sm:inline text-sm">智慧教室系統</span>
                   </button>
                   <div className="flex items-center justify-center flex-wrap gap-x-1 gap-y-1 text-xl lg:text-3xl xl:text-4xl font-black font-tc text-slate-800 dark:text-zinc-100 relative z-10 tracking-wide w-full">
-                    <input list="year-list" value={titleData.year} onChange={e => setTitleData({...titleData, year: e.target.value})} style={{ width: getInputWidth(titleData.year, 2.2) }} className={`shrink-0 text-center bg-transparent hover:bg-slate-200/60 dark:hover:bg-zinc-800/60 rounded-lg px-1 focus:outline-none transition-colors ${getTextColor(titleData.year, '114')}`} />
-                    <span className="shrink-0 px-0.5"><ZY active={bopomofoMode}>學年度第</ZY></span>
-                    <input list="semester-list" value={titleData.semester} onChange={e => setTitleData({...titleData, semester: e.target.value})} style={{ width: getInputWidth(titleData.semester, 1.5) }} className={`shrink-0 text-center bg-transparent hover:bg-slate-200/60 dark:hover:bg-zinc-800/60 rounded-lg px-1 focus:outline-none transition-colors ${getTextColor(titleData.semester, '二')}`} />
+                    
+                    {!bopomofoMode && (
+                        <>
+                            <ZYInput active={bopomofoMode} list="year-list" value={titleData.year} onChange={e => setTitleData({...titleData, year: e.target.value})} style={{ width: getInputWidth(titleData.year, 2.2) }} className={`shrink-0 text-center bg-transparent hover:bg-slate-200/60 dark:hover:bg-zinc-800/60 rounded-lg px-1 focus:outline-none transition-colors ${getTextColor(titleData.year, '114')}`} />
+                            <span className="shrink-0 px-0.5"><ZY active={bopomofoMode}>學年度第</ZY></span>
+                        </>
+                    )}
+
+                    <ZYInput active={bopomofoMode} list="semester-list" value={titleData.semester} onChange={e => setTitleData({...titleData, semester: e.target.value})} style={{ width: getInputWidth(titleData.semester, 1.5) }} className={`shrink-0 text-center bg-transparent hover:bg-slate-200/60 dark:hover:bg-zinc-800/60 rounded-lg px-1 focus:outline-none transition-colors ${getTextColor(titleData.semester, '二')}`} />
                     <span className="shrink-0 px-0.5"><ZY active={bopomofoMode}>學期</ZY></span>
-                    <input list="grade-list" value={titleData.grade} onChange={e => setTitleData({...titleData, grade: e.target.value})} style={{ width: getInputWidth(titleData.grade, 1.5) }} className={`shrink-0 text-center bg-transparent hover:bg-slate-200/60 dark:hover:bg-zinc-800/60 rounded-lg px-1 focus:outline-none transition-colors ${getTextColor(titleData.grade, '五')}`} />
+                    <ZYInput active={bopomofoMode} list="grade-list" value={titleData.grade} onChange={e => setTitleData({...titleData, grade: e.target.value})} style={{ width: getInputWidth(titleData.grade, 1.5) }} className={`shrink-0 text-center bg-transparent hover:bg-slate-200/60 dark:hover:bg-zinc-800/60 rounded-lg px-1 focus:outline-none transition-colors ${getTextColor(titleData.grade, '五')}`} />
                     <span className="shrink-0 px-0.5"><ZY active={bopomofoMode}>年級第</ZY></span>
-                    <input list="exam-num-list" value={titleData.examNum} onChange={e => setTitleData({...titleData, examNum: e.target.value})} style={{ width: getInputWidth(titleData.examNum, 1.5) }} className={`shrink-0 text-center bg-transparent hover:bg-slate-200/60 dark:hover:bg-zinc-800/60 rounded-lg px-1 focus:outline-none transition-colors ${getTextColor(titleData.examNum, '一')}`} />
+                    <ZYInput active={bopomofoMode} list="exam-num-list" value={titleData.examNum} onChange={e => setTitleData({...titleData, examNum: e.target.value})} style={{ width: getInputWidth(titleData.examNum, 1.5) }} className={`shrink-0 text-center bg-transparent hover:bg-slate-200/60 dark:hover:bg-zinc-800/60 rounded-lg px-1 focus:outline-none transition-colors ${getTextColor(titleData.examNum, '一')}`} />
                     <span className="shrink-0 px-0.5"><ZY active={bopomofoMode}>次</ZY></span>
-                    <input type="text" value={titleData.examName} onChange={e => setTitleData({...titleData, examName: e.target.value})} style={{ width: getInputWidth(titleData.examName, 4.5) }} className={`shrink-0 text-center bg-transparent hover:bg-slate-200/60 dark:hover:bg-zinc-800/60 rounded-lg px-1 focus:outline-none transition-colors ${getTextColor(titleData.examName, '定期評量')}`} />
+                    <ZYInput active={bopomofoMode} type="text" value={titleData.examName} onChange={e => setTitleData({...titleData, examName: e.target.value})} style={{ width: getInputWidth(titleData.examName, 4.5) }} className={`shrink-0 text-center bg-transparent hover:bg-slate-200/60 dark:hover:bg-zinc-800/60 rounded-lg px-1 focus:outline-none transition-colors ${getTextColor(titleData.examName, '定期評量')}`} />
                   </div>
                 </div>
 
                 <div className="flex-1 min-h-0 flex flex-col lg:flex-row gap-4 lg:gap-6 p-4 lg:p-6 relative z-10">
                   {/* 左側考程表 */}
                   <div className="w-full lg:w-[44%] flex flex-col bg-white dark:bg-zinc-900 rounded-[2rem] shadow-sm border border-slate-200/60 dark:border-zinc-800/60 overflow-hidden print:border-none print:shadow-none">
-                    <div className="print-header flex w-full px-4 lg:px-6 py-3 lg:py-4 border-b border-slate-100 dark:border-zinc-800 shrink-0 bg-slate-50/50 dark:bg-zinc-950/50">
-                      <div className="text-sm lg:text-base font-black text-slate-400 dark:text-zinc-500 w-[45%] tracking-widest text-center uppercase"><ZY active={bopomofoMode}>時間</ZY></div>
-                      <div className="text-sm lg:text-base font-black text-slate-400 dark:text-zinc-500 w-[25%] tracking-widest text-center uppercase"><ZY active={bopomofoMode}>科目</ZY></div>
-                      <div className="text-sm lg:text-base font-black text-slate-400 dark:text-zinc-500 w-[30%] tracking-widest text-center uppercase"><ZY active={bopomofoMode}>監考老師</ZY></div>
-                    </div>
+                    
+                    {bopomofoMode ? (
+                        <div className="print-header flex flex-col gap-2 w-full px-4 lg:px-6 py-3 lg:py-4 border-b border-slate-100 dark:border-zinc-800 shrink-0 bg-slate-50/50 dark:bg-zinc-950/50">
+                          <div className="text-sm lg:text-base font-black text-slate-400 dark:text-zinc-500 w-full tracking-widest text-center uppercase"><ZY active={bopomofoMode}>時間</ZY></div>
+                          <div className="flex w-full">
+                            <div className="text-sm lg:text-base font-black text-slate-400 dark:text-zinc-500 w-1/2 tracking-widest text-center uppercase"><ZY active={bopomofoMode}>科目</ZY></div>
+                            <div className="text-sm lg:text-base font-black text-slate-400 dark:text-zinc-500 w-1/2 tracking-widest text-center uppercase"><ZY active={bopomofoMode}>監考</ZY></div>
+                          </div>
+                        </div>
+                    ) : (
+                        <div className="print-header flex w-full px-4 lg:px-6 py-3 lg:py-4 border-b border-slate-100 dark:border-zinc-800 shrink-0 bg-slate-50/50 dark:bg-zinc-950/50">
+                          <div className="text-sm lg:text-base font-black text-slate-400 dark:text-zinc-500 w-[45%] tracking-widest text-center uppercase">時間</div>
+                          <div className="text-sm lg:text-base font-black text-slate-400 dark:text-zinc-500 w-[25%] tracking-widest text-center uppercase">科目</div>
+                          <div className="text-sm lg:text-base font-black text-slate-400 dark:text-zinc-500 w-[30%] tracking-widest text-center uppercase">監考老師</div>
+                        </div>
+                    )}
+
                     <div className="flex-1 overflow-y-auto flex flex-col w-full p-2 lg:p-3 scrollbar-hide">
                       {schedule.map((exam, index) => (
                         <div key={exam.id} draggable="true" onDragStart={e=>handleDragStart(e,index)} onDragOver={e=>handleDragOver(e,index)} onDragLeave={()=>setDragOverItemIndex(null)} onDrop={e=>handleDrop(e,index)} onDragEnd={()=>setDraggedItemIndex(null)}
-                          className={`group flex w-full items-center min-h-[65px] lg:min-h-[75px] px-2 rounded-2xl border border-transparent transition-all relative cursor-move ${index%2===0 ? 'bg-transparent' : 'bg-slate-50/50 dark:bg-zinc-800/20'} hover:bg-slate-100/80 dark:hover:bg-zinc-800/80 hover:border-slate-200/80 dark:hover:border-zinc-700/80 ${draggedItemIndex===index?'dragging':''} ${dragOverItemIndex===index?'drag-over':''}`}>
-                          <div className="drag-handle absolute left-0 text-slate-300 dark:text-zinc-600 opacity-0 group-hover:opacity-100 transition-opacity"><GripVertical className="w-5 h-5" /></div>
-                          <div className="w-[45%] px-0 flex items-center justify-center font-bold text-xl lg:text-[1.7rem] xl:text-[1.9rem] font-num tabular-nums text-slate-700 dark:text-zinc-200 tracking-tight gap-0.5">
+                          className={`group flex w-full items-center px-2 rounded-2xl border border-transparent transition-all relative cursor-move ${index%2===0 ? 'bg-transparent' : 'bg-slate-50/50 dark:bg-zinc-800/20'} hover:bg-slate-100/80 dark:hover:bg-zinc-800/80 hover:border-slate-200/80 dark:hover:border-zinc-700/80 ${draggedItemIndex===index?'dragging':''} ${dragOverItemIndex===index?'drag-over':''} ${bopomofoMode ? 'flex-col py-4 gap-3 min-h-[90px]' : 'min-h-[65px] lg:min-h-[75px]'}`}>
+                          <div className={`drag-handle absolute text-slate-300 dark:text-zinc-600 opacity-0 group-hover:opacity-100 transition-opacity ${bopomofoMode ? 'top-2 left-2' : 'left-0'}`}><GripVertical className="w-5 h-5" /></div>
+                          
+                          {/* 考程時間區塊 */}
+                          <div className={`px-0 flex items-center justify-center font-bold font-num tabular-nums text-slate-700 dark:text-zinc-200 tracking-tight gap-0.5 ${bopomofoMode ? 'w-full text-2xl lg:text-4xl' : 'w-[45%] text-xl lg:text-[1.7rem] xl:text-[1.9rem]'}`}>
                             <select value={exam.startH} onChange={e=>handleExamChange(exam.id,'startH',e.target.value)} className="bg-transparent hover:bg-white dark:hover:bg-zinc-700 rounded-lg focus:outline-none text-center no-arrow transition-colors">{hours.map(h=><option key={h} value={h} className="text-slate-800">{h}</option>)}</select>
                             <span className="opacity-50 pb-1">:</span>
                             <select value={exam.startM} onChange={e=>handleExamChange(exam.id,'startM',e.target.value)} className="bg-transparent hover:bg-white dark:hover:bg-zinc-700 rounded-lg focus:outline-none text-center no-arrow transition-colors">{minutes.map(m=><option key={m} value={m} className="text-slate-800">{m}</option>)}</select>
@@ -440,13 +618,18 @@
                             <span className="opacity-50 pb-1">:</span>
                             <select value={exam.endM} onChange={e=>handleExamChange(exam.id,'endM',e.target.value)} className="bg-transparent hover:bg-white dark:hover:bg-zinc-700 rounded-lg focus:outline-none text-center no-arrow transition-colors">{minutes.map(m=><option key={m} value={m} className="text-slate-800">{m}</option>)}</select>
                           </div>
-                          <div className="w-[25%] px-0 flex items-center justify-center">
-                            <input type="text" list="subject-list" value={exam.subject} onChange={e=>handleExamChange(exam.id,'subject',e.target.value)} placeholder="科目" className={`w-full shrink-0 text-center font-black text-2xl lg:text-[1.7rem] xl:text-[1.9rem] font-tc tracking-widest bg-transparent hover:bg-white dark:hover:bg-zinc-700 rounded-xl focus:outline-none py-1 transition-colors placeholder:text-slate-300 dark:placeholder:text-zinc-600 ${getTextColor(exam.subject, '')}`} />
+                          
+                          {/* 科目與監考區塊 (注音模式下利用 contents 或 flex wrapper 自動排版) */}
+                          <div className={`${bopomofoMode ? 'w-full flex items-center justify-center gap-2' : 'contents'}`}>
+                            <div className={`px-0 flex items-center justify-center ${bopomofoMode ? 'w-1/2' : 'w-[25%]'}`}>
+                              <ZYInput active={bopomofoMode} type="text" list="subject-list" value={exam.subject} onChange={e=>handleExamChange(exam.id,'subject',e.target.value)} placeholder="科目" className={`w-full shrink-0 text-center font-black font-tc tracking-widest bg-transparent hover:bg-white dark:hover:bg-zinc-700 rounded-xl focus:outline-none py-1 transition-colors placeholder:text-slate-300 dark:placeholder:text-zinc-600 ${getTextColor(exam.subject, '')} ${bopomofoMode ? 'text-3xl lg:text-4xl' : 'text-2xl lg:text-[1.7rem] xl:text-[1.9rem]'}`} />
+                            </div>
+                            <div className={`px-0 flex items-center justify-center font-black tracking-wider text-slate-500 dark:text-zinc-400 ${bopomofoMode ? 'w-1/2 text-2xl lg:text-3xl' : 'w-[30%] text-xl lg:text-[1.4rem] xl:text-[1.6rem]'}`}>
+                              <ZYInput active={bopomofoMode} type="text" value={exam.proctor} onChange={e=>handleExamChange(exam.id,'proctor',e.target.value)} className={`w-full shrink-0 text-center bg-transparent hover:bg-white dark:hover:bg-zinc-700 rounded-xl focus:outline-none py-1 transition-colors ${getTextColor(exam.proctor, 'OOO老師')}`} />
+                            </div>
                           </div>
-                          <div className="w-[30%] px-0 flex items-center justify-center text-xl lg:text-[1.4rem] xl:text-[1.6rem] font-black tracking-wider text-slate-500 dark:text-zinc-400">
-                            <input type="text" value={exam.proctor} onChange={e=>handleExamChange(exam.id,'proctor',e.target.value)} className={`w-full shrink-0 text-center bg-transparent hover:bg-white dark:hover:bg-zinc-700 rounded-xl focus:outline-none py-1 transition-colors ${getTextColor(exam.proctor, 'OOO老師')}`} />
-                          </div>
-                          <div className="absolute right-1 opacity-0 group-hover:opacity-100 print:hidden transition-opacity">
+
+                          <div className={`absolute opacity-0 group-hover:opacity-100 print:hidden transition-opacity ${bopomofoMode ? 'top-2 right-2' : 'right-1'}`}>
                             <button onClick={()=>removeExam(exam.id)} className="p-1.5 text-rose-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-zinc-700 rounded-full transition-colors"><Trash2 className="w-6 h-6" /></button>
                           </div>
                         </div>
@@ -496,11 +679,29 @@
                     <div className="flex gap-2 lg:gap-3 shrink-0">
                         <div className="flex-1 bg-white dark:bg-zinc-900 rounded-2xl p-2 lg:p-3 flex flex-col items-center justify-center border border-slate-200/60 dark:border-zinc-800/60 shadow-sm relative overflow-hidden">
                             <div className="text-[10px] lg:text-xs font-black text-slate-400 dark:text-zinc-500 tracking-widest"><ZY active={bopomofoMode}>應到</ZY></div>
-                            <div className="flex items-end gap-0.5 relative z-10"><input type="text" inputMode="numeric" maxLength="3" value={attendance.expected} onChange={e=>{const val = e.target.value.replace(/\D/g, ''); setAttendance({...attendance, expected: Math.min(999, val ? parseInt(val, 10) : 0)})}} className="w-[1.8em] text-center font-num text-2xl lg:text-3xl font-black text-indigo-600 dark:text-indigo-400 bg-transparent border-b-2 border-transparent hover:border-indigo-200 focus:border-indigo-600 focus:outline-none transition-colors" /><span className="text-xs text-slate-400 dark:text-zinc-500 font-bold pb-1"><ZY active={bopomofoMode}>人</ZY></span></div>
+                            <div className="flex items-end gap-0.5 relative z-10">
+                                <input type="text" inputMode="numeric" maxLength="3" value={attendance.expected} 
+                                       onChange={e => {
+                                           const val = e.target.value.replace(/\D/g, ''); 
+                                           // 修復：允許空字串存在，提升刪除時的 UX 體驗
+                                           setAttendance({...attendance, expected: val === '' ? '' : Math.min(999, parseInt(val, 10))});
+                                       }} 
+                                       className="w-[1.8em] text-center font-num text-2xl lg:text-3xl font-black text-indigo-600 dark:text-indigo-400 bg-transparent border-b-2 border-transparent hover:border-indigo-200 focus:border-indigo-600 focus:outline-none transition-colors" />
+                                <span className="text-xs text-slate-400 dark:text-zinc-500 font-bold pb-1"><ZY active={bopomofoMode}>人</ZY></span>
+                            </div>
                         </div>
                         <div className="flex-1 bg-white dark:bg-zinc-900 rounded-2xl p-2 lg:p-3 flex flex-col items-center justify-center border border-slate-200/60 dark:border-zinc-800/60 shadow-sm relative overflow-hidden">
                             <div className="text-[10px] lg:text-xs font-black text-slate-400 dark:text-zinc-500 tracking-widest"><ZY active={bopomofoMode}>實到</ZY></div>
-                            <div className="flex items-end gap-0.5 relative z-10"><input type="text" inputMode="numeric" maxLength="3" value={attendance.actual} onChange={e=>{const val = e.target.value.replace(/\D/g, ''); setAttendance({...attendance, actual: Math.min(999, val ? parseInt(val, 10) : 0)})}} className="w-[1.8em] text-center font-num text-2xl lg:text-3xl font-black text-indigo-600 dark:text-indigo-400 bg-transparent border-b-2 border-transparent hover:border-indigo-200 focus:border-indigo-600 focus:outline-none transition-colors" /><span className="text-xs text-slate-400 dark:text-zinc-500 font-bold pb-1"><ZY active={bopomofoMode}>人</ZY></span></div>
+                            <div className="flex items-end gap-0.5 relative z-10">
+                                <input type="text" inputMode="numeric" maxLength="3" value={attendance.actual} 
+                                       onChange={e => {
+                                           const val = e.target.value.replace(/\D/g, ''); 
+                                           // 修復：允許空字串存在，提升刪除時的 UX 體驗
+                                           setAttendance({...attendance, actual: val === '' ? '' : Math.min(999, parseInt(val, 10))});
+                                       }} 
+                                       className="w-[1.8em] text-center font-num text-2xl lg:text-3xl font-black text-indigo-600 dark:text-indigo-400 bg-transparent border-b-2 border-transparent hover:border-indigo-200 focus:border-indigo-600 focus:outline-none transition-colors" />
+                                <span className="text-xs text-slate-400 dark:text-zinc-500 font-bold pb-1"><ZY active={bopomofoMode}>人</ZY></span>
+                            </div>
                         </div>
                         <div className={`flex-1 bg-white dark:bg-zinc-900 rounded-2xl p-2 lg:p-3 flex flex-col items-center justify-center border border-slate-200/60 dark:border-zinc-800/60 shadow-sm transition-colors ${missingCount > 0 ? 'ring-2 ring-rose-400/50 bg-rose-50/30 dark:bg-rose-900/10' : ''}`}>
                             <div className={`text-[10px] lg:text-xs font-black tracking-widest ${missingCount > 0 ? 'text-rose-500 dark:text-rose-400' : 'text-slate-400 dark:text-zinc-500'}`}><ZY active={bopomofoMode}>缺考</ZY></div>
@@ -508,7 +709,7 @@
                         </div>
                         <div className="flex-[1.5] bg-white dark:bg-zinc-900 rounded-2xl p-2 lg:p-3 flex flex-col items-center justify-center border border-slate-200/60 dark:border-zinc-800/60 shadow-sm relative overflow-hidden">
                             <div className="text-[10px] lg:text-xs font-black text-slate-400 dark:text-zinc-500 tracking-widest"><ZY active={bopomofoMode}>缺席座號</ZY></div>
-                            <div className="w-full px-2"><input type="text" value={attendance.absentNumbers} onChange={e=>setAttendance({...attendance, absentNumbers: e.target.value})} placeholder={bopomofoMode ? 'ㄨˊ' : '無'} className={`w-full text-center font-num text-xl lg:text-2xl font-black bg-transparent border-b-2 border-slate-100 dark:border-zinc-800 hover:border-slate-300 focus:border-indigo-600 focus:outline-none pb-0.5 placeholder-slate-300 dark:placeholder-zinc-700 ${getTextColor(attendance.absentNumbers, '')}`} /></div>
+                            <div className="w-full px-2"><ZYInput active={bopomofoMode} type="text" value={attendance.absentNumbers} onChange={e=>setAttendance({...attendance, absentNumbers: e.target.value})} placeholder="無" className={`w-full text-center font-num text-xl lg:text-2xl font-black bg-transparent border-b-2 border-slate-100 dark:border-zinc-800 hover:border-slate-300 focus:border-indigo-600 focus:outline-none pb-0.5 placeholder-slate-300 dark:placeholder-zinc-700 ${getTextColor(attendance.absentNumbers, '')}`} /></div>
                         </div>
                     </div>
 
