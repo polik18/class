@@ -154,6 +154,8 @@
           '霏': 'ㄈㄟ', '霓': 'ㄋㄧˊ', '筑': 'ㄓㄨˊ', '芮': 'ㄖㄨㄟˋ', '貞': 'ㄓㄣ', '桂': 'ㄍㄨㄟˋ', '枝': 'ㄓ', '彩': 'ㄘㄞˇ',
           '霞': 'ㄒㄧㄚˊ', '鳳': 'ㄈㄥˋ', '嬌': 'ㄐㄧㄠ', '洋': 'ㄧㄤˊ', '珍': 'ㄓㄣ', '男': 'ㄋㄢˊ', '煌': 'ㄏㄨㄤˊ',
           '福': 'ㄈㄨˊ', '財': 'ㄘㄞˊ', '發': 'ㄈㄚ', '富': 'ㄈㄨˋ', '貴': 'ㄍㄨㄟˋ', '順': 'ㄕㄨㄣˋ', '康': 'ㄎㄤ', '泰': 'ㄊㄞˋ',
+          
+          // 聖經與屬靈常見命名用字
           '典': 'ㄉㄧㄢˇ', '望': 'ㄨㄤˋ', '愛': 'ㄞˋ', '慈': 'ㄘˊ', '善': 'ㄕㄢˋ', '聖': 'ㄕㄥˋ', '神': 'ㄕㄣˊ', '主': 'ㄓㄨˇ',
           '以': 'ㄧˇ', '諾': 'ㄋㄨㄛˋ', '琳': 'ㄌㄧㄣˊ', '撒': 'ㄙㄚ', '伯': 'ㄅㄛˊ', '加': 'ㄐㄧㄚ', '列': 'ㄌㄧㄝˋ', '迦': 'ㄐㄧㄚ',
           '勒': 'ㄌㄜˋ', '約': 'ㄩㄝ', '瑟': 'ㄙㄜˋ', '馬': 'ㄇㄚˇ', '可': 'ㄎㄜˇ', '太': 'ㄊㄞˋ', '利': 'ㄌㄧˋ', '瑪': 'ㄇㄚˇ',
@@ -186,7 +188,8 @@
 
             const tones = ['ˊ', 'ˇ', 'ˋ', '˙'];
             return (
-                <span className="inline-flex flex-wrap items-center">
+                // 修復：強制不換行，避免注音文字被擠壓到下一行
+                <span className="inline-flex flex-nowrap items-center shrink-0" style={{ whiteSpace: 'nowrap' }}>
                     {Array.from(children).map((char, i) => {
                         const zy = rubyDict[char];
                         if (zy) {
@@ -223,7 +226,7 @@
         };
 
         // 智慧注音輸入框 (自動切換編輯與注音展示)
-        const ZYInput = ({ value, onChange, active, className, style, list, placeholder, type = "text", maxLength, inputMode }) => {
+        const ZYInput = ({ value, onChange, active, className, style = {}, list, placeholder, type = "text", maxLength, inputMode }) => {
             const [focused, setFocused] = useState(false);
             const inputRef = useRef(null);
 
@@ -237,15 +240,19 @@
             if (active && !focused) {
                 const displayValue = value || placeholder || '';
                 const isPlaceholder = !value && placeholder;
-                let finalClassName = `${className} cursor-text inline-flex items-center justify-center overflow-hidden whitespace-nowrap`;
+                // 修復：移除 overflow-hidden，防止左側文字(如"五")被強制切掉，並加入 shrink-0
+                let finalClassName = `${className} cursor-text inline-flex items-center justify-center whitespace-nowrap shrink-0`;
                 if (isPlaceholder) {
                     finalClassName += " opacity-50"; 
                 }
                 
+                // 修復：將計算的 width 轉為 minWidth，讓容器可以根據內容自由撐開不折疊。並對 style 進行防呆處理避免 undefined。
+                const spanStyle = { ...style, minWidth: style.width, width: 'auto' };
+                
                 return (
                     <span
                         onClick={() => setFocused(true)}
-                        style={style}
+                        style={spanStyle}
                         className={finalClassName}
                     >
                         {displayValue ? <ZY active={true}>{displayValue}</ZY> : '\u00A0'}
@@ -406,7 +413,6 @@
                   if (diff <= 0 && diff > -1000) { shouldRing = true; ringId = `custom-${customTimer.endTime}`; }
               }
               
-              // 修復：正確處理敲鐘邏輯與重置，避免隔日不響
               if (shouldRing) {
                   if (lastRungId !== ringId) {
                       playSchoolBell(); 
@@ -474,9 +480,13 @@
           
           const getTextColor = (val, def) => val === def ? 'text-slate-400 dark:text-zinc-500' : 'text-indigo-600 dark:text-indigo-400';
           
+          // 修復：為注音模式的中文字保留更巨大的寬度額度(charWidth = 2.5)，防止切換到 input 時空間不足
           const getInputWidth = (text, minEm) => {
-              let ems = 0.5; 
-              for (let i = 0; i < (text || '').length; i++) ems += text.charCodeAt(i) > 255 ? 1.05 : 0.6;
+              let ems = bopomofoMode ? 1.5 : 0.5; 
+              const charWidth = bopomofoMode ? 2.5 : 1.05; 
+              for (let i = 0; i < (text || '').length; i++) {
+                  ems += text.charCodeAt(i) > 255 ? charWidth : 0.6;
+              }
               return `${Math.max(minEm, ems)}em`;
           };
 
@@ -532,7 +542,6 @@
 
           const { warning, displayTime, subText } = getWarningAndCountdown();
           
-          // 修復：安全計算缺考人數，防止空字串變成 NaN
           const expectedCount = parseInt(attendance.expected) || 0;
           const actualCount = parseInt(attendance.actual) || 0;
           const missingCount = Math.max(0, expectedCount - actualCount);
@@ -586,21 +595,18 @@
                   {/* 左側考程表 */}
                   <div className="w-full lg:w-[44%] flex flex-col bg-white dark:bg-zinc-900 rounded-[2rem] shadow-sm border border-slate-200/60 dark:border-zinc-800/60 overflow-hidden print:border-none print:shadow-none">
                     
-                    {bopomofoMode ? (
-                        <div className="print-header flex flex-col gap-2 w-full px-4 lg:px-6 py-3 lg:py-4 border-b border-slate-100 dark:border-zinc-800 shrink-0 bg-slate-50/50 dark:bg-zinc-950/50">
-                          <div className="text-sm lg:text-base font-black text-slate-400 dark:text-zinc-500 w-full tracking-widest text-center uppercase"><ZY active={bopomofoMode}>時間</ZY></div>
-                          <div className="flex w-full">
-                            <div className="text-sm lg:text-base font-black text-slate-400 dark:text-zinc-500 w-1/2 tracking-widest text-center uppercase"><ZY active={bopomofoMode}>科目</ZY></div>
-                            <div className="text-sm lg:text-base font-black text-slate-400 dark:text-zinc-500 w-1/2 tracking-widest text-center uppercase"><ZY active={bopomofoMode}>監考</ZY></div>
-                          </div>
-                        </div>
-                    ) : (
-                        <div className="print-header flex w-full px-4 lg:px-6 py-3 lg:py-4 border-b border-slate-100 dark:border-zinc-800 shrink-0 bg-slate-50/50 dark:bg-zinc-950/50">
-                          <div className="text-sm lg:text-base font-black text-slate-400 dark:text-zinc-500 w-[45%] tracking-widest text-center uppercase">時間</div>
-                          <div className="text-sm lg:text-base font-black text-slate-400 dark:text-zinc-500 w-[25%] tracking-widest text-center uppercase">科目</div>
-                          <div className="text-sm lg:text-base font-black text-slate-400 dark:text-zinc-500 w-[30%] tracking-widest text-center uppercase">監考老師</div>
-                        </div>
-                    )}
+                    {/* 表頭：統一為單行顯示，確保「時間、科目、監考」對齊在同一排 */}
+                    <div className="print-header flex w-full px-4 lg:px-6 py-3 lg:py-4 border-b border-slate-100 dark:border-zinc-800 shrink-0 bg-slate-50/50 dark:bg-zinc-950/50 items-center justify-between">
+                      <div className={`text-sm lg:text-base font-black text-slate-400 dark:text-zinc-500 tracking-widest text-center uppercase ${bopomofoMode ? 'flex-1' : 'w-[45%]'}`}>
+                          <ZY active={bopomofoMode}>時間</ZY>
+                      </div>
+                      <div className={`text-sm lg:text-base font-black text-slate-400 dark:text-zinc-500 tracking-widest text-center uppercase ${bopomofoMode ? 'flex-1' : 'w-[25%]'}`}>
+                          <ZY active={bopomofoMode}>科目</ZY>
+                      </div>
+                      <div className={`text-sm lg:text-base font-black text-slate-400 dark:text-zinc-500 tracking-widest text-center uppercase ${bopomofoMode ? 'flex-1' : 'w-[30%]'}`}>
+                          <ZY active={bopomofoMode}>{bopomofoMode ? '監考' : '監考老師'}</ZY>
+                      </div>
+                    </div>
 
                     <div className="flex-1 overflow-y-auto flex flex-col w-full p-2 lg:p-3 scrollbar-hide">
                       {schedule.map((exam, index) => (
@@ -619,7 +625,7 @@
                             <select value={exam.endM} onChange={e=>handleExamChange(exam.id,'endM',e.target.value)} className="bg-transparent hover:bg-white dark:hover:bg-zinc-700 rounded-lg focus:outline-none text-center no-arrow transition-colors">{minutes.map(m=><option key={m} value={m} className="text-slate-800">{m}</option>)}</select>
                           </div>
                           
-                          {/* 科目與監考區塊 (注音模式下利用 contents 或 flex wrapper 自動排版) */}
+                          {/* 科目與監考區塊 */}
                           <div className={`${bopomofoMode ? 'w-full flex items-center justify-center gap-2' : 'contents'}`}>
                             <div className={`px-0 flex items-center justify-center ${bopomofoMode ? 'w-1/2' : 'w-[25%]'}`}>
                               <ZYInput active={bopomofoMode} type="text" list="subject-list" value={exam.subject} onChange={e=>handleExamChange(exam.id,'subject',e.target.value)} placeholder="科目" className={`w-full shrink-0 text-center font-black font-tc tracking-widest bg-transparent hover:bg-white dark:hover:bg-zinc-700 rounded-xl focus:outline-none py-1 transition-colors placeholder:text-slate-300 dark:placeholder:text-zinc-600 ${getTextColor(exam.subject, '')} ${bopomofoMode ? 'text-3xl lg:text-4xl' : 'text-2xl lg:text-[1.7rem] xl:text-[1.9rem]'}`} />
@@ -683,7 +689,6 @@
                                 <input type="text" inputMode="numeric" maxLength="3" value={attendance.expected} 
                                        onChange={e => {
                                            const val = e.target.value.replace(/\D/g, ''); 
-                                           // 修復：允許空字串存在，提升刪除時的 UX 體驗
                                            setAttendance({...attendance, expected: val === '' ? '' : Math.min(999, parseInt(val, 10))});
                                        }} 
                                        className="w-[1.8em] text-center font-num text-2xl lg:text-3xl font-black text-indigo-600 dark:text-indigo-400 bg-transparent border-b-2 border-transparent hover:border-indigo-200 focus:border-indigo-600 focus:outline-none transition-colors" />
@@ -696,7 +701,6 @@
                                 <input type="text" inputMode="numeric" maxLength="3" value={attendance.actual} 
                                        onChange={e => {
                                            const val = e.target.value.replace(/\D/g, ''); 
-                                           // 修復：允許空字串存在，提升刪除時的 UX 體驗
                                            setAttendance({...attendance, actual: val === '' ? '' : Math.min(999, parseInt(val, 10))});
                                        }} 
                                        className="w-[1.8em] text-center font-num text-2xl lg:text-3xl font-black text-indigo-600 dark:text-indigo-400 bg-transparent border-b-2 border-transparent hover:border-indigo-200 focus:border-indigo-600 focus:outline-none transition-colors" />
@@ -740,12 +744,20 @@
                       {(warning.isRed || warning.active) && <div className={`absolute inset-0 animate-pulse pointer-events-none transition-all duration-700 ${warning.isRed ? 'bg-rose-600/10' : 'bg-amber-500/10'}`}></div>}
                       
                       {/* 上方：日期與提示 */}
-                      <div className="flex flex-col items-center z-20 w-full mt-2 lg:mt-3 shrink-0">
+                      <div className="flex flex-col items-center z-20 w-full mt-2 lg:mt-3 shrink-0 px-2 lg:px-4">
                           {warning.active ? (
                             <div className={`px-6 lg:px-10 py-2 lg:py-4 rounded-full font-black tracking-[0.2em] flex items-center gap-3 shadow-xl border-[3px] animate-bounce text-lg lg:text-3xl ${warning.isRed ? 'bg-white dark:bg-zinc-800 text-rose-600 dark:text-rose-400 border-rose-500' : 'bg-white dark:bg-zinc-800 text-amber-600 dark:text-amber-500 border-amber-500'}`}>
                               <AlertTriangle className="w-6 h-6 lg:w-10 lg:h-10" /><ZY active={bopomofoMode}>{warning.text}</ZY>
                             </div>
-                          ) : <div className="text-slate-500 dark:text-zinc-500 font-black tracking-[0.2em] lg:tracking-[0.4em] text-sm lg:text-2xl uppercase opacity-80"><ZY active={bopomofoMode}>{subText}</ZY></div>}
+                          ) : (
+                            <div className="text-slate-500 dark:text-zinc-500 font-black tracking-[0.2em] lg:tracking-[0.4em] text-sm lg:text-2xl uppercase opacity-80 flex flex-wrap justify-center items-center text-center gap-x-4 gap-y-2 lg:gap-y-4">
+                                {subText.split(' ').map((part, idx) => (
+                                    <span key={idx} className="flex shrink-0">
+                                        <ZY active={bopomofoMode}>{part}</ZY>
+                                    </span>
+                                ))}
+                            </div>
+                          )}
                       </div>
 
                       {/* 下方：智慧時鐘主體 (SVG Auto-scaling) 保證永不切字與溢出 */}
