@@ -1,0 +1,66 @@
+/* 基本工具類 */
+    /* 隱藏捲軸但保留功能 */
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    
+    /* 計時器圓環進度條動畫 */
+    .timer-circle {
+      transition: stroke-dashoffset 1s linear, stroke 0.5s ease;
+    }
+
+    /* 隱藏數字輸入框的原生上下箭頭，讓畫面更乾淨俐落 */
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    input[type="number"] {
+      -moz-appearance: textfield;
+      appearance: textfield;
+    }
+
+/* 學生版權限控制 (Hide controls in student mode) */
+    /* 學生版權限控制 (Hide controls in student mode) */
+    body.is-student #draw-btn,
+    body.is-student #reset-list-btn,
+    body.is-student #timer-set-btn,
+    body.is-student #timer-add-btn,
+    body.is-student #timer-sub-btn,
+    body.is-student #timer-play-btn,
+    body.is-student #timer-reset-btn,
+    body.is-student #score-add-btn,
+    body.is-student #score-remove-btn,
+    body.is-student #score-reset-btn,
+    body.is-student #noise-toggle-btn,
+    body.is-student #noise-panel-content,
+    body.is-student button[data-action^="sub"],
+    body.is-student button[data-action^="add"],
+    body.is-student #board-toolbar,
+    body.is-student #board-clear-btn,
+    body.is-student #nav-draw {
+      display: none !important;
+    }
+    body.is-student .team-name-input {
+      pointer-events: none !important;
+    }
+
+/* 布穀鳥時鐘動畫 */
+              @keyframes swing {
+                 0% { transform: rotate(-12deg); }
+                 100% { transform: rotate(12deg); }
+              }
+              .cuckoo-active {
+                  transform: translateY(0) !important;
+               }
+               .cuckoo-active .cuckoo-inner {
+                  animation: cuckoo-bounce 0.5s ease-in-out 6 alternate;
+                  display: inline-block;
+               }
+              @keyframes cuckoo-bounce {
+                  0% { transform: translateY(0) scale(1); }
+                  100% { transform: translateY(-12px) scale(1.1); }
+               }
+              .pinecone {
+                 clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+                 transform: scaleY(1.3);
+              }
