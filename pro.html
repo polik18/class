@@ -747,98 +747,127 @@
            </div>
         </div>
 
-        <!-- 子功能 3：蕃茄鐘 (布穀鐘) -->
-        <div id="clock-sub-pomo" class="w-full hidden flex-col items-center justify-start opacity-0 transition-opacity duration-300 ease-in-out gap-8 py-8 overflow-y-auto no-scrollbar flex-1 pb-20">
-           
+        <!-- 子功能 3：讀書蕃茄鐘（美術重設計版） -->
+        <div id="clock-sub-pomo" class="w-full hidden flex-col items-center justify-start opacity-0 transition-opacity duration-300 ease-in-out py-6 sm:py-8 overflow-y-auto no-scrollbar flex-1 pb-14">
+          <section id="pomo-shell" class="pomo-shell w-full max-w-6xl mx-auto relative overflow-hidden rounded-[2.25rem] sm:rounded-[3rem] border border-white/10 shadow-2xl px-5 py-6 sm:p-8 lg:p-10">
+            <div class="pomo-orb pomo-orb-a"></div>
+            <div class="pomo-orb pomo-orb-b"></div>
+            <div class="pomo-grid-glow"></div>
 
-           <div class="relative w-full max-w-[320px] mx-auto flex flex-col items-center mt-6 group">
-              
-              <!-- 屋頂 -->
-              <div class="w-0 h-0 border-l-[160px] border-l-transparent border-r-[160px] border-r-transparent border-b-[110px] border-b-[#8B5A2B] relative z-20 drop-shadow-2xl">
-                 <!-- 雕花裝飾 -->
-                 <div class="absolute top-[30px] left-[-80px] w-20 h-4 bg-[#6B4423] rounded-full rotate-[-35deg] shadow-sm"></div>
-                 <div class="absolute top-[30px] right-[-80px] w-20 h-4 bg-[#6B4423] rounded-full rotate-[35deg] shadow-sm"></div>
-                 
-                 <!-- 布穀鳥的窗體 -->
-                 <div class="absolute top-[40px] left-[-30px] w-[60px] h-[55px] bg-[#3E2723] rounded-t-full flex justify-center items-end overflow-hidden shadow-inner border-b text-center border-[#5D4037]">
-                    <div id="cuckoo-bird" class="text-3xl transition-transform duration-500 translate-y-full mb-1 drop-shadow-md z-10 w-full text-center"><span class="cuckoo-inner">🕊️</span></div>
-                    <!-- 兩扇小門 -->
-                    <div id="cuckoo-door-l" class="absolute left-0 top-0 bottom-0 w-1/2 bg-[#8D6E63] border border-[#5D4037] transform origin-left transition-transform duration-500 shadow-lg"></div>
-                    <div id="cuckoo-door-r" class="absolute right-0 top-0 bottom-0 w-1/2 bg-[#8D6E63] border border-[#5D4037] transform origin-right transition-transform duration-500 shadow-lg"></div>
-                 </div>
-              </div>
-              
-              <!-- 鐘體 -->
-              <div class="w-[280px] bg-[#A0522D] border-x-[12px] border-b-[16px] border-[#5C4033] rounded-b-[2rem] shadow-2xl relative z-30 flex flex-col items-center p-6 border-t-0 -mt-px bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4IiBoZWlnaHQ9IjgiPgo8cmVjdCB3aWR0aD0iOCIgaGVpZ2h0PSI4IiBmaWxsPSIjYTA1MjJkIj48L3JlY3Q+CjxwYXRoIGQ9Ik0wIDBMOCA4Wk04IDBMMCA4WiIgc3Ryb2tlPSIjOGI0NTEzIiBzdHJva2Utd2lkdGg9IjEiPjwvcGF0aD4KPC9zdmc+')] mix-blend-multiply flex-shrink-0">
-                 
-                 <div id="pomo-mode-badge" class="bg-[#3E2723] text-amber-200 px-6 py-1.5 rounded-full border border-amber-900 shadow-lg tracking-widest text-sm font-black mb-5 transition-colors duration-500 whitespace-nowrap shadow-[0_2px_10px_rgba(0,0,0,0.5)]">
-                    專注時間
-                 </div>
-                 
-                 <!-- 鐘面 -->
-                 <div class="w-[180px] h-[180px] bg-[#FFF8DC] rounded-full border-[10px] border-[#3E2723] shadow-inner flex flex-col items-center justify-center relative shadow-[inset_0_5px_15px_rgba(0,0,0,0.3),0_5px_15px_rgba(0,0,0,0.5)]">
-                    
-                    <!-- 羅馬數字裝飾 -->
-                    <div class="absolute w-full h-full p-1 opacity-20 pointer-events-none text-xs font-serif font-bold text-center">
-                       <div class="absolute top-1 left-1/2 -translate-x-1/2">XII</div>
-                       <div class="absolute bottom-1 left-1/2 -translate-x-1/2">VI</div>
-                       <div class="absolute top-1/2 right-1 -translate-y-1/2">III</div>
-                       <div class="absolute top-1/2 left-1 -translate-y-1/2">IX</div>
+            <div class="relative z-10 grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6 lg:gap-8 items-stretch">
+              <!-- 主計時舞台 -->
+              <div class="pomo-stage rounded-[2rem] sm:rounded-[2.5rem] p-5 sm:p-8 flex flex-col items-center justify-between min-h-[560px]">
+                <div class="w-full flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 text-left">
+                  <div>
+                    <div id="pomo-mode-badge" class="pomo-badge">專注時間</div>
+                    <h3 class="text-3xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight mt-4">讀書蕃茄鐘</h3>
+                    <p id="pomo-state-subtitle" class="text-slate-300/80 text-sm sm:text-base mt-3 leading-relaxed max-w-xl">
+                      把注意力收進這顆蕃茄裡，先完成眼前這一段。
+                    </p>
+                  </div>
+                  <div class="pomo-session-card self-start sm:self-center">
+                    <span class="text-[11px] uppercase tracking-[0.3em] text-slate-400 font-black">Cycle</span>
+                    <strong id="pomo-cycle-label" class="text-white text-lg font-black">Focus</strong>
+                  </div>
+                </div>
+
+                <div class="pomo-tomato-wrap my-8 sm:my-10" aria-live="polite">
+                  <svg class="pomo-progress-svg" viewBox="0 0 220 220" aria-hidden="true">
+                    <circle class="pomo-progress-track" cx="110" cy="110" r="96" pathLength="1000"></circle>
+                    <circle id="pomo-progress-ring" class="pomo-progress-ring" cx="110" cy="110" r="96" pathLength="1000"></circle>
+                  </svg>
+
+                  <div class="pomo-leaf pomo-leaf-left"></div>
+                  <div class="pomo-leaf pomo-leaf-mid"></div>
+                  <div class="pomo-leaf pomo-leaf-right"></div>
+
+                  <div class="pomo-tomato">
+                    <div class="pomo-highlight"></div>
+                    <span id="pomo-time-display" class="pomo-time-display">25:00</span>
+                    <span id="pomo-time-caption" class="pomo-time-caption">準備開始</span>
+                  </div>
+                </div>
+
+                <div class="w-full flex flex-col items-center gap-5">
+                  <div class="pomo-control-row" aria-label="蕃茄鐘控制">
+                    <button onclick="skipPomoPhase()" class="pomo-icon-btn" title="跳過此階段" aria-label="跳過此階段">
+                      <i data-lucide="skip-forward" class="w-5 h-5 pointer-events-none"></i>
+                    </button>
+                    <button onclick="togglePomoTimer()" id="pomo-toggle-btn" class="pomo-play-btn" title="開始或暫停" aria-label="開始或暫停">
+                      <i data-lucide="play" id="pomo-toggle-icon" class="w-7 h-7 fill-current pointer-events-none"></i>
+                      <span id="pomo-toggle-text">開始</span>
+                    </button>
+                    <button onclick="resetPomoTimer()" class="pomo-icon-btn" title="重新開始" aria-label="重新開始">
+                      <i data-lucide="rotate-ccw" class="w-5 h-5 pointer-events-none"></i>
+                    </button>
+                  </div>
+
+                  <div class="pomo-phase-strip">
+                    <div class="pomo-phase-pill is-focus">
+                      <span class="pomo-dot"></span>
+                      <span>專注 <strong id="pomo-focus-pill">25</strong> 分</span>
                     </div>
-
-                    <span id="pomo-time-display" class="text-[3.25rem] font-black font-mono text-[#4A3219] tracking-tighter drop-shadow-sm relative z-10 leading-none">25:00</span>
-                 </div>
-                 
-                 <!-- 控制按鈕 -->
-                 <div class="flex justify-center gap-4 mt-6">
-                    <button onclick="skipPomoPhase()" class="w-10 h-10 rounded-full bg-[#8B4513] hover:bg-[#A0522D] text-amber-100 border-2 border-[#5C4033] shadow-md transition-all flex items-center justify-center active:scale-95 group" title="跳過此階段">
-                       <i data-lucide="fast-forward" class="w-4 h-4 group-hover:scale-110 transition-transform"></i>
-                    </button>
-                    <button onclick="togglePomoTimer()" id="pomo-toggle-btn" class="w-12 h-12 rounded-full bg-amber-100 text-[#4A3219] hover:bg-white shadow-[0_4px_10px_rgba(0,0,0,0.5)] transition-all flex items-center justify-center active:scale-95 group border-4 border-[#3E2723]">
-                       <i data-lucide="play" id="pomo-toggle-icon" class="w-5 h-5 fill-[#4A3219] ml-1 group-hover:scale-110 transition-transform"></i>
-                    </button>
-                    <button onclick="resetPomoTimer()" class="w-10 h-10 rounded-full bg-[#8B4513] hover:bg-[#A0522D] text-amber-100 border-2 border-[#5C4033] shadow-md transition-all flex items-center justify-center active:scale-95 group" title="重新開始">
-                       <i data-lucide="rotate-ccw" class="w-4 h-4 group-hover:-rotate-180 transition-transform duration-500"></i>
-                    </button>
-                 </div>
-              </div>
-              
-              <!-- 鐘擺 -->
-              <div class="w-full flex justify-center -mt-6 relative z-10">
-                 <div class="w-3 h-28 flex flex-col items-center bg-gradient-to-b from-[#3E2723] to-[#8B4513] shadow-lg origin-top" style="animation: swing 2s ease-in-out infinite alternate;">
-                    <div class="absolute bottom-[-20px] w-12 h-12 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 border-4 border-[#8B4513] shadow-[0_5px_15px_rgba(0,0,0,0.6)]"></div>
-                 </div>
-              </div>
-              
-              <!-- 松果重錘 -->
-              <div class="flex gap-14 mt-4 absolute top-[400px]">
-                 <div class="w-1 h-32 bg-[#3E2723] relative shadow-md">
-                    <div class="absolute bottom-[-30px] left-[-10px] w-6 h-10 bg-[#5C4033] shadow-md border-b-2 border-[#3E2723] pinecone"></div>
-                 </div>
-                 <div class="w-1 h-20 bg-[#3E2723] relative shadow-md">
-                    <div class="absolute bottom-[-30px] left-[-10px] w-6 h-10 bg-[#5C4033] shadow-md border-b-2 border-[#3E2723] pinecone"></div>
-                 </div>
+                    <i data-lucide="arrow-right" class="w-4 h-4 text-slate-500 hidden sm:block"></i>
+                    <div class="pomo-phase-pill is-break">
+                      <span class="pomo-dot"></span>
+                      <span>休息 <strong id="pomo-break-pill">5</strong> 分</span>
+                    </div>
+                  </div>
+                </div>
               </div>
 
-           </div>
-           
-           <div class="mt-auto sm:mt-12 z-40 relative flex flex-col items-center gap-4">
-               <div class="text-slate-400 font-bold bg-[#3E2723]/90 px-6 py-3 rounded-full border border-amber-900/50 flex flex-col md:flex-row items-center gap-4 shadow-xl backdrop-blur-sm">
-                   <div class="flex items-center gap-2">
-                       <i data-lucide="brain" class="w-4 h-4 text-amber-500"></i> 
-                       <span class="text-sm text-amber-200">專注時間</span>
-                       <input type="number" id="pomo-work-min" value="25" min="1" onchange="updatePomoConfig()" class="w-14 bg-slate-900 border border-amber-700 rounded text-center text-white focus:outline-none focus:border-amber-400 px-1 py-1 font-bold text-sm shadow-inner">
-                       <span class="text-sm text-slate-400">分</span>
-                   </div>
-                   <div class="w-px h-6 bg-amber-900/50 hidden md:block"></div>
-                   <div class="flex items-center gap-2">
-                       <i data-lucide="coffee" class="w-4 h-4 text-emerald-500"></i>
-                       <span class="text-sm text-emerald-200">休息時間</span>
-                       <input type="number" id="pomo-break-min" value="5" min="1" onchange="updatePomoConfig()" class="w-14 bg-slate-900 border border-emerald-700 rounded text-center text-white focus:outline-none focus:border-emerald-400 px-1 py-1 font-bold text-sm shadow-inner">
-                       <span class="text-sm text-slate-400">分</span>
-                   </div>
-               </div>
-           </div>
+              <!-- 右側設定與說明 -->
+              <aside class="pomo-side-panel rounded-[2rem] sm:rounded-[2.5rem] p-5 sm:p-6 flex flex-col gap-5">
+                <div class="flex items-center justify-between gap-3">
+                  <div>
+                    <p class="text-[11px] uppercase tracking-[0.3em] text-rose-200/70 font-black">Settings</p>
+                    <h4 class="text-2xl font-black text-white mt-1">節奏設定</h4>
+                  </div>
+                  <div class="pomo-mini-mark" aria-hidden="true">
+                    <i data-lucide="sprout" class="w-6 h-6"></i>
+                  </div>
+                </div>
+
+                <div class="pomo-setting-card">
+                  <div class="flex items-center gap-3 mb-4">
+                    <div class="pomo-setting-icon is-focus"><i data-lucide="brain" class="w-5 h-5"></i></div>
+                    <div class="text-left">
+                      <label for="pomo-work-min" class="block text-sm font-black text-white">專注時間</label>
+                      <p class="text-xs text-slate-400 mt-0.5">適合閱讀、寫題、背誦</p>
+                    </div>
+                  </div>
+                  <div class="pomo-number-line">
+                    <input type="number" id="pomo-work-min" value="25" min="1" onchange="updatePomoConfig()" class="pomo-number-input" aria-label="專注時間分鐘數">
+                    <span>分鐘</span>
+                  </div>
+                </div>
+
+                <div class="pomo-setting-card">
+                  <div class="flex items-center gap-3 mb-4">
+                    <div class="pomo-setting-icon is-break"><i data-lucide="coffee" class="w-5 h-5"></i></div>
+                    <div class="text-left">
+                      <label for="pomo-break-min" class="block text-sm font-black text-white">休息時間</label>
+                      <p class="text-xs text-slate-400 mt-0.5">伸展、喝水、讓眼睛放鬆</p>
+                    </div>
+                  </div>
+                  <div class="pomo-number-line">
+                    <input type="number" id="pomo-break-min" value="5" min="1" onchange="updatePomoConfig()" class="pomo-number-input" aria-label="休息時間分鐘數">
+                    <span>分鐘</span>
+                  </div>
+                </div>
+
+                <div class="pomo-note-card mt-auto">
+                  <div class="flex items-start gap-3 text-left">
+                    <i data-lucide="sparkles" class="w-5 h-5 text-amber-300 shrink-0 mt-0.5"></i>
+                    <div>
+                      <p class="font-black text-white">投影模式更乾淨</p>
+                      <p id="pomo-next-label" class="text-sm text-slate-300/85 leading-relaxed mt-1">開始後畫面會用顏色提示目前是專注或休息。</p>
+                    </div>
+                  </div>
+                </div>
+              </aside>
+            </div>
+          </section>
         </div>
 
       </div>
@@ -876,11 +905,20 @@
             </defs>
           </svg>
 
-          <!-- 中間數字顯示 -->
-          <div class="relative flex flex-col items-center justify-center">
-            <div id="timer-display" class="text-[5rem] sm:text-[8rem] lg:text-[10rem] font-black font-mono leading-none tracking-tighter text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]">
+          <!-- 中央控制：上方重設、下方開始 / 暫停，中間保留最大化時間顯示 -->
+          <div class="timer-face relative flex items-center justify-center w-[78%] h-[78%] rounded-full">
+
+            <button id="timer-face-reset-btn" class="timer-face-control timer-face-reset group focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50" title="重設時間" aria-label="重設時間">
+              <i data-lucide="rotate-ccw" class="timer-face-icon w-5 h-5 sm:w-6 sm:h-6 pointer-events-none transition-transform duration-500 group-hover:-rotate-90"></i>
+            </button>
+
+            <div id="timer-display" class="relative z-10 text-[4.35rem] sm:text-[7.25rem] lg:text-[9.5rem] font-black font-mono leading-none tracking-tighter text-white drop-shadow-[0_0_18px_rgba(255,255,255,0.28)] pointer-events-none select-none">
               05:00
             </div>
+
+            <button id="timer-face-toggle-btn" class="timer-face-control timer-face-toggle group focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-300/70" title="開始計時" aria-label="開始計時">
+              <i data-lucide="play" id="timer-face-toggle-icon" class="timer-face-icon w-6 h-6 sm:w-7 sm:h-7 pointer-events-none transition-transform duration-300 group-hover:scale-110"></i>
+            </button>
 
             <!-- 時間到提示 -->
             <div id="timer-status-text" class="absolute -bottom-16 lg:-bottom-20 px-6 py-2 rounded-full bg-red-500/20 border border-red-500/50 text-xl md:text-2xl text-red-400 font-black tracking-widest uppercase opacity-0 transition-opacity drop-shadow-[0_0_15px_rgba(248,113,113,0.5)] backdrop-blur-md">
@@ -889,11 +927,10 @@
           </div>
         </div>
 
-        <!-- 手機版提示：告知使用者在下方可設定時間（桌面版隱藏） -->
+        <!-- 手機版提示：控制鈕已整合在計時畫面中，設定時間仍可往下調整 -->
         <div class="flex lg:hidden items-center gap-2 mt-6 text-slate-500 text-sm select-none">
-          <i data-lucide="chevrons-down" class="w-4 h-4 animate-bounce"></i>
-          <span>在下方設定時間與開始計時</span>
-          <i data-lucide="chevrons-down" class="w-4 h-4 animate-bounce"></i>
+          <i data-lucide="hand-pointer" class="w-4 h-4"></i>
+          <span>上方重設、下方開始 / 暫停；往下可調整時間</span>
         </div>
       </div>
 

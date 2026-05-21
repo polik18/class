@@ -1,0 +1,640 @@
+/* 基本工具類 */
+    /* 隱藏捲軸但保留功能 */
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    
+    /* 計時器圓環進度條動畫 */
+    .timer-circle {
+      transition: stroke-dashoffset 1s linear, stroke 0.5s ease;
+    }
+
+    /* 隱藏數字輸入框的原生上下箭頭，讓畫面更乾淨俐落 */
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    input[type="number"] {
+      -moz-appearance: textfield;
+      appearance: textfield;
+    }
+
+/* 學生版權限控制 (Hide controls in student mode) */
+    /* 學生版權限控制 (Hide controls in student mode) */
+    body.is-student #draw-btn,
+    body.is-student #reset-list-btn,
+    body.is-student #timer-set-btn,
+    body.is-student #timer-add-btn,
+    body.is-student #timer-sub-btn,
+    body.is-student #timer-play-btn,
+    body.is-student #timer-toggle-btn,
+    body.is-student #timer-face-toggle-btn,
+    body.is-student #timer-reset-btn,
+    body.is-student #timer-face-reset-btn,
+    body.is-student #score-add-btn,
+    body.is-student #score-remove-btn,
+    body.is-student #score-reset-btn,
+    body.is-student #noise-toggle-btn,
+    body.is-student #noise-panel-content,
+    body.is-student button[data-action^="sub"],
+    body.is-student button[data-action^="add"],
+    body.is-student #board-toolbar,
+    body.is-student #board-clear-btn,
+    body.is-student #nav-draw {
+      display: none !important;
+    }
+    body.is-student .team-name-input {
+      pointer-events: none !important;
+    }
+
+/* 布穀鳥時鐘動畫 */
+              @keyframes swing {
+                 0% { transform: rotate(-12deg); }
+                 100% { transform: rotate(12deg); }
+              }
+              .cuckoo-active {
+                  transform: translateY(0) !important;
+               }
+               .cuckoo-active .cuckoo-inner {
+                  animation: cuckoo-bounce 0.5s ease-in-out 6 alternate;
+                  display: inline-block;
+               }
+              @keyframes cuckoo-bounce {
+                  0% { transform: translateY(0) scale(1); }
+                  100% { transform: translateY(-12px) scale(1.1); }
+               }
+              .pinecone {
+                 clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+                 transform: scaleY(1.3);
+              }
+
+/* 計時器主畫面控制：去掉內圈，只保留上下兩顆圓形圖示 */
+.timer-face {
+  background: radial-gradient(circle at 50% 50%, rgba(15, 23, 42, 0.08) 0%, rgba(15, 23, 42, 0.02) 58%, transparent 76%);
+}
+
+.timer-face-control {
+  position: absolute;
+  left: 50%;
+  z-index: 20;
+  width: clamp(44px, 15%, 68px);
+  aspect-ratio: 1 / 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 9999px;
+  color: rgba(255, 255, 255, 0.92);
+  background: rgba(15, 23, 42, 0.18);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    0 8px 20px rgba(0, 0, 0, 0.16),
+    0 0 18px rgba(255, 255, 255, 0.08);
+  transition: transform 0.18s ease, color 0.18s ease, border-color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease;
+}
+
+.timer-face-control:hover,
+.timer-face-control:focus-visible {
+  border-color: rgba(255, 255, 255, 0.32);
+  background: rgba(255, 255, 255, 0.10);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.20),
+    0 10px 24px rgba(0, 0, 0, 0.18),
+    0 0 24px rgba(255, 255, 255, 0.16);
+}
+
+.timer-face-icon,
+.timer-face-control svg {
+  position: relative;
+  z-index: 1;
+  filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.24));
+}
+
+.timer-face-reset {
+  top: 9%;
+  transform: translate(-50%, 0);
+}
+
+.timer-face-reset:hover,
+.timer-face-reset:focus-visible {
+  transform: translate(-50%, -2px);
+}
+
+.timer-face-reset:active {
+  transform: translate(-50%, 0) scale(0.94);
+}
+
+.timer-face-toggle {
+  bottom: 9%;
+  transform: translate(-50%, 0);
+  color: rgba(224, 231, 255, 0.98);
+  border-color: rgba(165, 180, 252, 0.26);
+  background: rgba(99, 102, 241, 0.14);
+}
+
+.timer-face-toggle:hover,
+.timer-face-toggle:focus-visible {
+  transform: translate(-50%, 2px);
+  border-color: rgba(165, 180, 252, 0.44);
+  background: rgba(129, 140, 248, 0.18);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.20),
+    0 10px 24px rgba(0, 0, 0, 0.18),
+    0 0 28px rgba(129, 140, 248, 0.24);
+}
+
+.timer-face-toggle:active {
+  transform: translate(-50%, 0) scale(0.94);
+}
+
+/* 開始後維持 play/pause 行為，圖示會切成 pause，並用柔和金色提示目前正在計時 */
+.timer-face-toggle.is-running {
+  color: rgba(254, 243, 199, 0.98);
+  border-color: rgba(251, 191, 36, 0.30);
+  background: rgba(251, 191, 36, 0.13);
+}
+
+.timer-face-toggle.is-running:hover,
+.timer-face-toggle.is-running:focus-visible {
+  border-color: rgba(253, 230, 138, 0.48);
+  background: rgba(251, 191, 36, 0.18);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.20),
+    0 10px 24px rgba(0, 0, 0, 0.18),
+    0 0 30px rgba(251, 191, 36, 0.24);
+}
+
+@media (max-width: 420px) {
+  .timer-face {
+    width: 82%;
+    height: 82%;
+  }
+
+  .timer-face-control {
+    width: clamp(40px, 16%, 56px);
+  }
+
+  .timer-face-reset {
+    top: 6%;
+  }
+
+  .timer-face-toggle {
+    bottom: 6%;
+  }
+}
+
+/* 讀書蕃茄鐘：美術重設計版 */
+.pomo-shell {
+  --pomo-primary: 248, 113, 113;
+  --pomo-primary-strong: 239, 68, 68;
+  --pomo-secondary: 251, 146, 60;
+  --pomo-accent: 253, 224, 71;
+  background:
+    radial-gradient(circle at 18% 18%, rgba(var(--pomo-secondary), 0.22), transparent 30%),
+    radial-gradient(circle at 88% 12%, rgba(244, 114, 182, 0.16), transparent 32%),
+    linear-gradient(135deg, rgba(15, 23, 42, 0.94), rgba(30, 41, 59, 0.82));
+  isolation: isolate;
+}
+
+.pomo-shell.is-break {
+  --pomo-primary: 52, 211, 153;
+  --pomo-primary-strong: 16, 185, 129;
+  --pomo-secondary: 45, 212, 191;
+  --pomo-accent: 125, 211, 252;
+}
+
+.pomo-shell::before {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  border-radius: inherit;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.13), transparent 32%, rgba(var(--pomo-primary), 0.10)),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 45%);
+  pointer-events: none;
+  z-index: -1;
+}
+
+.pomo-orb {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(54px);
+  opacity: 0.68;
+  pointer-events: none;
+  transition: background 0.4s ease, opacity 0.4s ease;
+}
+
+.pomo-orb-a {
+  width: 18rem;
+  height: 18rem;
+  left: -6rem;
+  bottom: -6rem;
+  background: rgba(var(--pomo-primary), 0.34);
+}
+
+.pomo-orb-b {
+  width: 16rem;
+  height: 16rem;
+  right: 12%;
+  top: -7rem;
+  background: rgba(var(--pomo-secondary), 0.22);
+}
+
+.pomo-grid-glow {
+  position: absolute;
+  inset: 0;
+  opacity: 0.24;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.055) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.055) 1px, transparent 1px);
+  background-size: 42px 42px;
+  mask-image: radial-gradient(circle at center, black, transparent 72%);
+  pointer-events: none;
+}
+
+.pomo-stage,
+.pomo-side-panel {
+  background: rgba(15, 23, 42, 0.54);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 24px 60px rgba(2, 6, 23, 0.34);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.pomo-stage {
+  position: relative;
+  overflow: hidden;
+}
+
+.pomo-stage::after {
+  content: "";
+  position: absolute;
+  width: min(54vw, 520px);
+  height: min(54vw, 520px);
+  border-radius: 9999px;
+  background: radial-gradient(circle, rgba(var(--pomo-primary), 0.20), transparent 68%);
+  left: 50%;
+  top: 54%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.pomo-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  width: fit-content;
+  padding: 0.55rem 0.9rem;
+  border-radius: 9999px;
+  color: rgb(255, 241, 242);
+  background: rgba(var(--pomo-primary-strong), 0.18);
+  border: 1px solid rgba(var(--pomo-primary), 0.34);
+  box-shadow: 0 0 22px rgba(var(--pomo-primary), 0.18);
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0.18em;
+  transition: color 0.3s ease, background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.pomo-badge::before {
+  content: "";
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 9999px;
+  background: rgb(var(--pomo-primary));
+  box-shadow: 0 0 16px rgba(var(--pomo-primary), 0.85);
+}
+
+.pomo-session-card,
+.pomo-note-card,
+.pomo-setting-card {
+  background: rgba(2, 6, 23, 0.34);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.pomo-session-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  padding: 0.9rem 1.05rem;
+  border-radius: 1.35rem;
+}
+
+.pomo-tomato-wrap {
+  position: relative;
+  width: clamp(260px, 48vw, 430px);
+  aspect-ratio: 1 / 1;
+  display: grid;
+  place-items: center;
+  z-index: 1;
+}
+
+.pomo-progress-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+  overflow: visible;
+  filter: drop-shadow(0 0 26px rgba(var(--pomo-primary), 0.24));
+}
+
+.pomo-progress-track,
+.pomo-progress-ring {
+  fill: none;
+  stroke-width: 8;
+  stroke-linecap: round;
+}
+
+.pomo-progress-track {
+  stroke: rgba(255, 255, 255, 0.075);
+}
+
+.pomo-progress-ring {
+  stroke: rgb(var(--pomo-primary));
+  stroke-dasharray: 1000;
+  stroke-dashoffset: 0;
+  transition: stroke-dashoffset 0.7s linear, stroke 0.35s ease;
+}
+
+.pomo-tomato {
+  position: relative;
+  width: 78%;
+  aspect-ratio: 1 / 0.95;
+  border-radius: 46% 54% 52% 48% / 45% 45% 58% 58%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  background:
+    radial-gradient(circle at 32% 24%, rgba(255, 255, 255, 0.28), transparent 18%),
+    radial-gradient(circle at 72% 76%, rgba(127, 29, 29, 0.24), transparent 35%),
+    linear-gradient(145deg, rgba(var(--pomo-primary), 0.98), rgba(var(--pomo-primary-strong), 0.94) 52%, rgba(127, 29, 29, 0.72));
+  box-shadow:
+    inset -22px -26px 46px rgba(69, 10, 10, 0.24),
+    inset 12px 14px 24px rgba(255, 255, 255, 0.14),
+    0 26px 56px rgba(var(--pomo-primary), 0.28),
+    0 18px 34px rgba(2, 6, 23, 0.45);
+  transition: background 0.35s ease, box-shadow 0.35s ease, transform 0.35s ease;
+}
+
+.pomo-shell.is-running .pomo-tomato {
+  animation: pomo-breath 2.6s ease-in-out infinite;
+}
+
+.pomo-highlight {
+  position: absolute;
+  top: 18%;
+  left: 18%;
+  width: 21%;
+  height: 13%;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.32);
+  transform: rotate(-24deg);
+  filter: blur(1px);
+}
+
+.pomo-time-display {
+  position: relative;
+  z-index: 2;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: clamp(4rem, 11vw, 7.75rem);
+  font-weight: 950;
+  line-height: 0.9;
+  letter-spacing: -0.085em;
+  padding-right: 0.14em;
+  text-shadow: 0 8px 26px rgba(0, 0, 0, 0.28);
+}
+
+.pomo-time-caption {
+  position: relative;
+  z-index: 2;
+  margin-top: 0.65rem;
+  color: rgba(255, 255, 255, 0.80);
+  font-size: 0.8rem;
+  font-weight: 900;
+  letter-spacing: 0.22em;
+}
+
+.pomo-leaf {
+  position: absolute;
+  top: 5.5%;
+  left: 50%;
+  width: 18%;
+  height: 12%;
+  border-radius: 100% 0 100% 0;
+  transform-origin: left bottom;
+  background: linear-gradient(135deg, #a7f3d0, #22c55e 58%, #15803d);
+  box-shadow: 0 8px 18px rgba(5, 46, 22, 0.28);
+  z-index: 4;
+}
+
+.pomo-leaf-left {
+  transform: translateX(-72%) rotate(-52deg);
+}
+
+.pomo-leaf-mid {
+  width: 15%;
+  transform: translateX(-30%) rotate(-12deg);
+}
+
+.pomo-leaf-right {
+  transform: translateX(8%) rotate(32deg) scaleX(0.9);
+}
+
+.pomo-control-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 0.7rem;
+  border-radius: 9999px;
+  background: rgba(2, 6, 23, 0.36);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+.pomo-icon-btn,
+.pomo-play-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  color: rgba(255, 255, 255, 0.88);
+  background: rgba(255, 255, 255, 0.07);
+  transition: transform 0.18s ease, background 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.pomo-icon-btn {
+  width: 3.4rem;
+  height: 3.4rem;
+}
+
+.pomo-play-btn {
+  min-width: 8.2rem;
+  height: 4.1rem;
+  gap: 0.65rem;
+  padding: 0 1.25rem;
+  color: rgb(15, 23, 42);
+  background: linear-gradient(135deg, rgb(255, 255, 255), rgba(255, 255, 255, 0.78));
+  box-shadow: 0 12px 28px rgba(var(--pomo-primary), 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  font-weight: 950;
+}
+
+.pomo-play-btn.is-running {
+  color: white;
+  background: linear-gradient(135deg, rgba(var(--pomo-primary), 0.95), rgba(var(--pomo-primary-strong), 0.95));
+  box-shadow: 0 0 32px rgba(var(--pomo-primary), 0.34), 0 12px 28px rgba(2, 6, 23, 0.28);
+}
+
+.pomo-icon-btn:hover,
+.pomo-play-btn:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 255, 255, 0.25);
+  background-color: rgba(255, 255, 255, 0.12);
+}
+
+.pomo-icon-btn:active,
+.pomo-play-btn:active {
+  transform: translateY(0) scale(0.96);
+}
+
+.pomo-phase-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.7rem;
+}
+
+.pomo-phase-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: 9999px;
+  padding: 0.65rem 0.9rem;
+  background: rgba(2, 6, 23, 0.28);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: rgba(226, 232, 240, 0.86);
+  font-size: 0.85rem;
+  font-weight: 800;
+}
+
+.pomo-dot {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 9999px;
+  background: rgb(var(--pomo-primary));
+  box-shadow: 0 0 12px rgba(var(--pomo-primary), 0.74);
+}
+
+.pomo-phase-pill.is-break .pomo-dot {
+  background: rgb(52, 211, 153);
+  box-shadow: 0 0 12px rgba(52, 211, 153, 0.7);
+}
+
+.pomo-mini-mark,
+.pomo-setting-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 1rem;
+  background: rgba(var(--pomo-primary), 0.14);
+  color: rgb(var(--pomo-primary));
+  border: 1px solid rgba(var(--pomo-primary), 0.24);
+}
+
+.pomo-mini-mark {
+  width: 3rem;
+  height: 3rem;
+}
+
+.pomo-setting-card,
+.pomo-note-card {
+  border-radius: 1.55rem;
+  padding: 1.1rem;
+}
+
+.pomo-setting-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  flex-shrink: 0;
+}
+
+.pomo-setting-icon.is-break {
+  color: rgb(52, 211, 153);
+  border-color: rgba(52, 211, 153, 0.24);
+  background: rgba(52, 211, 153, 0.11);
+}
+
+.pomo-number-line {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem 1rem;
+  border-radius: 1.1rem;
+  background: rgba(15, 23, 42, 0.58);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  color: rgb(148, 163, 184);
+  font-weight: 800;
+}
+
+.pomo-number-input {
+  width: 7rem;
+  background: transparent;
+  border: 0;
+  outline: 0;
+  color: white;
+  font-size: 2.35rem;
+  line-height: 1;
+  font-weight: 950;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+}
+
+.pomo-number-input:focus {
+  color: rgb(var(--pomo-accent));
+}
+
+@keyframes pomo-breath {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.025); }
+}
+
+@media (max-width: 640px) {
+  .pomo-shell {
+    border-radius: 1.75rem;
+  }
+
+  .pomo-stage {
+    min-height: 520px;
+  }
+
+  .pomo-tomato-wrap {
+    width: min(88vw, 340px);
+  }
+
+  .pomo-control-row {
+    gap: 0.65rem;
+    padding: 0.55rem;
+  }
+
+  .pomo-icon-btn {
+    width: 3rem;
+    height: 3rem;
+  }
+
+  .pomo-play-btn {
+    min-width: 7.4rem;
+    height: 3.7rem;
+  }
+}
