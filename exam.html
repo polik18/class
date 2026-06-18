@@ -339,6 +339,19 @@
         // ==========================================
         // 4. 主應用程式 (Main App)
         // ==========================================
+
+        // 依當下日期推算台灣學年度與學期
+        // 規則：學年度8/1起算、以起始年的民國年命名；第一學期8/1~1/31、第二學期2/1~7/31；民國年=西元年-1911
+        const getAcademicTerm = (date = new Date()) => {
+            const g = date.getFullYear();
+            const m = date.getMonth() + 1; // 1-12
+            let year, semester;
+            if (m >= 8)      { year = g - 1911; semester = '一'; } // 8-12月：上學期
+            else if (m === 1){ year = g - 1912; semester = '一'; } // 1月：仍屬上學期（去年8月開學）
+            else             { year = g - 1912; semester = '二'; } // 2-7月：下學期
+            return { year: String(year), semester };
+        };
+
         function App() {
           const [currentTime, setCurrentTime] = useState(new Date());
           const [isFullscreen, setIsFullscreen] = useState(false);
@@ -348,7 +361,8 @@
             { id: 2, startH: '10', startM: '30', endH: '11', endM: '10', subject: '數學', proctor: 'OOO老師' },
           ];
           const defaultAttendance = { expected: 28, actual: 28, absentNumbers: '' };
-          const defaultTitle = { year: '114', semester: '二', grade: '五', examNum: '一', examName: '定期評量' };
+          const { year: autoYear, semester: autoSemester } = getAcademicTerm();
+          const defaultTitle = { year: autoYear, semester: autoSemester, grade: '五', examNum: '一', examName: '定期評量' };
 
           const loadState = (key, defaultVal) => {
               const saved = localStorage.getItem(key);
@@ -357,7 +371,12 @@
 
           const [schedule, setSchedule] = useState(() => loadState('examSchedule', defaultSchedule));
           const [attendance, setAttendance] = useState(() => loadState('examAttendance', defaultAttendance));
-          const [titleData, setTitleData] = useState(() => loadState('examTitle', defaultTitle));
+          const [titleData, setTitleData] = useState(() => {
+              const saved = loadState('examTitle', defaultTitle);
+              // 除非使用者曾手動覆寫學年度/學期，否則每次開啟都依當下日期自動校正
+              const termManual = loadState('examTitleTermManual', false);
+              return termManual ? saved : { ...saved, year: autoYear, semester: autoSemester };
+          });
           
           const [theme, setTheme] = useState(() => loadState('examTheme', 'light'));
           const [bopomofoMode, setBopomofoMode] = useState(() => loadState('examBopomofo', false));
@@ -453,9 +472,18 @@
             else if(document.exitFullscreen) document.exitFullscreen();
           };
 
+          // 使用者手動更動學年度/學期 → 記錄為手動覆寫，之後不再自動校正（直到重置）
+          const handleTermChange = (field, value) => {
+            localStorage.setItem('examTitleTermManual', JSON.stringify(true));
+            setTitleData({ ...titleData, [field]: value });
+          };
+
           const handleReset = () => {
             if (window.confirm("確定要將所有內容重置為初始狀態嗎？所有編輯的資料都會消失。")) {
-              setSchedule(defaultSchedule); setAttendance(defaultAttendance); setTitleData(defaultTitle);
+              localStorage.setItem('examTitleTermManual', JSON.stringify(false));
+              const term = getAcademicTerm(); // 重置時依當下日期重算，確保學年度/學期正確
+              setSchedule(defaultSchedule); setAttendance(defaultAttendance);
+              setTitleData({ ...defaultTitle, year: term.year, semester: term.semester });
               setCustomTimer(prev => ({...prev, active: false, endTime: null, mode: 'schedule'}));
             }
           };
@@ -599,12 +627,12 @@
                     
                     {!bopomofoMode && (
                         <>
-                            <ZYInput active={bopomofoMode} list="year-list" value={titleData.year} onChange={e => setTitleData({...titleData, year: e.target.value})} style={{ width: getInputWidth(titleData.year, 2.2) }} className={`shrink-0 text-center bg-transparent hover:bg-slate-200/60 dark:hover:bg-zinc-800/60 rounded-lg px-1 focus:outline-none transition-colors ${getTextColor(titleData.year, '114')}`} />
+                            <ZYInput active={bopomofoMode} list="year-list" value={titleData.year} onChange={e => handleTermChange('year', e.target.value)} style={{ width: getInputWidth(titleData.year, 2.2) }} className={`shrink-0 text-center bg-transparent hover:bg-slate-200/60 dark:hover:bg-zinc-800/60 rounded-lg px-1 focus:outline-none transition-colors ${getTextColor(titleData.year, autoYear)}`} />
                             <span className="shrink-0 px-0.5"><ZY active={bopomofoMode}>學年度第</ZY></span>
                         </>
                     )}
 
-                    <ZYInput active={bopomofoMode} list="semester-list" value={titleData.semester} onChange={e => setTitleData({...titleData, semester: e.target.value})} style={{ width: getInputWidth(titleData.semester, 1.5) }} className={`shrink-0 text-center bg-transparent hover:bg-slate-200/60 dark:hover:bg-zinc-800/60 rounded-lg px-1 focus:outline-none transition-colors ${getTextColor(titleData.semester, '二')}`} />
+                    <ZYInput active={bopomofoMode} list="semester-list" value={titleData.semester} onChange={e => handleTermChange('semester', e.target.value)} style={{ width: getInputWidth(titleData.semester, 1.5) }} className={`shrink-0 text-center bg-transparent hover:bg-slate-200/60 dark:hover:bg-zinc-800/60 rounded-lg px-1 focus:outline-none transition-colors ${getTextColor(titleData.semester, autoSemester)}`} />
                     <span className="shrink-0 px-0.5"><ZY active={bopomofoMode}>學期</ZY></span>
                     <ZYInput active={bopomofoMode} list="grade-list" value={titleData.grade} onChange={e => setTitleData({...titleData, grade: e.target.value})} style={{ width: getInputWidth(titleData.grade, 1.5) }} className={`shrink-0 text-center bg-transparent hover:bg-slate-200/60 dark:hover:bg-zinc-800/60 rounded-lg px-1 focus:outline-none transition-colors ${getTextColor(titleData.grade, '五')}`} />
                     <span className="shrink-0 px-0.5"><ZY active={bopomofoMode}>年級第</ZY></span>
@@ -672,7 +700,7 @@
                         {['國語', '數學', '自然', '社會', '英文', '自訂'].map(sub => <option key={sub} value={sub} />)}
                       </datalist>
                       <datalist id="year-list">
-                        {['114', '115', '自訂'].map(y => <option key={y} value={y} />)}
+                        {[autoYear, String(Number(autoYear) + 1), '自訂'].map(y => <option key={y} value={y} />)}
                       </datalist>
                       <datalist id="semester-list">
                         {['一', '二'].map(s => <option key={s} value={s} />)}
