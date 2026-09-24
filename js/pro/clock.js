@@ -287,6 +287,15 @@
             alert("⚠️ 此功能僅限老師使用。\n\n學生模式下无法播放上下課鐘聲，請聯繫老師操作。");
             return;
         }
+        // 自訂鈴聲：mode==='file' 時改播相對路徑音檔
+        const bellConfig = loadBellConfig();
+        if (bellConfig.mode === 'file') {
+            const path = (type === 'start') ? bellConfig.startPath : bellConfig.endPath;
+            if (!playCustomBell(path)) {
+                // 播放失敗 → 回退內建合成
+            }
+            return;
+        }
         if (audioCtx.state === 'suspended') audioCtx.resume();
         
         const mainGain = audioCtx.createGain();
@@ -332,9 +341,92 @@
         }
     };
 
+    // --- 鈴聲設定 (自訂 mp3/wav 檔案鈴聲) ---
+    // 儲存方式：相對路徑指向 repo 內音檔 (GitHub Pages 靜態托管)
+    const BELL_CONFIG_KEY = 'classAssistantBell';
+    const defaultBellConfig = { mode: 'synth', startPath: 'audio/start.mp3', endPath: 'audio/end.mp3' };
+
+    const loadBellConfig = () => {
+        try {
+            const saved = localStorage.getItem(BELL_CONFIG_KEY);
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                return Object.assign({}, defaultBellConfig, parsed);
+            }
+        } catch (e) {}
+        return Object.assign({}, defaultBellConfig);
+    };
+
+    const saveBellConfig = (cfg) => {
+        try {
+            localStorage.setItem(BELL_CONFIG_KEY, JSON.stringify(cfg));
+        } catch (e) {}
+    };
+
+    // 播放自訂檔案鈴聲 (用獨立 Audio 元素，避免與 audioCtx Proxy 衝突)
+    const playCustomBell = (path) => {
+        if (!path) return false;
+        try {
+            const audio = new Audio(path);
+            audio.play().catch((err) => {
+                console.warn('[bell] 播放自訂鈴聲失敗, 回退內建合成:', err);
+            });
+            return true;
+        } catch (err) {
+            console.warn('[bell] 播放自訂鈴聲異常, 回退內建合成:', err);
+            return false;
+        }
+    };
+
     let quickBreakInterval = null;
     let quickBreakRemaining = 0;
     let quickBreakTargetMode = 'class'; // 'class' or 'break'
+
+    // --- 自訂鈴聲 UI 控制 ---
+    const previewBell = (type) => {
+        const input = (type === 'start')
+            ? document.getElementById('bell-start-path')
+            : document.getElementById('bell-end-path');
+        // 直接用輸入框的值播放
+        playCustomBell(input ? input.value : '');
+    };
+
+    const clearBell = (type) => {
+        const cfg = loadBellConfig();
+        if (type === 'start') {
+            cfg.startPath = defaultBellConfig.startPath;
+        } else {
+            cfg.endPath = defaultBellConfig.endPath;
+        }
+        saveBellConfig(cfg);
+        refreshBellUI();
+    };
+
+    const onBellModeChange = (mode) => {
+        const cfg = loadBellConfig();
+        cfg.mode = mode;
+        saveBellConfig(cfg);
+        refreshBellUI();
+    };
+
+    const refreshBellUI = () => {
+        const cfg = loadBellConfig();
+        const modeSelect = document.getElementById('bell-mode-select');
+        if (modeSelect) modeSelect.value = cfg.mode;
+        const startInput = document.getElementById('bell-start-path');
+        const endInput = document.getElementById('bell-end-path');
+        if (startInput) startInput.value = cfg.startPath;
+        if (endInput) endInput.value = cfg.endPath;
+        const hint = document.getElementById('bell-status-hint');
+        if (hint) hint.textContent = (cfg.mode === 'file')
+            ? '目前使用自訂檔案鈴聲。'
+            : '目前使用內建合成蜂鳴。';
+    };
+
+    // 頁面載入時同步鈴聲設定到 UI
+    document.addEventListener('DOMContentLoaded', () => {
+        if (typeof refreshBellUI === 'function') refreshBellUI();
+    });
 
     const runQuickBreakPhase = () => {
         clearInterval(quickBreakInterval);
