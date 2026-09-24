@@ -380,10 +380,11 @@
 
     const putBellBlob = async (blob) => {
         const db = await openBellDB();
+        const key = 'bell-' + Date.now() + '-' + Math.floor(Math.random() * 100000);
         return new Promise((resolve, reject) => {
             const tx = db.transaction(BELL_STORE_NAME, 'readwrite');
-            const req = tx.objectStore(BELL_STORE_NAME).put(blob);
-            req.onsuccess = () => resolve(req.result);
+            const req = tx.objectStore(BELL_STORE_NAME).put(blob, key);
+            req.onsuccess = () => resolve(key);
             req.onerror = () => reject(req.error);
         });
     };
@@ -446,10 +447,10 @@
             cfg.mode = 'file';
             saveBellConfig(cfg);
             refreshBellUI();
-            showGlobalToast('已儲存自訂鈴聲檔案', 'bell-ok', 'text-emerald-400');
+            showToast('已儲存自訂鈴聲檔案', 'emerald');
         } catch (e) {
             console.error('[bell] 儲存失敗:', e);
-            showGlobalToast('儲存鈴聲檔案失敗', 'bell-err', 'text-rose-400');
+            showToast('儲存鈴聲檔案失敗', 'amber');
         }
     };
 
