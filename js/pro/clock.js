@@ -417,6 +417,7 @@
 
     // 播放自訂檔案鈴聲 (從 IndexedDB 取 blob，用獨立 Audio 元素，避免與 audioCtx Proxy 衝突)
     const playCustomBell = async (type) => {
+        stopAllBells(); // 播自訂鈴聲前先停掉其他正在播的，避免重疊
         const cfg = loadBellConfig();
         const key = (type === 'start') ? cfg.startKey : cfg.endKey;
         const blob = await getBellBlob(key);
