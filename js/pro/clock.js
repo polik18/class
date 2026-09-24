@@ -284,20 +284,9 @@
 
     // --- 上下課鐘功能 (Class Bell) ---
     // 使用 Web Audio API 合成極度真實的雙音校園鐘聲
-    window.playSchoolBell = (type) => {
-        if (window._irsIsStudentMode) {
-            alert("⚠️ 此功能僅限老師使用。\n\n學生模式下无法播放上下課鐘聲，請聯繫老師操作。");
-            return;
-        }
-        // 自訂鈴聲：mode==='file' 時改播 IndexedDB 音檔
-        const bellConfig = loadBellConfig();
-        if (bellConfig.mode === 'file') {
-            playCustomBell(type); // 播放失敗 → 回退內建合成
-            return;
-        }
-        stopAllBells();
+    const synthBell = (type) => {
         if (audioCtx.state === 'suspended') audioCtx.resume();
-        
+
         const mainGain = audioCtx.createGain();
         mainGain.connect(audioCtx.destination);
         mainGain.gain.setValueAtTime(0.5, audioCtx.currentTime);
@@ -305,25 +294,25 @@
         const playChime = (freq, startTime, duration) => {
             const osc = audioCtx.createOscillator();
             const gainNode = audioCtx.createGain();
-            
+
             osc.type = 'sine';
             osc.frequency.setValueAtTime(freq, startTime);
-            
+
             // 鐘聲的獨特音色處理 (主要依靠包絡線 Envelope)
             gainNode.gain.setValueAtTime(0, startTime);
             gainNode.gain.linearRampToValueAtTime(1, startTime + 0.05); // 敲擊瞬間
             gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + duration); // 餘音繞樑
-            
+
             osc.connect(gainNode);
             gainNode.connect(mainGain);
-            
+
             osc.start(startTime);
             osc.stop(startTime + duration);
             currentOscs.push(osc);
         };
 
         const now = audioCtx.currentTime;
-        
+
         if (type === 'start') {
             // 上課鐘：西敏寺鐘聲 (長鈴聲) ＋ 高音
             const notes = [
@@ -331,7 +320,7 @@
                 392.00, 587.32, 659.25, 523.25  // Sol Re Mi Do
             ];
             const delays = [0, 1.2, 2.4, 3.6, 5.4, 6.6, 7.8, 9.0];
-            
+
             for(let i=0; i<notes.length; i++) {
                 playChime(notes[i], now + delays[i], 3.5);
             }
@@ -340,6 +329,25 @@
             playChime(329.63, now, 2);         // Mi (低)
             playChime(261.63, now + 0.8, 2.5); // Do (低)
         }
+    };
+
+    window.playSchoolBell = (type) => {
+        if (window._irsIsStudentMode) {
+            alert("⚠️ 此功能僅限老師使用。\n\n學生模式下無法播放上下課鐘聲，請聯繫老師操作。");
+            return;
+        }
+        // 無論何種模式，先停掉所有正在播的音源，避免重疊
+        stopAllBells();
+        // 自訂鈴聲：mode==='file' 時改播 IndexedDB 音檔
+        const bellConfig = loadBellConfig();
+        if (bellConfig.mode === 'file') {
+            // 自訂鈴聲播放失敗（未設定或播放錯誤）時，回退內建合成鈴聲
+            playCustomBell(type).then((ok) => {
+                if (!ok) synthBell(type);
+            });
+            return;
+        }
+        synthBell(type);
     };
 
     // --- 鈴聲設定 (自訂 mp3/wav 檔案鈴聲) ---
@@ -416,22 +424,32 @@
     };
 
     // 播放自訂檔案鈴聲 (從 IndexedDB 取 blob，用獨立 Audio 元素，避免與 audioCtx Proxy 衝突)
+    // 回傳 boolean：成功 true；失敗（無設定 / 播放錯誤）回傳 false，由呼叫端回退內建合成
     const playCustomBell = async (type) => {
         stopAllBells(); // 播自訂鈴聲前先停掉其他正在播的，避免重疊
         const cfg = loadBellConfig();
         const key = (type === 'start') ? cfg.startKey : cfg.endKey;
         const blob = await getBellBlob(key);
-        if (!blob) return false;
+        if (!blob) {
+            showToast('鈴聲檔案遺失，回退內建鈴聲', 'amber');
+            return false;
+        }
         try {
             const url = URL.createObjectURL(blob);
             const audio = new Audio(url);
             audio.play().catch((err) => {
                 console.warn('[bell] 播放自訂鈴聲失敗, 回退內建合成:', err);
+                showToast('自訂鈴聲播放失敗，回退內建鈴聲', 'amber');
             });
+            audio.onended = () => {
+                // 自訂鈴聲播完後，若仍在 file 模式可接續播放內建合成鈴聲
+                // （此處保持簡潔，僅清理）
+            };
             setTimeout(() => URL.revokeObjectURL(url), 1000);
             return true;
         } catch (err) {
             console.warn('[bell] 播放自訂鈴聲異常, 回退內建合成:', err);
+            showToast('自訂鈴聲播放異常，回退內建鈴聲', 'amber');
             return false;
         }
     };
