@@ -492,6 +492,11 @@
         if (typeof refreshBellUI === 'function') refreshBellUI();
     });
 
+    window.pickBellFile = pickBellFile;
+    window.previewBell = previewBell;
+    window.clearBell = clearBell;
+    window.onBellModeChange = onBellModeChange;
+
     const runQuickBreakPhase = () => {
         clearInterval(quickBreakInterval);
         const min = quickBreakTargetMode === 'class' ? parseInt(document.getElementById('quick-class-min').value) || 50 : parseInt(document.getElementById('quick-break-min').value) || 10;
