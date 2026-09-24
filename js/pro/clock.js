@@ -6,6 +6,8 @@
       time: document.getElementById('clock-time'),
       secBar: document.getElementById('clock-seconds-bar')
     };
+    // 目前合成蜂鳴播放的振盪器清單，用於「播另一個就先停」。
+    let currentOscs = [];
 
     const daysStr = ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"];
 
@@ -293,6 +295,7 @@
             playCustomBell(type); // 播放失敗 → 回退內建合成
             return;
         }
+        stopAllBells();
         if (audioCtx.state === 'suspended') audioCtx.resume();
         
         const mainGain = audioCtx.createGain();
@@ -316,6 +319,7 @@
             
             osc.start(startTime);
             osc.stop(startTime + duration);
+            currentOscs.push(osc);
         };
 
         const now = audioCtx.currentTime;
@@ -509,6 +513,18 @@
         updatePreviewButton(type);
     };
 
+    // 停止所有正在播放的鈴聲（合成蜂鳴 + 自訂音檔），避免重疊播放
+    const stopAllBells = () => {
+        // 停止合成蜂鳴振盪器
+        currentOscs.forEach((osc) => {
+            try { osc.stop(); } catch (e) {}
+        });
+        currentOscs = [];
+        // 停止自訂音檔播放
+        stopPreview('start');
+        stopPreview('end');
+    };
+
     // 播放/停止自訂鈴聲（點擊切換）
     const previewBell = async (type) => {
         const state = bellPlayState[type];
@@ -516,6 +532,7 @@
             stopPreview(type);
             return;
         }
+        stopAllBells(); // 播自訂鈴聲前先停掉其他正在播的
         const cfg = loadBellConfig();
         const key = (type === 'start') ? cfg.startKey : cfg.endKey;
         if (!key) {
