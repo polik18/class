@@ -439,23 +439,111 @@
     // 選取本地音檔 → 存入 IndexedDB → 存 key 到設定檔
     const pickBellFile = async (type, file) => {
         if (!file) return;
+        stopPreview(type); // 選新檔先停止正在播放的
         try {
             const key = await putBellBlob(file);
             const cfg = loadBellConfig();
-            if (type === 'start') cfg.startKey = key;
-            else cfg.endKey = key;
+            if (type === 'start') { cfg.startKey = key; cfg.startFileName = file.name; }
+            else { cfg.endKey = key; cfg.endFileName = file.name; }
             cfg.mode = 'file';
             saveBellConfig(cfg);
             refreshBellUI();
-            showToast('已儲存自訂鈴聲檔案', 'emerald');
+            setBellFileName(type, file.name);
+            showToast('已儲存自訂鈴聲檔案：' + file.name, 'emerald');
         } catch (e) {
             console.error('[bell] 儲存失敗:', e);
             showToast('儲存鈴聲檔案失敗', 'amber');
         }
     };
 
+    // 設定/清除檔案名稱顯示（讓使用者一眼看出已上傳）
+    const setBellFileName = (type, name) => {
+        const el = document.getElementById(type === 'start' ? 'bell-start-file-name' : 'bell-end-file-name');
+        if (!el) return;
+        if (name) {
+            el.textContent = '已儲存：' + name;
+            el.className = 'text-[10px] text-emerald-400 truncate max-w-[200px] ml-1';
+        } else {
+            el.textContent = '';
+            el.className = 'text-[10px] text-slate-500 truncate max-w-[200px] ml-1';
+        }
+    };
+
+    // 播放/停止狀態追蹤（每種鈴聲各一）
+    const bellPlayState = { start: { audio: null, playing: false }, end: { audio: null, playing: false } };
+
+    // 更新播放按鈕的視覺狀態
+    const updatePreviewButton = (type) => {
+        const btn = document.getElementById(type === 'start' ? 'bell-start-preview-btn' : 'bell-end-preview-btn');
+        if (!btn) return;
+        const state = bellPlayState[type];
+        const playIcon = btn.querySelector('i[data-lucide="play"]');
+        const squareIcon = btn.querySelector('i[data-lucide="square"]');
+        const label = btn.querySelector('.bell-preview-label');
+        if (state.playing) {
+            btn.classList.add('bg-rose-600/40', 'border-rose-500/50', 'text-rose-200');
+            btn.classList.remove('bg-indigo-600/20', 'border-indigo-500/30', 'text-indigo-300');
+            if (playIcon) playIcon.classList.add('hidden');
+            if (squareIcon) squareIcon.classList.remove('hidden');
+            if (label) label.textContent = '停止';
+        } else {
+            btn.classList.remove('bg-rose-600/40', 'border-rose-500/50', 'text-rose-200');
+            btn.classList.add('bg-indigo-600/20', 'border-indigo-500/30', 'text-indigo-300');
+            if (playIcon) playIcon.classList.remove('hidden');
+            if (squareIcon) squareIcon.classList.add('hidden');
+            if (label) label.textContent = '播放';
+        }
+    };
+
+    // 停止播放並重設按鈕
+    const stopPreview = (type) => {
+        const state = bellPlayState[type];
+        if (!state) return;
+        if (state.audio) {
+            state.audio.pause();
+            state.audio.currentTime = 0;
+            if (state.audio.src) URL.revokeObjectURL(state.audio.src);
+            state.audio = null;
+        }
+        state.playing = false;
+        updatePreviewButton(type);
+    };
+
+    // 播放/停止自訂鈴聲（點擊切換）
     const previewBell = async (type) => {
-        await playCustomBell(type);
+        const state = bellPlayState[type];
+        if (state.playing) {
+            stopPreview(type);
+            return;
+        }
+        const cfg = loadBellConfig();
+        const key = (type === 'start') ? cfg.startKey : cfg.endKey;
+        if (!key) {
+            showToast('請先選取鈴聲檔案', 'amber');
+            return;
+        }
+        try {
+            const blob = await getBellBlob(key);
+            if (!blob) {
+                showToast('鈴聲檔案已遺失，請重新選取', 'amber');
+                return;
+            }
+            const url = URL.createObjectURL(blob);
+            const audio = new Audio(url);
+            state.audio = audio;
+            state.playing = true;
+            updatePreviewButton(type);
+            audio.play().catch((err) => {
+                console.warn('[bell] 播放失敗:', err);
+                showToast('播放失敗', 'amber');
+                stopPreview(type);
+            });
+            audio.onended = () => stopPreview(type);
+        } catch (err) {
+            console.error('[bell] 播放異常:', err);
+            showToast('播放失敗', 'amber');
+            stopPreview(type);
+        }
     };
 
     const clearBell = async (type) => {
@@ -464,8 +552,10 @@
         if (key) await deleteBellBlob(key);
         if (type === 'start') {
             cfg.startKey = null;
+            cfg.startFileName = null;
         } else {
             cfg.endKey = null;
+            cfg.endFileName = null;
         }
         saveBellConfig(cfg);
         refreshBellUI();
@@ -486,6 +576,8 @@
         if (hint) hint.textContent = (cfg.mode === 'file')
             ? '目前使用自訂檔案鈴聲。'
             : '目前使用內建合成蜂鳴。';
+        setBellFileName('start', cfg.startFileName);
+        setBellFileName('end', cfg.endFileName);
     };
 
     // 頁面載入時同步鈴聲設定到 UI

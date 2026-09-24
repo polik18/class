@@ -743,8 +743,10 @@
                               class="hidden" onchange="pickBellFile('start', this.files[0])">
                           <button type="button" onclick="document.getElementById('bell-start-file').click()"
                               class="px-3 py-1 text-xs bg-indigo-600/20 hover:bg-indigo-600 text-indigo-300 rounded border border-indigo-500/30 flex items-center gap-1"><i data-lucide="upload" class="w-3 h-3"></i>選取檔案</button>
-                          <button onclick="previewBell('start')" class="px-2 py-1 text-xs bg-indigo-600/20 hover:bg-indigo-600 text-indigo-300 rounded border border-indigo-500/30 flex items-center gap-1"><i data-lucide="play" class="w-3 h-3"></i>試聽</button>
+                          <button id="bell-start-preview-btn" onclick="previewBell('start')" class="px-2 py-1 text-xs bg-indigo-600/20 hover:bg-indigo-600 text-indigo-300 rounded border border-indigo-500/30 flex items-center gap-1">
+                              <i data-lucide="play" class="w-3 h-3"></i><i data-lucide="square" class="w-3 h-3 hidden"></i><span class="bell-preview-label">播放</span></button>
                           <button onclick="clearBell('start')" class="px-2 py-1 text-xs bg-slate-700 hover:bg-slate-600 text-slate-300 rounded border border-white/10"><i data-lucide="rotate-ccw" class="w-3 h-3"></i></button>
+                          <span id="bell-start-file-name" class="text-[10px] text-slate-500 truncate max-w-[200px] ml-1"></span>
                       </div>
                   </div>
                   <div>
@@ -754,8 +756,10 @@
                               class="hidden" onchange="pickBellFile('end', this.files[0])">
                           <button type="button" onclick="document.getElementById('bell-end-file').click()"
                               class="px-3 py-1 text-xs bg-indigo-600/20 hover:bg-indigo-600 text-indigo-300 rounded border border-indigo-500/30 flex items-center gap-1"><i data-lucide="upload" class="w-3 h-3"></i>選取檔案</button>
-                          <button onclick="previewBell('end')" class="px-2 py-1 text-xs bg-indigo-600/20 hover:bg-indigo-600 text-indigo-300 rounded border border-indigo-500/30 flex items-center gap-1"><i data-lucide="play" class="w-3 h-3"></i>試聽</button>
+                          <button id="bell-end-preview-btn" onclick="previewBell('end')" class="px-2 py-1 text-xs bg-indigo-600/20 hover:bg-indigo-600 text-indigo-300 rounded border border-indigo-500/30 flex items-center gap-1">
+                              <i data-lucide="play" class="w-3 h-3"></i><i data-lucide="square" class="w-3 h-3 hidden"></i><span class="bell-preview-label">播放</span></button>
                           <button onclick="clearBell('end')" class="px-2 py-1 text-xs bg-slate-700 hover:bg-slate-600 text-slate-300 rounded border border-white/10"><i data-lucide="rotate-ccw" class="w-3 h-3"></i></button>
+                          <span id="bell-end-file-name" class="text-[10px] text-slate-500 truncate max-w-[200px] ml-1"></span>
                       </div>
                   </div>
               </div>
