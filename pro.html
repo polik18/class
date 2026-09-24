@@ -725,7 +725,7 @@
                  <i data-lucide="music" class="w-5 h-5"></i> 自訂鈴聲
               </div>
               <p class="text-[10px] text-slate-500 leading-relaxed">
-                 選擇「自訂檔案鈴聲」後，上課/下課將播放相對路徑指向的音檔（如 audio/start.mp3）。音檔需放在本專案資料夾內，GitHub Pages 才能播放。
+                 選擇「自訂檔案鈴聲」後，點擊「選取檔案」上傳上課/下課音檔（mp3/wav），音檔存在本機瀏覽器，離線亦可播放，完全不需要上傳到 GitHub。
               </p>
               <div class="flex items-center justify-center gap-3">
                  <label class="text-sm font-bold text-slate-300">模式</label>
@@ -736,24 +736,28 @@
                  </select>
               </div>
               <div class="flex flex-col gap-3">
-                 <!-- 上課鈴聲 -->
-                 <div class="flex items-center gap-2 bg-slate-950/50 rounded-xl px-3 py-2 border border-white/5">
-                    <span class="text-xs font-bold text-rose-400 whitespace-nowrap">上課鈴聲</span>
-                    <input type="text" id="bell-start-path" value="audio/start.mp3"
-                       class="flex-1 bg-transparent border border-white/10 rounded-lg px-2 py-1 text-white text-sm focus:outline-none focus:border-rose-500"
-                       placeholder="相對路徑, 如 audio/start.mp3">
-                    <button onclick="previewBell('start')" class="px-2 py-1 text-xs bg-indigo-600/20 hover:bg-indigo-600 text-indigo-300 rounded border border-indigo-500/30 flex items-center gap-1"><i data-lucide="play" class="w-3 h-3"></i>試聽</button>
-                    <button onclick="clearBell('start')" class="px-2 py-1 text-xs bg-slate-700 hover:bg-slate-600 text-slate-300 rounded border border-white/10"><i data-lucide="rotate-ccw" class="w-3 h-3"></i></button>
-                 </div>
-                 <!-- 下課鈴聲 -->
-                 <div class="flex items-center gap-2 bg-slate-950/50 rounded-xl px-3 py-2 border border-white/5">
-                    <span class="text-xs font-bold text-emerald-400 whitespace-nowrap">下課鈴聲</span>
-                    <input type="text" id="bell-end-path" value="audio/end.mp3"
-                       class="flex-1 bg-transparent border border-white/10 rounded-lg px-2 py-1 text-white text-sm focus:outline-none focus:border-emerald-500"
-                       placeholder="相對路徑, 如 audio/end.mp3">
-                    <button onclick="previewBell('end')" class="px-2 py-1 text-xs bg-indigo-600/20 hover:bg-indigo-600 text-indigo-300 rounded border border-indigo-500/30 flex items-center gap-1"><i data-lucide="play" class="w-3 h-3"></i>試聽</button>
-                    <button onclick="clearBell('end')" class="px-2 py-1 text-xs bg-slate-700 hover:bg-slate-600 text-slate-300 rounded border border-white/10"><i data-lucide="rotate-ccw" class="w-3 h-3"></i></button>
-                 </div>
+                  <div>
+                      <label class="block text-xs text-slate-400 mb-1">上課鈴聲檔案</label>
+                      <div class="flex items-center gap-2">
+                          <input type="file" id="bell-start-file" accept="audio/*"
+                              class="hidden" onchange="pickBellFile('start', this.files[0])">
+                          <button type="button" onclick="document.getElementById('bell-start-file').click()"
+                              class="px-3 py-1 text-xs bg-indigo-600/20 hover:bg-indigo-600 text-indigo-300 rounded border border-indigo-500/30 flex items-center gap-1"><i data-lucide="upload" class="w-3 h-3"></i>選取檔案</button>
+                          <button onclick="previewBell('start')" class="px-2 py-1 text-xs bg-indigo-600/20 hover:bg-indigo-600 text-indigo-300 rounded border border-indigo-500/30 flex items-center gap-1"><i data-lucide="play" class="w-3 h-3"></i>試聽</button>
+                          <button onclick="clearBell('start')" class="px-2 py-1 text-xs bg-slate-700 hover:bg-slate-600 text-slate-300 rounded border border-white/10"><i data-lucide="rotate-ccw" class="w-3 h-3"></i></button>
+                      </div>
+                  </div>
+                  <div>
+                      <label class="block text-xs text-slate-400 mb-1">下課鈴聲檔案</label>
+                      <div class="flex items-center gap-2">
+                          <input type="file" id="bell-end-file" accept="audio/*"
+                              class="hidden" onchange="pickBellFile('end', this.files[0])">
+                          <button type="button" onclick="document.getElementById('bell-end-file').click()"
+                              class="px-3 py-1 text-xs bg-indigo-600/20 hover:bg-indigo-600 text-indigo-300 rounded border border-indigo-500/30 flex items-center gap-1"><i data-lucide="upload" class="w-3 h-3"></i>選取檔案</button>
+                          <button onclick="previewBell('end')" class="px-2 py-1 text-xs bg-indigo-600/20 hover:bg-indigo-600 text-indigo-300 rounded border border-indigo-500/30 flex items-center gap-1"><i data-lucide="play" class="w-3 h-3"></i>試聽</button>
+                          <button onclick="clearBell('end')" class="px-2 py-1 text-xs bg-slate-700 hover:bg-slate-600 text-slate-300 rounded border border-white/10"><i data-lucide="rotate-ccw" class="w-3 h-3"></i></button>
+                      </div>
+                  </div>
               </div>
               <p class="text-[10px] text-slate-500 leading-relaxed" id="bell-status-hint">目前使用內建合成蜂鳴。</p>
            </div>

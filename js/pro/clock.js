@@ -287,13 +287,10 @@
             alert("⚠️ 此功能僅限老師使用。\n\n學生模式下无法播放上下課鐘聲，請聯繫老師操作。");
             return;
         }
-        // 自訂鈴聲：mode==='file' 時改播相對路徑音檔
+        // 自訂鈴聲：mode==='file' 時改播 IndexedDB 音檔
         const bellConfig = loadBellConfig();
         if (bellConfig.mode === 'file') {
-            const path = (type === 'start') ? bellConfig.startPath : bellConfig.endPath;
-            if (!playCustomBell(path)) {
-                // 播放失敗 → 回退內建合成
-            }
+            playCustomBell(type); // 播放失敗 → 回退內建合成
             return;
         }
         if (audioCtx.state === 'suspended') audioCtx.resume();
@@ -342,9 +339,12 @@
     };
 
     // --- 鈴聲設定 (自訂 mp3/wav 檔案鈴聲) ---
-    // 儲存方式：相對路徑指向 repo 內音檔 (GitHub Pages 靜態托管)
+    // 儲存方式：音檔以 blob 存在 IndexedDB，設定檔只存 blob key。
+    // 使用者在網頁內選取本地音檔，離線可用，完全不需要 repo 存取權。
     const BELL_CONFIG_KEY = 'classAssistantBell';
-    const defaultBellConfig = { mode: 'synth', startPath: 'audio/start.mp3', endPath: 'audio/end.mp3' };
+    const BELL_DB_NAME = 'classAssistantBellDB';
+    const BELL_STORE_NAME = 'blobs';
+    const defaultBellConfig = { mode: 'synth', startKey: null, endKey: null };
 
     const loadBellConfig = () => {
         try {
@@ -363,14 +363,66 @@
         } catch (e) {}
     };
 
-    // 播放自訂檔案鈴聲 (用獨立 Audio 元素，避免與 audioCtx Proxy 衝突)
-    const playCustomBell = (path) => {
-        if (!path) return false;
+    // IndexedDB 讀寫鈴聲 blob
+    const openBellDB = () => {
+        return new Promise((resolve, reject) => {
+            const req = indexedDB.open(BELL_DB_NAME, 1);
+            req.onupgradeneeded = () => {
+                const db = req.result;
+                if (!db.objectStoreNames.contains(BELL_STORE_NAME)) {
+                    db.createObjectStore(BELL_STORE_NAME);
+                }
+            };
+            req.onsuccess = () => resolve(req.result);
+            req.onerror = () => reject(req.error);
+        });
+    };
+
+    const putBellBlob = async (blob) => {
+        const db = await openBellDB();
+        return new Promise((resolve, reject) => {
+            const tx = db.transaction(BELL_STORE_NAME, 'readwrite');
+            const req = tx.objectStore(BELL_STORE_NAME).put(blob);
+            req.onsuccess = () => resolve(req.result);
+            req.onerror = () => reject(req.error);
+        });
+    };
+
+    const getBellBlob = async (key) => {
+        if (!key) return null;
+        const db = await openBellDB();
+        return new Promise((resolve, reject) => {
+            const tx = db.transaction(BELL_STORE_NAME, 'readonly');
+            const req = tx.objectStore(BELL_STORE_NAME).get(key);
+            req.onsuccess = () => resolve(req.result || null);
+            req.onerror = () => reject(req.error);
+        });
+    };
+
+    const deleteBellBlob = async (key) => {
+        if (!key) return;
+        const db = await openBellDB();
+        return new Promise((resolve, reject) => {
+            const tx = db.transaction(BELL_STORE_NAME, 'readwrite');
+            const req = tx.objectStore(BELL_STORE_NAME).delete(key);
+            req.onsuccess = () => resolve();
+            req.onerror = () => reject(req.error);
+        });
+    };
+
+    // 播放自訂檔案鈴聲 (從 IndexedDB 取 blob，用獨立 Audio 元素，避免與 audioCtx Proxy 衝突)
+    const playCustomBell = async (type) => {
+        const cfg = loadBellConfig();
+        const key = (type === 'start') ? cfg.startKey : cfg.endKey;
+        const blob = await getBellBlob(key);
+        if (!blob) return false;
         try {
-            const audio = new Audio(path);
+            const url = URL.createObjectURL(blob);
+            const audio = new Audio(url);
             audio.play().catch((err) => {
                 console.warn('[bell] 播放自訂鈴聲失敗, 回退內建合成:', err);
             });
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
             return true;
         } catch (err) {
             console.warn('[bell] 播放自訂鈴聲異常, 回退內建合成:', err);
@@ -383,20 +435,36 @@
     let quickBreakTargetMode = 'class'; // 'class' or 'break'
 
     // --- 自訂鈴聲 UI 控制 ---
-    const previewBell = (type) => {
-        const input = (type === 'start')
-            ? document.getElementById('bell-start-path')
-            : document.getElementById('bell-end-path');
-        // 直接用輸入框的值播放
-        playCustomBell(input ? input.value : '');
+    // 選取本地音檔 → 存入 IndexedDB → 存 key 到設定檔
+    const pickBellFile = async (type, file) => {
+        if (!file) return;
+        try {
+            const key = await putBellBlob(file);
+            const cfg = loadBellConfig();
+            if (type === 'start') cfg.startKey = key;
+            else cfg.endKey = key;
+            cfg.mode = 'file';
+            saveBellConfig(cfg);
+            refreshBellUI();
+            showGlobalToast('已儲存自訂鈴聲檔案', 'bell-ok', 'text-emerald-400');
+        } catch (e) {
+            console.error('[bell] 儲存失敗:', e);
+            showGlobalToast('儲存鈴聲檔案失敗', 'bell-err', 'text-rose-400');
+        }
     };
 
-    const clearBell = (type) => {
+    const previewBell = async (type) => {
+        await playCustomBell(type);
+    };
+
+    const clearBell = async (type) => {
         const cfg = loadBellConfig();
+        const key = (type === 'start') ? cfg.startKey : cfg.endKey;
+        if (key) await deleteBellBlob(key);
         if (type === 'start') {
-            cfg.startPath = defaultBellConfig.startPath;
+            cfg.startKey = null;
         } else {
-            cfg.endPath = defaultBellConfig.endPath;
+            cfg.endKey = null;
         }
         saveBellConfig(cfg);
         refreshBellUI();
@@ -413,10 +481,6 @@
         const cfg = loadBellConfig();
         const modeSelect = document.getElementById('bell-mode-select');
         if (modeSelect) modeSelect.value = cfg.mode;
-        const startInput = document.getElementById('bell-start-path');
-        const endInput = document.getElementById('bell-end-path');
-        if (startInput) startInput.value = cfg.startPath;
-        if (endInput) endInput.value = cfg.endPath;
         const hint = document.getElementById('bell-status-hint');
         if (hint) hint.textContent = (cfg.mode === 'file')
             ? '目前使用自訂檔案鈴聲。'
