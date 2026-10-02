@@ -3,3 +3,4 @@ realtime-worker/.wrangler/
 realtime-worker/.dev.vars
 realtime-worker/.env
 *.log
+.DS_Store
