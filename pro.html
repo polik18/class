@@ -1476,6 +1476,12 @@
                  <button id="irs-download-btn" onclick="exportIRSResults()" class="hidden items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all shadow-sm active:scale-95">
                     <i data-lucide="download" class="w-3.5 h-3.5"></i> 下載結果
                  </button>
+                 <button id="irs-json-download-btn" onclick="exportIRSJson()" class="hidden items-center gap-1.5 px-3 py-1.5 rounded-lg bg-cyan-700 hover:bg-cyan-600 text-white text-xs font-bold transition-all shadow-sm active:scale-95" title="下載不含 owner token 的本機完整備份">
+                    <i data-lucide="braces" class="w-3.5 h-3.5"></i> JSON
+                 </button>
+                 <button id="irs-clear-local-btn" onclick="clearIRSLocalRecords()" class="hidden items-center gap-1.5 px-3 py-1.5 rounded-lg bg-rose-900/70 hover:bg-rose-700 text-rose-100 text-xs font-bold transition-all shadow-sm active:scale-95" title="結束教室並清除這間教室的本機紀錄">
+                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> 清除
+                 </button>
                  <span id="irs-answer-status" class="text-sm font-medium text-slate-400">等待發佈題目...</span>
               </div>
            </div>

@@ -21,6 +21,17 @@
         }, 4000);
     };
 
+    window.showGlobalToast = (message, icon = 'info', colorClass = 'text-indigo-300') => {
+        const safeIcon = /^[a-z0-9-]+$/i.test(icon) ? icon : 'info';
+        const color = colorClass.includes('emerald')
+            ? 'emerald'
+            : colorClass.includes('amber') || colorClass.includes('rose')
+                ? 'amber'
+                : 'indigo';
+        showToast(`<i data-lucide="${safeIcon}" class="w-5 h-5 ${colorClass}"></i><span>${escapeHTML(String(message))}</span>`, color);
+        if (window.lucide) lucide.createIcons({ root: document.getElementById('global-toast-content') });
+    };
+
     // ----------------------------------------------------------------------
     // 系統初始化與通用函數
     lucide.createIcons();
@@ -237,4 +248,3 @@
         }
       });
     };
-

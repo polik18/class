@@ -148,16 +148,31 @@
             return { room: room || null, students, questions, answers };
         },
 
+        async getRecoverableRoom(now = Date.now()) {
+            const db = await openDatabase();
+            const transaction = db.transaction('rooms', 'readonly');
+            const done = transactionDone(transaction);
+            const rooms = await requestResult(transaction.objectStore('rooms').getAll());
+            await done;
+            return rooms
+                .filter(room => room.status === 'active' && Number(room.expiresAt) > now && room.ownerToken)
+                .sort((left, right) => Number(right.updatedAt || 0) - Number(left.updatedAt || 0))[0] || null;
+        },
+
         async deleteRoom(roomId) {
             const db = await openDatabase();
-            const transaction = db.transaction(['rooms', 'students', 'questions', 'answers', 'messages'], 'readwrite');
-            transaction.objectStore('rooms').delete(roomId);
+            const roomTransaction = db.transaction('rooms', 'readwrite');
+            roomTransaction.objectStore('rooms').delete(roomId);
+            await transactionDone(roomTransaction);
             for (const storeName of ['students', 'questions', 'answers', 'messages']) {
-                const store = transaction.objectStore(storeName);
-                const keys = await requestResult(store.index('roomId').getAllKeys(IDBKeyRange.only(roomId)));
-                keys.forEach(key => store.delete(key));
+                const readTransaction = db.transaction(storeName, 'readonly');
+                const readDone = transactionDone(readTransaction);
+                const keys = await requestResult(readTransaction.objectStore(storeName).index('roomId').getAllKeys(IDBKeyRange.only(roomId)));
+                await readDone;
+                const deleteTransaction = db.transaction(storeName, 'readwrite');
+                keys.forEach(key => deleteTransaction.objectStore(storeName).delete(key));
+                await transactionDone(deleteTransaction);
             }
-            await transactionDone(transaction);
         }
     };
 

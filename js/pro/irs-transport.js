@@ -107,6 +107,17 @@
             return `${role}_${IrsProtocol.randomId('client').replace(/[^A-Za-z0-9_-]/g, '').slice(0, 48)}`;
         }
 
+        static studentClientId(roomId) {
+            const storageKey = `class_irs_client_${roomId}`;
+            try {
+                const existing = localStorage.getItem(storageKey);
+                if (/^student_[A-Za-z0-9_-]{8,56}$/.test(existing || '')) return existing;
+            } catch {}
+            const clientId = HybridRelayTransport.clientId('student');
+            try { localStorage.setItem(storageKey, clientId); } catch {}
+            return clientId;
+        }
+
         async createTeacher() {
             this.role = 'teacher';
             this.clientId = HybridRelayTransport.clientId('teacher');
@@ -134,11 +145,25 @@
 
         async joinStudent(roomId) {
             this.role = 'student';
-            this.clientId = HybridRelayTransport.clientId('student');
             this.roomId = String(roomId || '').trim().toUpperCase();
+            this.clientId = HybridRelayTransport.studentClientId(this.roomId);
             await this.ensureJoinTicket(true);
             await this.openSocket(this.websocketUrl(this.roomId), ['classroom.v1'], 'negotiating');
             return { roomId: this.roomId, clientId: this.clientId };
+        }
+
+        async resumeTeacher(room) {
+            this.role = 'teacher';
+            this.clientId = HybridRelayTransport.clientId('teacher');
+            this.roomId = String(room?.roomId || '').trim().toUpperCase();
+            this.ownerToken = room?.ownerToken || null;
+            if (!this.roomId || !this.ownerToken) throw new Error('invalid_recovery_record');
+            const response = await fetch(`${this.apiUrl}/api/rooms/${this.roomId}`, { cache: 'no-store' });
+            const status = await response.json().catch(() => ({}));
+            if (!response.ok || !status.active) throw new Error(status.error || `room_resume_${response.status}`);
+            this.directLimit = Number(status.directLimit || room.directLimit || 0);
+            await this.openSocket(this.websocketUrl(this.roomId), ['classroom.v1', `owner.${this.ownerToken}`], 'control');
+            return { ...room, ...status };
         }
 
         websocketUrl(roomId) {

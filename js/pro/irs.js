@@ -131,7 +131,9 @@
       history: [], // Array of { questionNo, qType, qTypeName, timestamp, records: [{name, gender, answer, status}] }
       studentName: '',
       transport: null,
-      transportMode: 'legacy'
+      transportMode: 'legacy',
+      roomRecord: null,
+      isInitializing: false
     };
 
     // 下載作答結果 CSV (Fix 4: now exports ALL historical questions)
@@ -171,6 +173,48 @@
         showGlobalToast(`已下載 ${irsState.history.length} 道題目的完整紀錄！`, "check-circle", "text-emerald-400");
     };
 
+    window.exportIRSJson = async () => {
+      if (!window.IrsPersistence || !irsState.roomId) return;
+      try {
+        const snapshot = await IrsPersistence.getRoomSnapshot(irsState.roomId);
+        const safeRoom = snapshot.room ? { ...snapshot.room } : null;
+        if (safeRoom) delete safeRoom.ownerToken;
+        const payload = {
+          format: 'class-irs-backup-v1',
+          exportedAt: new Date().toISOString(),
+          room: safeRoom,
+          students: snapshot.students,
+          questions: snapshot.questions,
+          answers: snapshot.answers
+        };
+        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `智慧助手_IRS備份_${irsState.roomId}_${new Date().toISOString().slice(0, 10)}.json`;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(url);
+        showGlobalToast('已下載不含教師密鑰的 JSON 備份', 'braces', 'text-emerald-400');
+      } catch (error) {
+        warnPersistenceUnavailable(error);
+      }
+    };
+
+    window.clearIRSLocalRecords = async () => {
+      if (!window.IrsPersistence || !irsState.roomId) return;
+      const roomId = irsState.roomId;
+      if (!confirm(`確定要結束教室 ${roomId}，並刪除這間教室在本機保存的名單、題目與答案嗎？\n\n此操作無法復原，建議先下載 CSV 或 JSON。`)) return;
+      try {
+        irsState.transport?.close();
+        await IrsPersistence.deleteRoom(roomId);
+        window.location.reload();
+      } catch (error) {
+        warnPersistenceUnavailable(error);
+      }
+    };
+
     const irsEls = {
       roomId: document.getElementById('irs-room-id'),
       teacherView: document.getElementById('irs-teacher-view'),
@@ -203,6 +247,9 @@
 
     // 共用：清理 IRS 狀態
     const cleanupIRS = () => {
+      if (irsState.role === 'teacher' && irsState.transportMode === 'hybrid-relay' && irsState.roomRecord && window.IrsPersistence) {
+        IrsPersistence.saveRoom({ ...irsState.roomRecord, status: 'closed', closedAt: Date.now() }).catch(warnPersistenceUnavailable);
+      }
       if (irsState.transport) {
         irsState.transport.close();
         irsState.transport = null;
@@ -216,6 +263,8 @@
       irsState.connections = {};
       irsState.hostConn = null;
       irsState.transportMode = 'legacy';
+      irsState.roomRecord = null;
+      irsState.isInitializing = false;
       irsState.studentsInfo = {};
       irsState.currentQ = null;
       irsState.currentQuestionId = null;
@@ -306,25 +355,55 @@
       irsState.transport = transport;
       irsState.transportMode = 'hybrid-relay';
       try {
-        const room = await transport.createTeacher();
+        let room = null;
+        let snapshot = null;
+        let recovered = false;
+        let recoveryRecord = null;
+        if (window.IrsPersistence) {
+          try {
+            recoveryRecord = await IrsPersistence.getRecoverableRoom();
+          } catch (error) {
+            warnPersistenceUnavailable(error);
+          }
+        }
+        if (recoveryRecord && confirm(`偵測到尚未到期的教室 ${recoveryRecord.roomId}，是否恢復先前的問答與答案？`)) {
+          try {
+            room = await transport.resumeTeacher(recoveryRecord);
+            snapshot = await IrsPersistence.getRoomSnapshot(recoveryRecord.roomId);
+            recovered = true;
+          } catch (error) {
+            console.warn('IRS room recovery failed, creating a new room', error);
+            await IrsPersistence.saveRoom({ ...recoveryRecord, status: 'expired', recoveryFailedAt: Date.now() }).catch(warnPersistenceUnavailable);
+            showGlobalToast('原教室已到期或無法重連，將建立新教室', 'refresh-cw', 'text-amber-400');
+          }
+        } else if (recoveryRecord) {
+          await IrsPersistence.saveRoom({ ...recoveryRecord, status: 'closed', closedAt: Date.now() }).catch(warnPersistenceUnavailable);
+        }
+        if (!room) room = await transport.createTeacher();
         irsState.roomId = room.roomId;
         irsState.role = 'teacher';
+        irsState.roomRecord = {
+          ...(recoveryRecord || {}),
+          roomId: room.roomId,
+          ownerToken: room.ownerToken || recoveryRecord?.ownerToken,
+          expiresAt: room.expiresAt,
+          maxStudents: room.maxStudents,
+          directLimit: room.directLimit,
+          status: 'active',
+          createdAt: recoveryRecord?.createdAt || Date.now()
+        };
         irsEls.roomId.textContent = room.roomId;
         irsEls.roomIdMini.textContent = room.roomId;
+        document.getElementById('irs-json-download-btn')?.classList.replace('hidden', 'flex');
+        document.getElementById('irs-clear-local-btn')?.classList.replace('hidden', 'flex');
+        if (snapshot) restoreHybridTeacherState(snapshot);
         updateTeacherUI();
         setPeerStatus('connected', '混合備援已連線');
         if (window.IrsPersistence) {
-          IrsPersistence.saveRoom({
-            roomId: room.roomId,
-            ownerToken: room.ownerToken,
-            expiresAt: room.expiresAt,
-            maxStudents: room.maxStudents,
-            directLimit: room.directLimit,
-            status: 'active',
-            createdAt: Date.now()
-          }).catch(warnPersistenceUnavailable);
+          IrsPersistence.saveRoom(irsState.roomRecord).catch(warnPersistenceUnavailable);
           IrsPersistence.requestPersistentStorage();
         }
+        if (recovered) showGlobalToast('已恢復先前教室與本機問答紀錄', 'database-backup', 'text-emerald-400');
       } catch (error) {
         console.error('Hybrid IRS room creation failed', error);
         transport.close();
@@ -391,13 +470,21 @@
         const statusLed = document.getElementById('peer-status-led');
         if (statusLed) { statusLed.className = 'w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse'; statusLed.title = '連線錯誤'; }
         alert("網路連線發生錯誤，請稍後再試！");
-        leaveIRS();
+        if (irsState.peer) {
+          try { irsState.peer.destroy(); } catch {}
+          irsState.peer = null;
+        }
+        irsState.roomId = '';
+        irsEls.roomId.textContent = '連線失敗';
+        irsEls.roomIdMini.textContent = '連線失敗';
       });
     };
 
     window.initIRSTeacher = () => {
       if (window.IrsHybridTransport?.isEnabled()) {
-        initIRSHybridTeacher();
+        if (irsState.isInitializing) return;
+        irsState.isInitializing = true;
+        initIRSHybridTeacher().finally(() => { irsState.isInitializing = false; });
         return;
       }
       initIRSLegacyTeacher();
@@ -540,7 +627,13 @@
     const handleTeacherReceive = (peerId, data, conn) => {
       if (data.type === 'join') {
         irsState.connections[peerId] = conn;
-        irsState.studentsInfo[peerId] = { name: data.name, gender: data.gender, hasAnswered: false, answer: null };
+        const previous = irsState.studentsInfo[peerId];
+        irsState.studentsInfo[peerId] = {
+          name: data.name,
+          gender: data.gender,
+          hasAnswered: Boolean(irsState.isQuestionActive && previous?.hasAnswered),
+          answer: irsState.isQuestionActive ? previous?.answer || null : null
+        };
         updateTeacherUI();
         
         // --- 新增：浮動通知 ---
@@ -703,6 +796,58 @@
         accepted,
         persisted
       });
+    };
+
+    const restoreHybridTeacherState = snapshot => {
+      const students = {};
+      (snapshot.students || []).forEach(student => {
+        students[student.clientId] = {
+          name: student.name,
+          gender: student.gender || '',
+          hasAnswered: false,
+          answer: null
+        };
+      });
+      const questions = [...(snapshot.questions || [])].sort((left, right) => Number(left.startedAt || 0) - Number(right.startedAt || 0));
+      const activeQuestion = [...questions].reverse().find(question => question.status === 'active') || null;
+      const answers = snapshot.answers || [];
+      if (activeQuestion) {
+        irsState.currentQ = activeQuestion.qType;
+        irsState.currentQuestionId = activeQuestion.questionId;
+        irsState.currentQuestionStartedAt = activeQuestion.startedAt || null;
+        irsState.isQuestionActive = true;
+        answers.filter(answer => answer.questionId === activeQuestion.questionId).forEach(answer => {
+          if (!students[answer.clientId]) return;
+          students[answer.clientId].hasAnswered = true;
+          students[answer.clientId].answer = answer.value;
+        });
+        irsState.buzzerList = activeQuestion.qType === 'BUZZER'
+          ? answers
+              .filter(answer => answer.questionId === activeQuestion.questionId)
+              .sort((left, right) => Number(left.receivedAt || 0) - Number(right.receivedAt || 0))
+              .map(answer => answer.clientId)
+          : [];
+        irsEls.qLauncher?.classList.add('hidden');
+        irsEls.qLauncher?.classList.remove('flex');
+        irsEls.textLauncherCard?.classList.add('hidden');
+        irsEls.qActive?.classList.remove('hidden');
+        irsEls.qActive?.classList.add('flex');
+        const typeNames = { ABCD: '單選 (A, B, C, D)', OX: '是非 (O, X)', VOTE: '投票表決', BUZZER: '搶答模式', TEXT: '開放式問答 (文字輸入)' };
+        if (irsEls.activeQType) irsEls.activeQType.textContent = typeNames[activeQuestion.qType] || activeQuestion.qType;
+      }
+      const closedQuestions = questions.filter(question => question.status === 'closed');
+      const typeNames = { ABCD: '單選(ABCD)', OX: '是非(OX)', VOTE: '投票', BUZZER: '搶答', TEXT: '開放問答' };
+      irsState.history = closedQuestions.map((question, index) => ({
+        questionNo: index + 1,
+        qType: question.qType,
+        qTypeName: typeNames[question.qType] || question.qType,
+        timestamp: new Date(question.endedAt || question.startedAt || Date.now()).toLocaleTimeString('zh-TW', { hour12: false }),
+        records: (snapshot.students || []).map(student => {
+          const answer = answers.find(item => item.questionId === question.questionId && item.clientId === student.clientId);
+          return { name: student.name, gender: student.gender || '', answer: answer?.value || '', status: answer ? '已答' : '未答' };
+        })
+      }));
+      irsState.studentsInfo = students;
     };
 
     const updateTeacherUI = () => {
@@ -876,6 +1021,14 @@
         }
     };
 
+    const broadcastIRSMessage = data => {
+      if (irsState.transportMode === 'hybrid-relay' && irsState.transport?.isOpen()) {
+        irsState.transport.broadcast(data);
+        return;
+      }
+      Object.values(irsState.connections).forEach(conn => conn.send(data));
+    };
+
     window.sendIRSQuestion = async (type) => {
       const questionId = IrsProtocol.randomId('question');
       const startedAt = Date.now();
@@ -903,9 +1056,7 @@
             warnPersistenceUnavailable(error);
          }
       }
-      Object.values(irsState.connections).forEach(conn => {
-         conn.send({ type: 'question', qType: type, questionId });
-      });
+      broadcastIRSMessage({ type: 'question', qType: type, questionId });
       
       // 更新老師控制面板 UI (切換至進行中狀態)
       if (irsEls.qLauncher) {
@@ -957,9 +1108,7 @@
       }
 
       irsState.isQuestionActive = false;
-      Object.values(irsState.connections).forEach(conn => {
-         conn.send({ type: 'stop', questionId: irsState.currentQuestionId });
-      });
+      broadcastIRSMessage({ type: 'stop', questionId: irsState.currentQuestionId });
       if (irsState.transportMode === 'hybrid-relay' && window.IrsPersistence && irsState.currentQuestionId) {
          IrsPersistence.saveQuestion({
            roomId: irsState.roomId,
