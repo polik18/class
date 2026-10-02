@@ -5,6 +5,11 @@ import {
   validClientId,
   validateEnvelope
 } from './protocol.js';
+import {
+  issueJoinTicket,
+  verifyJoinTicket,
+  verifyTurnstileToken
+} from './security.js';
 
 const JSON_HEADERS = {
   'content-type': 'application/json; charset=utf-8',
@@ -307,19 +312,50 @@ async function routeRequest(request, env) {
     return jsonResponse({ ok: true, service: 'class-realtime-api', protocolVersion: 1 }, 200, request, env);
   }
 
+  if (url.pathname === '/api/config' && request.method === 'GET') {
+    if (!isAllowedOrigin(request, env)) return jsonResponse({ error: 'origin_not_allowed' }, 403, request, env);
+    const local = isLocalDevelopmentRequest(request);
+    const turnstileRequired = !local && env.REQUIRE_TURNSTILE === 'true';
+    return jsonResponse({
+      turnstileRequired,
+      turnstileSiteKey: turnstileRequired ? String(env.TURNSTILE_SITE_KEY || '') : null,
+      joinTicketRequired: true
+    }, 200, request, env);
+  }
+
   if (url.pathname === '/api/rooms' && request.method === 'POST') {
     if (!isAllowedOrigin(request, env)) return jsonResponse({ error: 'origin_not_allowed' }, 403, request, env);
+    if (env.ALLOW_NEW_ROOMS !== 'true') return jsonResponse({ error: 'new_rooms_paused' }, 503, request, env);
+    const authorized = await authorizeRoomCreation(request, env);
+    if (!authorized.ok) return jsonResponse({ error: authorized.error }, authorized.status, request, env);
     return createRoom(request, env);
   }
 
-  const match = url.pathname.match(/^\/api\/rooms\/([A-Za-z0-9-]+)(?:\/(connect))?$/);
+  const match = url.pathname.match(/^\/api\/rooms\/([A-Za-z0-9-]+)(?:\/(connect|ticket))?$/);
   if (match) {
     const roomId = normalizeRoomId(match[1]);
     if (!roomId) return jsonResponse({ error: 'invalid_room_id' }, 400, request, env);
     const stub = env.CLASSROOMS.getByName(roomId);
     if (match[2] === 'connect' && request.method === 'GET') {
       if (!isAllowedOrigin(request, env)) return new Response('Origin not allowed', { status: 403 });
+      const role = url.searchParams.get('role');
+      const clientId = url.searchParams.get('clientId');
+      if (role === 'student') {
+        const secret = joinTicketSecret(request, env);
+        if (!secret) return new Response('Join ticket service unavailable', { status: 503 });
+        const validTicket = validClientId(clientId) && await verifyJoinTicket(
+          secret,
+          url.searchParams.get('ticket'),
+          roomId,
+          clientId
+        );
+        if (!validTicket) return new Response('Invalid or expired join ticket', { status: 403 });
+      }
       return stub.fetch(rewriteInternalUrl(request, '/internal/connect'));
+    }
+    if (match[2] === 'ticket' && request.method === 'POST') {
+      if (!isAllowedOrigin(request, env)) return jsonResponse({ error: 'origin_not_allowed' }, 403, request, env);
+      return createJoinTicket(request, env, stub, roomId);
     }
     if (!match[2] && request.method === 'GET') {
       const response = await stub.fetch(rewriteInternalUrl(request, '/internal/status'));
@@ -328,6 +364,50 @@ async function routeRequest(request, env) {
   }
 
   return jsonResponse({ error: 'not_found' }, 404, request, env);
+}
+
+async function authorizeRoomCreation(request, env) {
+  if (isLocalDevelopmentRequest(request)) return { ok: true };
+  if (env.REQUIRE_TURNSTILE !== 'true') return { ok: true };
+  if (!env.TURNSTILE_SITE_KEY || !env.TURNSTILE_SECRET_KEY) {
+    return { ok: false, error: 'turnstile_not_configured', status: 503 };
+  }
+  const input = await safeJson(request);
+  const result = await verifyTurnstileToken({
+    token: input?.turnstileToken,
+    secret: env.TURNSTILE_SECRET_KEY,
+    remoteIp: request.headers.get('cf-connecting-ip'),
+    expectedAction: 'create-room'
+  });
+  return result.ok
+    ? { ok: true }
+    : { ok: false, error: result.error, status: result.error === 'turnstile_unavailable' ? 503 : 403 };
+}
+
+async function createJoinTicket(request, env, stub, roomId) {
+  const secret = joinTicketSecret(request, env);
+  if (!secret) return jsonResponse({ error: 'join_ticket_not_configured' }, 503, request, env);
+  const input = await safeJson(request);
+  if (!validClientId(input?.clientId)) return jsonResponse({ error: 'invalid_client_id' }, 400, request, env);
+  const roomResponse = await stub.fetch(new Request(new URL('/internal/status', request.url)));
+  if (!roomResponse.ok) return jsonResponse({ error: 'room_not_found' }, 404, request, env);
+  const ttlSeconds = clampInt(env.JOIN_TICKET_TTL_SECONDS, 30, 300, 90);
+  const ticket = await issueJoinTicket(secret, roomId, input.clientId, Date.now(), ttlSeconds * 1000);
+  return jsonResponse(ticket, 201, request, env);
+}
+
+function joinTicketSecret(request, env) {
+  const configured = String(env.JOIN_TOKEN_SECRET || '');
+  if (configured.length >= 32) return configured;
+  if (isLocalDevelopmentRequest(request)) return 'class-local-development-ticket-secret';
+  return null;
+}
+
+function isLocalDevelopmentRequest(request) {
+  const url = new URL(request.url);
+  if (!['localhost', '127.0.0.1'].includes(url.hostname)) return false;
+  const origin = request.headers.get('origin');
+  return origin === 'http://localhost:4177' || origin === 'http://127.0.0.1:4177';
 }
 
 async function createRoom(request, env) {

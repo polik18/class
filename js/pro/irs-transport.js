@@ -10,6 +10,59 @@
         { urls: 'stun:stun.cloudflare.com:3478' },
         { urls: 'stun:stun.l.google.com:19302' }
     ];
+    let turnstileScriptPromise = null;
+
+    function loadTurnstileScript() {
+        if (window.turnstile) return Promise.resolve(window.turnstile);
+        if (turnstileScriptPromise) return turnstileScriptPromise;
+        turnstileScriptPromise = new Promise((resolve, reject) => {
+            const script = document.createElement('script');
+            script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
+            script.async = true;
+            script.defer = true;
+            script.addEventListener('load', () => resolve(window.turnstile), { once: true });
+            script.addEventListener('error', () => reject(new Error('turnstile_script_failed')), { once: true });
+            document.head.appendChild(script);
+        });
+        return turnstileScriptPromise;
+    }
+
+    async function obtainTurnstileToken(siteKey) {
+        const turnstile = await loadTurnstileScript();
+        if (!turnstile || !siteKey) throw new Error('turnstile_not_configured');
+        const overlay = document.createElement('div');
+        overlay.className = 'fixed inset-0 z-[200] bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4';
+        overlay.innerHTML = '<div class="w-full max-w-sm rounded-2xl border border-cyan-500/30 bg-slate-900 p-6 text-center shadow-2xl"><div class="text-lg font-black text-white mb-2">正在進行安全驗證</div><p class="text-sm text-slate-400 mb-4">驗證完成後會立即建立教室</p><div data-turnstile-container class="min-h-[65px] flex justify-center"></div></div>';
+        document.body.appendChild(overlay);
+        const container = overlay.querySelector('[data-turnstile-container]');
+
+        return new Promise((resolve, reject) => {
+            let widgetId = null;
+            let settled = false;
+            const finish = (callback, value) => {
+                if (settled) return;
+                settled = true;
+                window.clearTimeout(timeout);
+                try { if (widgetId !== null) turnstile.remove(widgetId); } catch {}
+                overlay.remove();
+                callback(value);
+            };
+            const timeout = window.setTimeout(() => finish(reject, new Error('turnstile_timeout')), 60_000);
+            widgetId = turnstile.render(container, {
+                sitekey: siteKey,
+                action: 'create-room',
+                appearance: 'interaction-only',
+                execution: 'execute',
+                theme: 'dark',
+                language: 'zh-TW',
+                callback: token => finish(resolve, token),
+                'error-callback': () => finish(reject, new Error('turnstile_failed')),
+                'expired-callback': () => finish(reject, new Error('turnstile_expired')),
+                'timeout-callback': () => finish(reject, new Error('turnstile_timeout'))
+            });
+            turnstile.execute(widgetId);
+        });
+    }
 
     class HybridRelayTransport {
         constructor(options = {}) {
@@ -19,6 +72,8 @@
             this.clientId = null;
             this.roomId = null;
             this.ownerToken = null;
+            this.joinTicket = null;
+            this.joinTicketExpiresAt = 0;
             this.directLimit = 0;
             this.sequence = 0;
             this.connections = new Map();
@@ -55,10 +110,17 @@
         async createTeacher() {
             this.role = 'teacher';
             this.clientId = HybridRelayTransport.clientId('teacher');
+            const configResponse = await fetch(`${this.apiUrl}/api/config`, { cache: 'no-store' });
+            const config = await configResponse.json().catch(() => ({}));
+            if (!configResponse.ok) throw new Error(config.error || `config_${configResponse.status}`);
+            let turnstileToken = null;
+            if (config.turnstileRequired) {
+                turnstileToken = await obtainTurnstileToken(config.turnstileSiteKey);
+            }
             const response = await fetch(`${this.apiUrl}/api/rooms`, {
                 method: 'POST',
                 headers: { 'content-type': 'application/json' },
-                body: '{}',
+                body: JSON.stringify({ turnstileToken }),
                 cache: 'no-store'
             });
             const room = await response.json().catch(() => ({}));
@@ -74,6 +136,7 @@
             this.role = 'student';
             this.clientId = HybridRelayTransport.clientId('student');
             this.roomId = String(roomId || '').trim().toUpperCase();
+            await this.ensureJoinTicket(true);
             await this.openSocket(this.websocketUrl(this.roomId), ['classroom.v1'], 'negotiating');
             return { roomId: this.roomId, clientId: this.clientId };
         }
@@ -91,7 +154,10 @@
                 const url = new URL(baseUrl);
                 url.searchParams.set('role', this.role);
                 url.searchParams.set('clientId', this.clientId);
-                if (this.role === 'student') url.searchParams.set('mode', mode);
+                if (this.role === 'student') {
+                    url.searchParams.set('mode', mode);
+                    if (this.joinTicket) url.searchParams.set('ticket', this.joinTicket);
+                }
                 const socket = new WebSocket(url, protocols);
                 this.socket = socket;
                 this.intentionalControlClose = false;
@@ -322,6 +388,7 @@
                 if (this.isOpen()) {
                     this.sendControl('control.direct-failed', { disconnectedAt: Date.now() });
                 } else {
+                    await this.ensureJoinTicket();
                     await this.openSocket(this.websocketUrl(this.roomId), ['classroom.v1'], 'relay');
                 }
                 this.onStateChange({ state: 'relay', role: 'student' });
@@ -332,6 +399,21 @@
             } finally {
                 this.activatingRelay = false;
             }
+        }
+
+        async ensureJoinTicket(force = false) {
+            if (this.role !== 'student') return;
+            if (!force && this.joinTicket && this.joinTicketExpiresAt > Date.now() + 10_000) return;
+            const response = await fetch(`${this.apiUrl}/api/rooms/${this.roomId}/ticket`, {
+                method: 'POST',
+                headers: { 'content-type': 'application/json' },
+                body: JSON.stringify({ clientId: this.clientId }),
+                cache: 'no-store'
+            });
+            const result = await response.json().catch(() => ({}));
+            if (!response.ok || !result.ticket) throw new Error(result.error || `join_ticket_${response.status}`);
+            this.joinTicket = result.ticket;
+            this.joinTicketExpiresAt = Number(result.expiresAt || 0);
         }
 
         handleDirectMessage(rawMessage, peerId) {
@@ -535,6 +617,8 @@
             this.pendingMessages = [];
             this.pendingAcks.forEach(pending => window.clearTimeout(pending.timer));
             this.pendingAcks.clear();
+            this.joinTicket = null;
+            this.joinTicketExpiresAt = 0;
         }
     }
 

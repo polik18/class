@@ -1,10 +1,18 @@
 # IRS 即時問答混合連線改善計畫
 
-- 文件狀態：規畫草案 v1
+- 文件狀態：執行中 v2
 - 日期：2026-10-02
 - 適用頁面：`pro.html` 的 IRS 即時問答
 - 本計畫範圍：連線、容量、可靠性、本機保存、公開服務防護
 - 不在本輪直接實作：既有 UI 大改、D1 保存學生答案、影音經雲端中繼
+
+## 0. 目前實作進度（2026-10-02）
+
+- 已完成 P01～P03 核心：共同協定、原生 DataChannel、Durable Object 訊號／Relay、P2P 成功後關閉學生 WebSocket、直連失敗自動備援。
+- 已完成 P04 的 question ID、答案 ACK／同 message ID 重送、IndexedDB 原子去重與題目／學生／答案保存；尚未完成教師重新整理後接回原房間、JSON 匯出與本機清除 UI。
+- 已完成 P05 的 owner token、Origin、8 KiB 白名單、連線速率、60 人上限、Turnstile 建房驗證程式、90 秒 HMAC join ticket 與緊急停止新房開關；尚未完成匿名用量警戒與正式壓測。
+- 已用瀏覽器自動測試驗證 DIRECT、強制 RELAY、第一次 ACK 遺失重送去重、IndexedDB 實際落地，以及無 ticket WebSocket 被拒絕。
+- 混合模式目前仍由 `?transport=hybrid` 隱藏開關啟用；60 人驗收前維持 legacy 預設。
 
 ## 1. 決策摘要
 

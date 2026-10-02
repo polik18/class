@@ -1262,7 +1262,7 @@
           } else if (data.qType === 'TEXT') {
              optsHTML = `
                <div class="col-span-2 flex flex-col gap-4 w-full h-full justify-center relative z-10">
-                   <textarea id="irs-text-input" rows="4" class="w-full bg-slate-900 border border-fuchsia-500/30 rounded-2xl p-4 text-xl text-white focus:outline-none focus:border-fuchsia-500 transition-colors shadow-inner resize-none placeholder-slate-500" placeholder="請自由輸入你的答案..."></textarea>
+                   <textarea id="irs-text-input" rows="4" maxlength="200" class="w-full bg-slate-900 border border-fuchsia-500/30 rounded-2xl p-4 text-xl text-white focus:outline-none focus:border-fuchsia-500 transition-colors shadow-inner resize-none placeholder-slate-500" placeholder="請自由輸入你的答案（最多 200 字）..."></textarea>
                    <button onclick="submitIRSTextAnswer()" class="w-full py-5 rounded-2xl bg-gradient-to-br from-fuchsia-600 to-purple-600 hover:opacity-90 active:scale-95 text-white font-black text-2xl shadow-[0_0_30px_rgba(192,38,211,0.3)] transition-all border border-white/20 flex items-center justify-center gap-2">
                       <i data-lucide="send" class="w-6 h-6"></i> 送出答案
                    </button>
@@ -1307,6 +1307,11 @@
     };
 
     window.submitIRSAnswer = (val) => {
+       val = String(val);
+       if (val.length > 200) {
+          alert('答案最多 200 字，請縮短後再送出。');
+          return;
+       }
        if (irsState.hostConn) {
           irsState.hostConn.send({ type: 'answer', val: val, questionId: irsState.currentQuestionId });
           
