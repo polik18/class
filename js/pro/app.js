@@ -36,7 +36,7 @@
     // 系統初始化與通用函數
     lucide.createIcons();
 
-    // 初始化時顯示 Pro 版導覽視窗
+    // 初始化時顯示完整功能導覽視窗；保留既有儲存鍵以延續使用者偏好。
     window.addEventListener('load', () => {
         const welcomeModal = document.getElementById('welcome-guide-modal');
         if (welcomeModal && !localStorage.getItem('classroom_assistant_pro_seen')) {
