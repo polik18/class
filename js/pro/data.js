@@ -273,6 +273,10 @@
 
     window.sendToAllStudents = (data, excludePeerId = null) => {
         if (typeof irsState === 'undefined' || !irsState.connections) return;
+        if (irsState.transportMode === 'hybrid-relay' && irsState.transport?.isOpen()) {
+            irsState.transport.broadcast(data, excludePeerId);
+            return;
+        }
         Object.entries(irsState.connections).forEach(([peerId, conn]) => {
            if (peerId !== excludePeerId && conn && conn.open) {
                conn.send(data);
@@ -388,7 +392,9 @@
         const qrContainer = document.getElementById('global-qrcode');
         if (qrContainer && typeof QRCode !== 'undefined') {
             qrContainer.innerHTML = '';
-            const joinUrl = window.location.origin + window.location.pathname + '?room=' + irsState.roomId;
+            const joinUrl = typeof window.buildIRSJoinUrl === 'function'
+                ? window.buildIRSJoinUrl(irsState.roomId)
+                : window.location.origin + window.location.pathname + '?room=' + irsState.roomId;
             new QRCode(qrContainer, {
                 text: joinUrl,
                 width: 96,
@@ -467,4 +473,3 @@
             showGlobalToast("已傳送觀看畫面請求給該學生", "monitor-up", "text-cyan-400");
         }
     };
-

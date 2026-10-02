@@ -1,0 +1,17 @@
+name = "class-realtime-api"
+main = "src/index.js"
+compatibility_date = "2026-09-01"
+
+[vars]
+ALLOWED_ORIGINS = "http://localhost:4177,https://polik18.github.io"
+ROOM_TTL_SECONDS = "14400"
+MAX_STUDENTS_PER_ROOM = "60"
+DIRECT_LIMIT_PER_ROOM = "30"
+
+[[durable_objects.bindings]]
+name = "CLASSROOMS"
+class_name = "Classroom"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["Classroom"]

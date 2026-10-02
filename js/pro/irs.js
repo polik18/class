@@ -20,6 +20,14 @@
 
     let qrCodeInstance = null;
 
+    window.buildIRSJoinUrl = (roomId) => {
+        const joinUrl = new URL(window.location.href.split('?')[0]);
+        joinUrl.searchParams.set('room', roomId);
+        if (window.IrsHybridTransport?.isEnabled()) joinUrl.searchParams.set('transport', 'hybrid');
+        if (window._irsNetworkMode === 'lan') joinUrl.searchParams.set('lan', '1');
+        return joinUrl.toString();
+    };
+
     // 全域方法，用於產生並顯示 QR Code
     window.showIRSQR = () => {
         if (!irsState.roomId) return;
@@ -28,9 +36,7 @@
         document.getElementById('qr-modal-room-id').textContent = irsState.roomId;
 
         // 產生帶有 room 參數的網址（校內模式加上 &lan=1）
-        const baseUrl = window.location.href.split('?')[0];
-        const lanSuffix = window._irsNetworkMode === 'lan' ? '&lan=1' : '';
-        const joinUrl = `${baseUrl}?room=${irsState.roomId}${lanSuffix}`;
+        const joinUrl = buildIRSJoinUrl(irsState.roomId);
 
         if (!qrCodeInstance) {
             qrCodeInstance = new QRCode(container, {
@@ -121,7 +127,9 @@
       isQuestionActive: false,
       buzzerList: [], // Track buzzer order
       history: [], // Array of { questionNo, qType, qTypeName, timestamp, records: [{name, gender, answer, status}] }
-      studentName: ''
+      studentName: '',
+      transport: null,
+      transportMode: 'legacy'
     };
 
     // 下載作答結果 CSV (Fix 4: now exports ALL historical questions)
@@ -193,6 +201,10 @@
 
     // 共用：清理 IRS 狀態
     const cleanupIRS = () => {
+      if (irsState.transport) {
+        irsState.transport.close();
+        irsState.transport = null;
+      }
       if (irsState.peer) {
         irsState.peer.destroy();
         irsState.peer = null;
@@ -201,6 +213,7 @@
       irsState.roomId = '';
       irsState.connections = {};
       irsState.hostConn = null;
+      irsState.transportMode = 'legacy';
       irsState.studentsInfo = {};
       irsState.currentQ = null;
       irsState.buzzerList = [];
@@ -246,13 +259,68 @@
     // 生成好記的隨機代碼
     const generateRoomId = () => Math.random().toString(36).substring(2, 6).toUpperCase() + '-' + Math.random().toString(36).substring(2, 6).toUpperCase();
 
-    window.initIRSTeacher = () => {
+    const setPeerStatus = (state, title) => {
+      const statusLed = document.getElementById('peer-status-led');
+      if (!statusLed) return;
+      const styles = {
+        connected: 'w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.8)]',
+        connecting: 'w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse',
+        error: 'w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse'
+      };
+      statusLed.className = styles[state] || styles.connecting;
+      statusLed.title = title;
+    };
+
+    const prepareTeacherView = () => {
       if (audioCtx.state === 'suspended') audioCtx.resume();
       irsEls.studentLogin.classList.add('hidden');
       irsEls.studentLogin.classList.remove('flex');
       irsEls.teacherView.classList.replace('hidden', 'flex');
       irsEls.roomId.textContent = "建立中...";
       irsEls.roomIdMini.textContent = "建立中...";
+      setPeerStatus('connecting', '建立教室中...');
+    };
+
+    const initIRSHybridTeacher = async () => {
+      prepareTeacherView();
+      const transport = new IrsHybridTransport({
+        onData: ({ senderId, data, connection }) => handleTeacherReceive(senderId, data, connection),
+        onServerEvent: message => {
+          if (message.type === 'server.student-offline' && message.payload?.clientId) {
+            const clientId = message.payload.clientId;
+            delete irsState.connections[clientId];
+            delete irsState.studentsInfo[clientId];
+            updateTeacherUI();
+          }
+        },
+        onStateChange: event => {
+          if (event.state === 'open') setPeerStatus('connected', '混合備援已連線');
+          if (event.state === 'error') setPeerStatus('error', '混合備援連線錯誤');
+          if (event.state === 'closed' && irsState.transport === transport) setPeerStatus('error', '混合備援已斷線');
+        }
+      });
+      irsState.transport = transport;
+      irsState.transportMode = 'hybrid-relay';
+      try {
+        const room = await transport.createTeacher();
+        irsState.roomId = room.roomId;
+        irsState.role = 'teacher';
+        irsEls.roomId.textContent = room.roomId;
+        irsEls.roomIdMini.textContent = room.roomId;
+        updateTeacherUI();
+        setPeerStatus('connected', '混合備援已連線');
+      } catch (error) {
+        console.error('Hybrid IRS room creation failed', error);
+        transport.close();
+        irsState.transport = null;
+        irsState.transportMode = 'legacy';
+        showGlobalToast('混合連線暫不可用，已切回原有 P2P 模式', 'wifi-off', 'text-amber-400');
+        initIRSLegacyTeacher();
+      }
+    };
+
+    const initIRSLegacyTeacher = () => {
+      prepareTeacherView();
       
       const newRoomId = generateRoomId();
       irsState.peer = new Peer(newRoomId, {
@@ -311,12 +379,18 @@
       });
     };
 
+    window.initIRSTeacher = () => {
+      if (window.IrsHybridTransport?.isEnabled()) {
+        initIRSHybridTeacher();
+        return;
+      }
+      initIRSLegacyTeacher();
+    };
+
     window.copyIRSLink = () => {
        if(!irsState.roomId) return;
        
-       const baseUrl = window.location.href.split('?')[0];
-       const lanSuffix = window._irsNetworkMode === 'lan' ? '&lan=1' : '';
-       const joinUrl = `${baseUrl}?room=${irsState.roomId}${lanSuffix}`;
+       const joinUrl = buildIRSJoinUrl(irsState.roomId);
        
        const showSuccessUI = () => {
           if (audioCtx.state === 'suspended') audioCtx.resume();
@@ -806,6 +880,51 @@
       irsEls.joinId.classList.remove('opacity-60', 'cursor-not-allowed', 'bg-slate-800/50');
     };
 
+    const completeStudentJoin = (conn, joinName, joinGender) => {
+      irsState.hostConn = conn;
+      conn.send({ type: 'join', name: joinName, gender: joinGender });
+      document.body.classList.add('is-student');
+      if (appState.currentMode === 'draw') switchAppMode('clock');
+      irsEls.studentLogin.classList.add('hidden');
+      irsEls.studentView.classList.replace('hidden', 'flex');
+      const joinedNameWithGender = joinGender ? `${joinName}(${joinGender})` : joinName;
+      irsEls.myName.innerHTML = renderName(joinedNameWithGender, false);
+      irsEls.joinBtn.innerHTML = '連線加入';
+      irsEls.joinBtn.disabled = false;
+    };
+
+    const joinIRSHybrid = async (joinId, joinName, joinGender) => {
+      const transport = new IrsHybridTransport({
+        onData: ({ data }) => handleStudentReceive(data),
+        onServerEvent: message => {
+          if (message.type === 'server.teacher-online' && irsState.hostConn?.open) {
+            irsState.hostConn.send({ type: 'join', name: joinName, gender: joinGender });
+          }
+          if (message.type === 'server.teacher-offline') {
+            irsEls.studentWaiting.innerHTML = '<i data-lucide="wifi-off" class="w-14 h-14 text-amber-400 mx-auto"></i><p class="text-lg font-bold text-amber-200">老師暫時離線，正在等待重新連線…</p>';
+            if (window.lucide) lucide.createIcons({ root: irsEls.studentWaiting });
+          }
+        }
+      });
+      irsState.transport = transport;
+      irsState.transportMode = 'hybrid-relay';
+      irsState.hostId = joinId;
+      try {
+        await transport.joinStudent(joinId);
+        irsState.role = 'student';
+        completeStudentJoin(transport.hostConnection(), joinName, joinGender);
+      } catch (error) {
+        console.error('Hybrid IRS join failed', error);
+        transport.close();
+        irsState.transport = null;
+        irsState.transportMode = 'legacy';
+        irsEls.loginError.textContent = '混合連線失敗，請確認教室代碼或稍後再試。';
+        irsEls.loginError.classList.remove('hidden');
+        irsEls.joinBtn.innerHTML = '連線加入';
+        irsEls.joinBtn.disabled = false;
+      }
+    };
+
     window.joinIRS = () => {
       if (audioCtx.state === 'suspended') audioCtx.resume();
       const joinId = irsEls.joinId.value.trim().toUpperCase();
@@ -822,6 +941,10 @@
       irsEls.joinBtn.disabled = true;
 
       irsState.studentName = joinName;
+      if (window.IrsHybridTransport?.isEnabled()) {
+         joinIRSHybrid(joinId, joinName, joinGender);
+         return;
+      }
       const studentId = 'irs_' + Math.random().toString(36).substring(2, 10);
       irsState.peer = new Peer(studentId, {
           config: { 'iceServers': getIrsIceServers() }
@@ -853,24 +976,7 @@
 
          conn.on('open', () => {
             clearTimeout(connTimeout);
-            irsState.hostConn = conn;
-            conn.send({ type: 'join', name: joinName, gender: joinGender });
-            
-            // 只有在學生模式且進入別人教室的時候才鎖住教師功能
-            document.body.classList.add('is-student');
-            // 學生模式下不應顯示抽籤機，若目前在抽籤機頁面則切換到時間管理
-            if (appState.currentMode === 'draw') switchAppMode('clock');
-            
-            // UI 切換
-            irsEls.studentLogin.classList.add('hidden');
-            irsEls.studentView.classList.replace('hidden', 'flex');
-            // 學生端顯示姓名加上性別圖示
-            const joinedNameWithGender = joinGender ? `${joinName}(${joinGender})` : joinName;
-            irsEls.myName.innerHTML = renderName(joinedNameWithGender, false);
-            
-            // 恢復按鈕
-            irsEls.joinBtn.innerHTML = '連線加入';
-            irsEls.joinBtn.disabled = false;
+            completeStudentJoin(conn, joinName, joinGender);
          });
 
          conn.on('data', handleStudentReceive);
@@ -1104,6 +1210,11 @@
             return;
         }
 
+        if (irsState.transportMode === 'hybrid-relay') {
+            showGlobalToast('混合測試模式目前只傳送問答資料；螢幕廣播仍使用原有 P2P 模式', 'monitor-x', 'text-amber-400');
+            return;
+        }
+
         try {
             localScreenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
             isBroadcasting = true;
@@ -1165,6 +1276,10 @@
 
     // 學生：申請投影畫面給老師 (Fix 2c: 直接開始投影，不需老師同意的中間步驟)
     window.requestCastToTeacher = () => {
+        if (irsState.transportMode === 'hybrid-relay') {
+            showGlobalToast('相容連線模式暫不支援螢幕分享', 'monitor-x', 'text-amber-400');
+            return;
+        }
         if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
             alert("您的裝置或瀏覽器不支援螢幕畫面分享功能。\n\n造成原因：大多數手機、平板或非 Chrome/Edge 瀏覽器不支持此 API。\n請改用電腦，並以 Chrome 或 Edge 瀏覽器開啟。");
             return;
@@ -1291,4 +1406,3 @@
             }
         }
     };
-

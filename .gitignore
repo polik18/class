@@ -1,0 +1,5 @@
+realtime-worker/node_modules/
+realtime-worker/.wrangler/
+realtime-worker/.dev.vars
+realtime-worker/.env
+*.log
