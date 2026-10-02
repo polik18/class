@@ -10,6 +10,7 @@
         chat_msg: 'app.chat-message',
         question: 'app.question',
         answer: 'app.answer',
+        ack: 'app.ack',
         stop: 'app.stop',
         draw_path: 'app.draw-path',
         undo_path: 'app.undo-path',

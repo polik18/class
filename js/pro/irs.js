@@ -124,6 +124,8 @@
       hostConn: null, // connection to host (Student side)
       studentsInfo: {}, // peerId => { name: string, gender: string, hasAnswered: boolean, answer: string }
       currentQ: null, // 'ABCD' | 'OX' | 'BUZZER' | 'VOTE' | 'TEXT' | null
+      currentQuestionId: null,
+      currentQuestionStartedAt: null,
       isQuestionActive: false,
       buzzerList: [], // Track buzzer order
       history: [], // Array of { questionNo, qType, qTypeName, timestamp, records: [{name, gender, answer, status}] }
@@ -216,6 +218,8 @@
       irsState.transportMode = 'legacy';
       irsState.studentsInfo = {};
       irsState.currentQ = null;
+      irsState.currentQuestionId = null;
+      irsState.currentQuestionStartedAt = null;
       irsState.buzzerList = [];
       
       // 復原老師面板 UI 狀態
@@ -284,7 +288,7 @@
     const initIRSHybridTeacher = async () => {
       prepareTeacherView();
       const transport = new IrsHybridTransport({
-        onData: ({ senderId, data, connection }) => handleTeacherReceive(senderId, data, connection),
+        onData: message => handleHybridTeacherReceive(message),
         onServerEvent: message => {
           if (message.type === 'server.student-offline' && message.payload?.clientId) {
             const clientId = message.payload.clientId;
@@ -309,6 +313,18 @@
         irsEls.roomIdMini.textContent = room.roomId;
         updateTeacherUI();
         setPeerStatus('connected', '混合備援已連線');
+        if (window.IrsPersistence) {
+          IrsPersistence.saveRoom({
+            roomId: room.roomId,
+            ownerToken: room.ownerToken,
+            expiresAt: room.expiresAt,
+            maxStudents: room.maxStudents,
+            directLimit: room.directLimit,
+            status: 'active',
+            createdAt: Date.now()
+          }).catch(warnPersistenceUnavailable);
+          IrsPersistence.requestPersistentStorage();
+        }
       } catch (error) {
         console.error('Hybrid IRS room creation failed', error);
         transport.close();
@@ -563,9 +579,10 @@
 
         // 如果目前有題目，補發給剛加入的學生
         if (irsState.currentQ) {
-           conn.send({ type: 'question', qType: irsState.currentQ });
+           conn.send({ type: 'question', qType: irsState.currentQ, questionId: irsState.currentQuestionId });
         }
       } else if (data.type === 'answer') {
+        if (irsState.transportMode === 'hybrid-relay' && data.questionId !== irsState.currentQuestionId) return;
         if (irsState.studentsInfo[peerId] && irsState.isQuestionActive) {
            if (!irsState.studentsInfo[peerId].hasAnswered) {
                irsState.studentsInfo[peerId].hasAnswered = true;
@@ -614,6 +631,78 @@
       } else if (data.type === 'stop_screen_share') {
         closeScreenViewModal();
       }
+    };
+
+    const hybridSeenMessageIds = new Set();
+    let persistenceWarningShown = false;
+
+    const warnPersistenceUnavailable = error => {
+      console.warn('IRS IndexedDB persistence unavailable', error);
+      if (persistenceWarningShown) return;
+      persistenceWarningShown = true;
+      showGlobalToast('本機資料庫暫不可用；本次答案仍會顯示，但重新整理後可能遺失', 'database-zap', 'text-amber-400');
+    };
+
+    const handleHybridTeacherReceive = async ({ senderId, data, connection, envelope }) => {
+      if (data.type === 'join') {
+        handleTeacherReceive(senderId, data, connection);
+        if (window.IrsPersistence && irsState.roomId) {
+          IrsPersistence.saveStudent({
+            roomId: irsState.roomId,
+            clientId: senderId,
+            name: data.name,
+            gender: data.gender || '',
+            joinedAt: Date.now()
+          }).catch(warnPersistenceUnavailable);
+        }
+        return;
+      }
+
+      if (data.type !== 'answer') {
+        handleTeacherReceive(senderId, data, connection);
+        return;
+      }
+
+      const messageId = envelope?.messageId;
+      if (!messageId) return;
+      const accepted = Boolean(
+        irsState.isQuestionActive &&
+        irsState.studentsInfo[senderId] &&
+        irsState.currentQuestionId &&
+        data.questionId === irsState.currentQuestionId
+      );
+      let duplicate = hybridSeenMessageIds.has(messageId);
+      let persisted = false;
+
+      if (!duplicate && window.IrsPersistence) {
+        try {
+          const result = await IrsPersistence.recordAnswer({
+            roomId: irsState.roomId,
+            questionId: data.questionId || 'unknown',
+            clientId: senderId,
+            messageId,
+            value: data.val,
+            accepted
+          });
+          duplicate = result.duplicate;
+          persisted = true;
+        } catch (error) {
+          warnPersistenceUnavailable(error);
+        }
+      }
+
+      if (!duplicate) {
+        hybridSeenMessageIds.add(messageId);
+        if (accepted) handleTeacherReceive(senderId, data, connection);
+      }
+
+      connection.send({
+        type: 'ack',
+        messageId,
+        questionId: data.questionId || null,
+        accepted,
+        persisted
+      });
     };
 
     const updateTeacherUI = () => {
@@ -787,8 +876,12 @@
         }
     };
 
-    window.sendIRSQuestion = (type) => {
+    window.sendIRSQuestion = async (type) => {
+      const questionId = IrsProtocol.randomId('question');
+      const startedAt = Date.now();
       irsState.currentQ = type;
+      irsState.currentQuestionId = questionId;
+      irsState.currentQuestionStartedAt = startedAt;
       irsState.isQuestionActive = true;
       irsState.buzzerList = []; // 發佈新題目時清空搶答榜單
       // 重置所有學生作答狀態
@@ -797,8 +890,21 @@
          irsState.studentsInfo[k].answer = null;
       });
       // 廣播給所有連線
+      if (irsState.transportMode === 'hybrid-relay' && window.IrsPersistence) {
+         try {
+            await IrsPersistence.saveQuestion({
+              roomId: irsState.roomId,
+              questionId,
+              qType: type,
+              status: 'active',
+              startedAt
+            });
+         } catch (error) {
+            warnPersistenceUnavailable(error);
+         }
+      }
       Object.values(irsState.connections).forEach(conn => {
-         conn.send({ type: 'question', qType: type });
+         conn.send({ type: 'question', qType: type, questionId });
       });
       
       // 更新老師控制面板 UI (切換至進行中狀態)
@@ -852,8 +958,18 @@
 
       irsState.isQuestionActive = false;
       Object.values(irsState.connections).forEach(conn => {
-         conn.send({ type: 'stop' });
+         conn.send({ type: 'stop', questionId: irsState.currentQuestionId });
       });
+      if (irsState.transportMode === 'hybrid-relay' && window.IrsPersistence && irsState.currentQuestionId) {
+         IrsPersistence.saveQuestion({
+           roomId: irsState.roomId,
+           questionId: irsState.currentQuestionId,
+           qType: irsState.currentQ,
+           status: 'closed',
+           startedAt: irsState.currentQuestionStartedAt,
+           endedAt: Date.now()
+         }).catch(warnPersistenceUnavailable);
+      }
       
       // 更新老師控制面板 UI (恢復至待命狀態)
       if (irsEls.qActive) {
@@ -902,6 +1018,12 @@
           }
           if (message.type === 'server.teacher-offline') {
             irsEls.studentWaiting.innerHTML = '<i data-lucide="wifi-off" class="w-14 h-14 text-amber-400 mx-auto"></i><p class="text-lg font-bold text-amber-200">老師暫時離線，正在等待重新連線…</p>';
+            if (window.lucide) lucide.createIcons({ root: irsEls.studentWaiting });
+          }
+        },
+        onStateChange: event => {
+          if (event.state === 'delivery-timeout') {
+            irsEls.studentWaiting.innerHTML = '<div class="p-6 rounded-full bg-amber-500/20 inline-block mb-4 border border-amber-500/30"><i data-lucide="refresh-cw" class="w-12 h-12 text-amber-400 mx-auto"></i></div><p class="text-xl font-bold text-amber-200">尚未收到教師端確認</p><p class="text-sm text-slate-400 mt-2">系統已自動重送；請保留畫面並告知老師</p>';
             if (window.lucide) lucide.createIcons({ root: irsEls.studentWaiting });
           }
         }
@@ -1095,6 +1217,9 @@
        } else if (data.type === 'chat_msg') {
           appendChatMessage(data.name, data.msg, data.timestamp, false);
        } else if (data.type === 'question') {
+          irsState.currentQ = data.qType;
+          irsState.currentQuestionId = data.questionId || null;
+          irsState.currentQuestionStartedAt = Date.now();
           if (audioCtx.state === 'suspended') audioCtx.resume();
           playScoreSound('add'); // 提示音
           
@@ -1156,6 +1281,15 @@
 
           irsEls.studentOptions.innerHTML = optsHTML;
           lucide.createIcons({ root: irsEls.studentOptions });
+       } else if (data.type === 'ack') {
+          const isCurrentQuestion = !data.questionId || data.questionId === irsState.currentQuestionId;
+          if (!isCurrentQuestion) return;
+          if (data.accepted) {
+             irsEls.studentWaiting.innerHTML = '<div class="p-6 rounded-full bg-emerald-500/20 inline-block mb-4 border border-emerald-500/30"><i data-lucide="badge-check" class="w-14 h-14 text-emerald-400 mx-auto"></i></div><p class="text-xl font-bold text-emerald-200">教師端已確認答案</p><p class="text-sm text-slate-400 mt-2">答案已安全記錄在教師電腦</p>';
+          } else {
+             irsEls.studentWaiting.innerHTML = '<div class="p-6 rounded-full bg-amber-500/20 inline-block mb-4 border border-amber-500/30"><i data-lucide="clock-alert" class="w-14 h-14 text-amber-400 mx-auto"></i></div><p class="text-xl font-bold text-amber-200">本題已結束或題目已更新</p><p class="text-sm text-slate-400 mt-2">這次答案未列入統計</p>';
+          }
+          lucide.createIcons({ root: irsEls.studentWaiting });
        } else if (data.type === 'stop') {
           irsEls.studentWaiting.classList.remove('hidden');
           irsEls.studentOptions.classList.add('hidden');
@@ -1174,7 +1308,7 @@
 
     window.submitIRSAnswer = (val) => {
        if (irsState.hostConn) {
-          irsState.hostConn.send({ type: 'answer', val: val });
+          irsState.hostConn.send({ type: 'answer', val: val, questionId: irsState.currentQuestionId });
           
           // 畫面上替換為已送出
           irsEls.studentOptions.classList.add('hidden');
@@ -1189,7 +1323,10 @@
              const displayStr = escapeHTML(rawDisplay);
              const textSize = rawVal.length > 4 ? 'text-2xl' : 'text-4xl';
              
-             irsEls.studentWaiting.innerHTML = `<div class="px-6 py-4 rounded-3xl bg-emerald-500/20 inline-block mb-4 font-black text-emerald-400 max-w-[90%] border border-emerald-500/30 shadow-inner"><span class="${textSize} break-all">${displayStr}</span></div><p class="text-xl font-bold text-slate-300">已送出答案！<br>等待老師公佈結果...</p>`;
+             const deliveryText = irsState.transportMode === 'hybrid-relay'
+               ? '正在傳送，等待教師端確認…'
+               : '已送出答案！<br>等待老師公佈結果...';
+             irsEls.studentWaiting.innerHTML = `<div class="px-6 py-4 rounded-3xl bg-emerald-500/20 inline-block mb-4 font-black text-emerald-400 max-w-[90%] border border-emerald-500/30 shadow-inner"><span class="${textSize} break-all">${displayStr}</span></div><p class="text-xl font-bold text-slate-300">${deliveryText}</p>`;
           }
           
           lucide.createIcons();

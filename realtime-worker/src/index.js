@@ -186,6 +186,13 @@ export class Classroom {
       socket.serializeAttachment(attachment);
       await this.addDirectClient(attachment.clientId);
     }
+    if (attachment.role === 'student' && message.type === 'control.direct-failed') {
+      attachment.mode = 'relay';
+      socket.serializeAttachment(attachment);
+      await this.removeDirectClient(attachment.clientId);
+      this.sendTeachers(serverMessage('server.student-online', { clientId: attachment.clientId, mode: 'relay' }));
+      return;
+    }
     if (attachment.role === 'teacher' && message.type === 'control.direct-left' && message.targetClientId) {
       await this.removeDirectClient(message.targetClientId);
       return;

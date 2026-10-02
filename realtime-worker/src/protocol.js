@@ -21,6 +21,7 @@ const ALLOWED_MESSAGE_TYPES = new Set([
   'app.chat-message',
   'app.question',
   'app.answer',
+  'app.ack',
   'app.stop',
   'app.draw-path',
   'app.undo-path',

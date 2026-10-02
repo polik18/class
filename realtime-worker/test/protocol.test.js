@@ -35,6 +35,11 @@ test('accepts valid protocol envelopes', () => {
   assert.equal(result.message.type, 'app.answer');
 });
 
+test('accepts delivery acknowledgements', () => {
+  const result = validateEnvelope(envelope({ type: 'app.ack' }));
+  assert.equal(result.ok, true);
+});
+
 test('rejects unsupported message types and invalid sequence numbers', () => {
   assert.deepEqual(validateEnvelope(envelope({ type: 'admin.delete' })), { ok: false, error: 'unsupported_type' });
   assert.deepEqual(validateEnvelope(envelope({ sequence: -1 })), { ok: false, error: 'invalid_sequence' });

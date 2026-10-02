@@ -4,6 +4,8 @@
     const PROD_API_URL = 'https://class-realtime-api.vote-platform-api.workers.dev';
     const LOCAL_API_URL = 'http://localhost:8790';
     const NEGOTIATION_TIMEOUT_MS = 8_000;
+    const ACK_TIMEOUT_MS = 2_000;
+    const MAX_ACK_ATTEMPTS = 4;
     const ICE_SERVERS = [
         { urls: 'stun:stun.cloudflare.com:3478' },
         { urls: 'stun:stun.l.google.com:19302' }
@@ -26,6 +28,7 @@
             this.studentPeer = null;
             this.studentJoinData = null;
             this.pendingMessages = [];
+            this.pendingAcks = new Map();
             this.fallbackOnly = false;
             this.activatingRelay = false;
             this.intentionalControlClose = false;
@@ -216,7 +219,10 @@
                 record.ready = true;
                 window.clearTimeout(record.timer);
                 this.onStateChange({ state: 'direct', role: this.role, clientId: record.clientId });
-                if (this.role === 'student') this.enterDirectStandby(record);
+                if (this.role === 'student') {
+                    this.flushPendingMessages();
+                    this.enterDirectStandby(record);
+                }
             });
             channel.addEventListener('message', event => this.handleDirectMessage(event.data, record.clientId));
             channel.addEventListener('close', () => {
@@ -307,15 +313,20 @@
         }
 
         async activateRelay() {
-            if (this.role !== 'student' || this.shuttingDown || this.activatingRelay || this.isOpen()) return;
+            if (this.role !== 'student' || this.shuttingDown || this.activatingRelay) return;
             this.activatingRelay = true;
             this.fallbackOnly = true;
             this.intentionalControlClose = false;
             this.onStateChange({ state: 'relay-connecting', role: 'student' });
             try {
-                await this.openSocket(this.websocketUrl(this.roomId), ['classroom.v1'], 'relay');
+                if (this.isOpen()) {
+                    this.sendControl('control.direct-failed', { disconnectedAt: Date.now() });
+                } else {
+                    await this.openSocket(this.websocketUrl(this.roomId), ['classroom.v1'], 'relay');
+                }
                 this.onStateChange({ state: 'relay', role: 'student' });
                 if (this.studentJoinData) this.sendLegacy(this.studentJoinData);
+                this.flushPendingMessages();
             } catch (error) {
                 this.onStateChange({ state: 'error', role: 'student', error });
             } finally {
@@ -336,6 +347,14 @@
         }
 
         deliverLegacy(senderId, legacy, envelope) {
+            if (this.role === 'student' && legacy.type === 'ack' && legacy.messageId) {
+                const pending = this.pendingAcks.get(legacy.messageId);
+                if (pending) {
+                    window.clearTimeout(pending.timer);
+                    this.pendingAcks.delete(legacy.messageId);
+                    this.onStateChange({ state: 'delivery-confirmed', role: this.role, messageId: legacy.messageId });
+                }
+            }
             const connection = this.role === 'teacher' ? this.connectionFor(senderId) : this.hostConnection();
             this.onData({ senderId, data: legacy, connection, envelope });
         }
@@ -389,20 +408,61 @@
             const envelope = this.createLegacyEnvelope(data, targetClientId);
             const serialized = JSON.stringify(envelope);
 
+            this.sendSerialized(serialized, targetClientId);
+            if (this.role === 'student' && data?.type === 'answer') {
+                this.trackAcknowledgement(envelope, serialized, targetClientId);
+            }
+            return envelope.messageId;
+        }
+
+        sendSerialized(serialized, targetClientId = null, queueIfOffline = true) {
             if (this.role === 'student' && this.hasDirectChannel()) {
                 this.studentPeer.channel.send(serialized);
-                return;
+                return true;
             }
             if (this.role === 'teacher' && targetClientId && this.peerIsDirect(targetClientId)) {
                 this.peers.get(targetClientId).channel.send(serialized);
-                return;
+                return true;
             }
             if (this.isOpen()) {
                 this.socket.send(serialized);
-                return;
+                return true;
             }
-            this.pendingMessages.push(serialized);
+            if (queueIfOffline && !this.pendingMessages.includes(serialized)) this.pendingMessages.push(serialized);
             if (this.role === 'student') this.activateRelay();
+            return false;
+        }
+
+        trackAcknowledgement(envelope, serialized, targetClientId) {
+            const pending = {
+                messageId: envelope.messageId,
+                serialized,
+                targetClientId,
+                attempts: 1,
+                timer: null
+            };
+            this.pendingAcks.set(envelope.messageId, pending);
+            this.scheduleAcknowledgementRetry(pending);
+        }
+
+        scheduleAcknowledgementRetry(pending) {
+            window.clearTimeout(pending.timer);
+            pending.timer = window.setTimeout(() => {
+                if (!this.pendingAcks.has(pending.messageId) || this.shuttingDown) return;
+                if (pending.attempts >= MAX_ACK_ATTEMPTS) {
+                    this.pendingAcks.delete(pending.messageId);
+                    this.onStateChange({
+                        state: 'delivery-timeout',
+                        role: this.role,
+                        messageId: pending.messageId,
+                        attempts: pending.attempts
+                    });
+                    return;
+                }
+                pending.attempts += 1;
+                this.sendSerialized(pending.serialized, pending.targetClientId);
+                this.scheduleAcknowledgementRetry(pending);
+            }, ACK_TIMEOUT_MS);
         }
 
         broadcast(data, excludeClientId = null) {
@@ -419,9 +479,13 @@
         }
 
         flushPendingMessages() {
-            if (!this.isOpen()) return;
+            if (!this.isOpen() && !this.hasDirectChannel()) return;
             const pending = this.pendingMessages.splice(0);
-            pending.forEach(message => this.socket.send(message));
+            pending.forEach(message => {
+                let targetClientId = null;
+                try { targetClientId = JSON.parse(message).targetClientId || null; } catch {}
+                this.sendSerialized(message, targetClientId);
+            });
         }
 
         peerIsDirect(clientId) {
@@ -469,6 +533,8 @@
             this.offlineTimers.forEach(timer => window.clearTimeout(timer));
             this.offlineTimers.clear();
             this.pendingMessages = [];
+            this.pendingAcks.forEach(pending => window.clearTimeout(pending.timer));
+            this.pendingAcks.clear();
         }
     }
 
