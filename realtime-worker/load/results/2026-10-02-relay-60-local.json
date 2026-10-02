@@ -1,0 +1,27 @@
+{
+  "date": "2026-10-02",
+  "scope": "local synthetic relay protocol test",
+  "gitCommit": "9908637+load-script-working-tree",
+  "test": "relay-simultaneous-answer",
+  "apiUrl": "http://localhost:8790",
+  "requestedStudents": 60,
+  "connectedStudents": 60,
+  "uniqueOnlineEvents": 60,
+  "uniqueAnswers": 60,
+  "acknowledgements": 60,
+  "joinDurationMs": 201,
+  "answerRoundTripMs": {
+    "min": 9.99,
+    "p50": 12.22,
+    "p95": 13.18,
+    "max": 13.35
+  },
+  "totalDurationMs": 221,
+  "passed": true,
+  "limitations": [
+    "Worker、教師與 60 個模擬學生位於同一台電腦，延遲不可視為公開網路數據。",
+    "本次全數使用 WebSocket Relay，未覆蓋 30 DIRECT 加 30 RELAY。",
+    "本次使用程式化 WebSocket 客戶端，未量測 60 個瀏覽器分頁的 CPU、記憶體與渲染效能。",
+    "仍需 Cloudflare 正式環境、校園 Wi-Fi、行動網路與實體裝置驗收後才能宣稱公開支援 60 人。"
+  ]
+}

@@ -6,9 +6,11 @@
   "scripts": {
     "dev": "wrangler dev --port 8790",
     "deploy": "wrangler deploy",
+    "load:relay": "node load/relay-load.mjs",
     "test": "node --test"
   },
   "devDependencies": {
-    "wrangler": "^4.146.0"
+    "wrangler": "^4.146.0",
+    "ws": "^8.22.0"
   }
 }

@@ -13,6 +13,7 @@
 - 已完成 P05 的 owner token、Origin、8 KiB 白名單、連線速率、60 人上限、Turnstile 建房驗證程式、90 秒 HMAC join ticket 與緊急停止新房開關；尚未完成匿名用量警戒與正式壓測。
 - 已用瀏覽器自動測試驗證 DIRECT、強制 RELAY、第一次 ACK 遺失重送去重、IndexedDB 實際落地、無 ticket WebSocket 被拒絕，以及教師重整後同房恢復並繼續第二題。
 - 混合模式目前仍由 `?transport=hybrid` 隱藏開關啟用；60 人驗收前維持 legacy 預設。
+- P06 已完成第一個可重跑基線：本機 60 人全 Relay 同時答題為 60/60 加入、60/60 ACK、零遺失，p95 13.18 ms；此結果不含公開網路與瀏覽器負載，不能當作正式 60 人容量宣稱。
 
 ## 1. 決策摘要
 
