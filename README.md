@@ -60,6 +60,7 @@
 ## 📂 檔案目錄結構與版本說明
 * `index.html`：**基礎版**。穩定、無須連網也能完整使用的單機完整版，涵蓋基礎的抽籤、大鐘、計分五大功能。
 * `pro.html`：**Pro進階版**。具備深度模組連動、資料匯出入備份管理，且支援 WebRTC 之「IRS 即時問答」連線。
+* `docs/IRS_HYBRID_IMPROVEMENT_PLAN.md`：IRS 採用 P2P 優先、Cloudflare 協助配對與備援中繼、本機保存資料的分階段改善計畫。
 
 ---
 
