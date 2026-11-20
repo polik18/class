@@ -12,7 +12,73 @@
 </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>智慧考場電子看板</title>
+    <title>智慧考場電子看板｜考試時間、科目與應到實到人數大螢幕顯示</title>
+    <meta name="description" content="智慧考場電子看板：在投影機或大型觸控螢幕上顯示考試科目、時間、監考教師與應到／實到人數，免安裝直接在瀏覽器使用，適合段考與各類考場。">
+    <link rel="canonical" href="https://polik18.github.io/class/exam.html">
+    <meta property="og:type" content="website">
+    <meta property="og:locale" content="zh_TW">
+    <meta property="og:site_name" content="Polik Projects">
+    <meta property="og:title" content="智慧考場電子看板｜考試時間、科目與應到實到人數大螢幕顯示">
+    <meta property="og:description" content="智慧考場電子看板：在投影機或大型觸控螢幕上顯示考試科目、時間、監考教師與應到／實到人數，免安裝直接在瀏覽器使用，適合段考與各類考場。">
+    <meta property="og:url" content="https://polik18.github.io/class/exam.html">
+    <meta property="og:image" content="https://polik18.github.io/assets/og/exam.jpg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="智慧考場電子看板｜考試時間、科目與應到實到人數大螢幕顯示">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="智慧考場電子看板｜考試時間、科目與應到實到人數大螢幕顯示">
+    <meta name="twitter:description" content="智慧考場電子看板：在投影機或大型觸控螢幕上顯示考試科目、時間、監考教師與應到／實到人數，免安裝直接在瀏覽器使用，適合段考與各類考場。">
+    <meta name="twitter:image" content="https://polik18.github.io/assets/og/exam.jpg">
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebApplication",
+          "name": "智慧考場電子看板",
+          "url": "https://polik18.github.io/class/exam.html",
+          "description": "智慧考場電子看板：在投影機或大型觸控螢幕上顯示考試科目、時間、監考教師與應到／實到人數，免安裝直接在瀏覽器使用，適合段考與各類考場。",
+          "applicationCategory": "EducationalApplication",
+          "operatingSystem": "Any（需現代瀏覽器）",
+          "inLanguage": "zh-TW",
+          "isAccessibleForFree": true,
+          "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "TWD"
+          },
+          "author": {
+            "@type": "Person",
+            "name": "小黃老師",
+            "url": "https://polik18.github.io/"
+          }
+        },
+        {
+          "@type": "BreadcrumbList",
+          "itemListElement": [
+            {
+              "@type": "ListItem",
+              "position": 1,
+              "name": "Polik 專案展示",
+              "item": "https://polik18.github.io/"
+            },
+            {
+              "@type": "ListItem",
+              "position": 2,
+              "name": "教學現場與班級經營",
+              "item": "https://polik18.github.io/education.html"
+            },
+            {
+              "@type": "ListItem",
+              "position": 3,
+              "name": "智慧考場電子看板",
+              "item": "https://polik18.github.io/class/exam.html"
+            }
+          ]
+        }
+      ]
+    }
+    </script>
     
     <!-- 引入 React 與 Babel -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
@@ -78,6 +144,7 @@
   <script src="https://polik18.github.io/assets/polik-shell.js" data-cat="education" data-accent="#818cf8" data-accent2="#f472b6" defer></script>
 </head>
 <body class="bg-slate-200 dark:bg-zinc-950 transition-colors duration-500 text-slate-800 dark:text-zinc-200 min-h-screen overflow-hidden">
+    <h1 class="sr-only">智慧考場電子看板</h1>
     <a data-polik-category-return href="https://polik18.github.io/education.html" aria-label="回到教學現場分類" style="position:fixed;left:14px;bottom:14px;z-index:2147483647;display:inline-flex;align-items:center;min-height:40px;padding:0 14px;border:1px solid rgba(23,79,60,.3);border-radius:999px;background:rgba(255,253,248,.94);color:#0d3528;font:700 13px/1 system-ui,-apple-system,sans-serif;text-decoration:none;box-shadow:0 8px 24px rgba(0,0,0,.2);backdrop-filter:blur(10px)">← 回教學現場分類</a>
     <div id="root"></div>
     <script>
