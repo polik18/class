@@ -81,6 +81,30 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
   <link rel="stylesheet" href="css/pro.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Space+Grotesk:wght@500;700&display=swap">
+  <script src="https://polik18.github.io/assets/polik-shell.js" data-cat="education" data-accent="#818cf8" data-accent2="#f472b6" data-side="left" defer></script>
+  <style id="polik-skin">
+    /* Polik Neo-Lab 外觀：課堂舞台 */
+    @property --cl-spin { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
+    body.bg-slate-950 { background: radial-gradient(70rem 40rem at 50% -12%, rgba(129, 140, 248, .22), transparent 62%), radial-gradient(50rem 36rem at 100% 100%, rgba(244, 114, 182, .12), transparent 60%), #04050d !important; }
+    body::before { content: ""; position: fixed; inset: 0; z-index: 0; pointer-events: none; background-image: radial-gradient(rgba(170, 180, 240, .14) 1px, transparent 1.4px); background-size: 26px 26px; -webkit-mask-image: radial-gradient(ellipse 75% 60% at 50% 25%, #000, transparent 75%); mask-image: radial-gradient(ellipse 75% 60% at 50% 25%, #000, transparent 75%); }
+    header.sticky { background: rgba(4, 5, 13, .6) !important; backdrop-filter: blur(20px) saturate(160%) !important; }
+    header.sticky::after { content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 1px; background: linear-gradient(90deg, transparent, #818cf8, #f472b6, transparent); opacity: .7; }
+    header h1 { font-family: "Space Grotesk", "Noto Sans TC", sans-serif; letter-spacing: -.01em; }
+    #header-time span { font-family: "JetBrains Mono", monospace; color: #c7d2fe; }
+    #main-nav-container { background: rgba(8, 10, 24, .7) !important; border-color: rgba(129, 140, 248, .22) !important; }
+    #main-nav-container > button.bg-indigo-600 { background: linear-gradient(115deg, #6366f1, #a855f7 55%, #ec4899) !important; box-shadow: 0 10px 26px -10px rgba(168, 85, 247, .9), inset 0 1px 0 rgba(255, 255, 255, .25) !important; }
+    div:has(> #display-area) { isolation: isolate; border-color: transparent !important; background: radial-gradient(90% 80% at 50% 0%, rgba(129, 140, 248, .16), transparent 70%), repeating-linear-gradient(0deg, rgba(255, 255, 255, .02) 0 1px, transparent 1px 4px), rgba(8, 10, 26, .66) !important; }
+    div:has(> #display-area)::before { content: ""; position: absolute; inset: 0; z-index: -1; border-radius: inherit; padding: 1px; background: conic-gradient(from var(--cl-spin), rgba(129, 140, 248, .18) 0 55%, #818cf8 72%, #f472b6 84%, rgba(129, 140, 248, .18) 96%); -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; animation: cl-spin 7s linear infinite; pointer-events: none; }
+    div:has(> #display-area)::after { content: "LIVE · CLASSROOM"; position: absolute; top: 18px; left: 24px; z-index: 11; padding: 4px 10px; color: #c7d2fe; font: 700 10px/1.4 "JetBrains Mono", monospace; letter-spacing: .22em; border: 1px solid rgba(129, 140, 248, .4); border-radius: 999px; background: rgba(129, 140, 248, .1); pointer-events: none; }
+    @keyframes cl-spin { to { --cl-spin: 360deg; } }
+    #standby-view svg { color: #a5b4fc !important; filter: drop-shadow(0 0 26px rgba(129, 140, 248, .75)); }
+    #standby-view > p { color: #c7d2fe !important; font-family: "Space Grotesk", "Noto Sans TC", sans-serif; }
+    #draw-btn.bg-indigo-600 { background: linear-gradient(115deg, #6366f1, #a855f7 50%, #ec4899) !important; background-size: 170% 100% !important; box-shadow: 0 22px 50px -18px rgba(168, 85, 247, .95), inset 0 1px 0 rgba(255, 255, 255, .3) !important; transition: background-position .5s, transform .2s !important; }
+    #draw-btn.bg-indigo-600:hover { background-position: 100% 0 !important; }
+    main .rounded-\[2rem\]:not(:has(> #display-area)) { border-color: rgba(129, 140, 248, .16) !important; }
+    @media (prefers-reduced-motion: reduce) { div:has(> #display-area)::before { animation: none; } }
+  </style>
 </head>
 <body class="min-h-screen bg-slate-950 text-slate-100 font-sans selection:bg-indigo-500/30 overflow-x-hidden relative flex flex-col m-0 p-0">
   <a data-polik-category-return href="https://polik18.github.io/education.html" aria-label="回到教學現場分類" style="position:fixed;left:14px;bottom:14px;z-index:2147483647;display:inline-flex;align-items:center;min-height:40px;padding:0 14px;border:1px solid rgba(23,79,60,.3);border-radius:999px;background:rgba(255,253,248,.94);color:#0d3528;font:700 13px/1 system-ui,-apple-system,sans-serif;text-decoration:none;box-shadow:0 8px 24px rgba(0,0,0,.2);backdrop-filter:blur(10px)">← 回教學現場分類</a>
