@@ -1,0 +1,13 @@
+{
+  "name": "class-css-build",
+  "private": true,
+  "scripts": {
+    "build": "npm run build:css && npm run build:exam",
+    "build:css": "tailwindcss -c tailwind.config.js -i input.css -o ../../css/tailwind.css --minify",
+    "build:exam": "esbuild ../../src/exam.jsx --loader:.jsx=jsx --jsx=transform --target=es2019 --minify --outfile=../../js/exam.js && tailwindcss -c tailwind.exam.config.js -i input.css -o ../../css/exam-tailwind.css --minify"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.12",
+    "tailwindcss": "3.4.19"
+  }
+}

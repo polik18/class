@@ -1,0 +1,655 @@
+// 考場電子看板主程式（JSX 原始碼）。修改後在 tools/tailwind 執行 npm run build 產生 js/exam.js
+const { useState, useEffect, useRef } = React;
+
+// ==========================================
+// 1. 圖示元件 (Icons)
+// ==========================================
+const Clock = ({className}) => (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>);
+const AlertTriangle = ({className}) => (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12.01" y1="17" y2="17"/></svg>);
+const Plus = ({className}) => (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M5 12h14"/><path d="M12 5v14"/></svg>);
+const Trash2 = ({className}) => (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>);
+const RotateCcw = ({className}) => (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>);
+const GripVertical = ({className}) => (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="9" cy="12" r="1"/><circle cx="9" cy="5" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="19" r="1"/></svg>);
+const Moon = ({className}) => (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>);
+const Sun = ({className}) => (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>);
+const Maximize = ({className}) => (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>);
+const Minimize = ({className}) => (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M8 3v3a2 2 0 0 1-2 2H3"/><path d="M21 8h-3a2 2 0 0 1-2-2V3"/><path d="M3 16h3a2 2 0 0 1 2 2v3"/><path d="M16 21v-3a2 2 0 0 1 2-2h3"/></svg>);
+const Timer = ({className}) => (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="10" x2="14" y1="2" y2="2"/><line x1="12" x2="15" y1="14" y2="11"/><circle cx="12" cy="14" r="8"/></svg>);
+const Languages = ({className}) => (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>);
+const Volume2 = ({className}) => (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>);
+const VolumeX = ({className}) => (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>);
+const Palette = ({className}) => (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.9 0 1.6-.5 2-1.3.4.8 1.1 1.3 2 1.3 3.3 0 6-2.7 6-6 0-3.3-2.7-6-6-6-2.5 0-4.5-2-4.5-4.5 0-.4 0-.8.1-1.2"/></svg>);
+const ChevronLeft = ({className}) => (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="15 18 9 12 15 6"/></svg>);
+const XIcon = ({className}) => (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>);
+
+const IconButton = ({ icon: Icon, label, description, onClick, isActive, activeColor, inactiveColor }) => (
+    <div className="relative group flex justify-center">
+        <button onClick={onClick} className={`p-2 lg:p-2.5 rounded-xl transition-all shadow-sm ${isActive ? activeColor + ' ring-2 ring-current ring-offset-2 dark:ring-offset-zinc-900' : inactiveColor}`}>
+            <Icon className="w-5 h-5 lg:w-6 lg:h-6" />
+        </button>
+        <div className="absolute top-full mt-3 px-5 py-4 bg-white dark:bg-zinc-800 border-4 border-indigo-500 dark:border-indigo-400 text-slate-900 dark:text-white rounded-[1.5rem] opacity-0 group-hover:opacity-100 transition-all duration-300 scale-95 group-hover:scale-100 pointer-events-none z-[100] shadow-[0_20px_50px_-12px_rgba(0,0,0,0.5)] flex flex-col gap-2 w-80 translate-y-2 group-hover:translate-y-0">
+            <div className="font-black text-lg lg:text-xl border-b-2 border-indigo-100 dark:border-zinc-700 pb-2 flex items-center gap-3 text-indigo-600 dark:text-indigo-300">
+                <Icon className="w-6 h-6" /> {label}
+            </div>
+            <div className="text-sm lg:text-base leading-relaxed font-bold font-sans-tc text-slate-600 dark:text-zinc-200">
+                {description}
+            </div>
+            <div className="mt-1 text-[10px] lg:text-xs text-indigo-500 font-black uppercase tracking-widest">
+                當前狀態: {isActive ? '已啟動' : '未開啟 (點擊切換)'}
+            </div>
+        </div>
+    </div>
+);
+
+
+const ZY = ({ children, active }) => {
+    if (!active || typeof children !== 'string') return <>{children}</>;
+
+    // 檢查是否所有中文字都有對應的注音，若有缺漏則整段都不標示注音（All-or-nothing 規則）
+    let canConvertAll = true;
+    for (let char of children) {
+        // 使用正則表達式判定是否為中文字，若是中文且字典裡查不到，就判定為有缺漏
+        if (/[\u4e00-\u9fa5]/.test(char) && !rubyDict[char]) {
+            canConvertAll = false;
+            break;
+        }
+    }
+
+    if (!canConvertAll) {
+        // 若有缺字，直接回傳純文字，不進行任何注音渲染
+        return <span className="inline-flex items-center mx-[0.1em]">{children}</span>;
+    }
+
+    const tones = ['ˊ', 'ˇ', 'ˋ', '˙'];
+    return (
+        // 修復：強制不換行，避免注音文字被擠壓到下一行
+        <span className="inline-flex flex-nowrap items-center shrink-0" style={{ whiteSpace: 'nowrap' }}>
+            {Array.from(children).map((char, i) => {
+                const zy = rubyDict[char];
+                if (zy) {
+                    let tone = '';
+                    let phonetics = zy;
+                    for (let t of tones) {
+                        if (zy.includes(t)) {
+                            tone = t;
+                            phonetics = zy.replace(t, '');
+                            break;
+                        }
+                    }
+                    return (
+                        <span key={i} className="inline-flex items-center mx-[0.1em] align-middle whitespace-nowrap">
+                            <span className="leading-none">{char}</span>
+                            <span className="inline-flex items-center text-[0.45em] ml-[0.15em] leading-none text-indigo-600 dark:text-indigo-400 font-black h-full">
+                                <span className="flex flex-col items-center justify-center min-w-[1em]">
+                                    {tone === '˙' && <span className="mb-[0.05em] text-[1.3em]">˙</span>}
+                                    {Array.from(phonetics).map((p, idx) => <span key={idx} className="block leading-[1.05]">{p}</span>)}
+                                </span>
+                                {tone && tone !== '˙' && (
+                                    <span className="ml-[0.05em] flex items-center text-[1.4em] font-black h-full pt-[0.1em]">
+                                        {tone}
+                                    </span>
+                                )}
+                            </span>
+                        </span>
+                    );
+                }
+                return <span key={i} className="mx-[0.05em]">{char}</span>;
+            })}
+        </span>
+    );
+};
+
+// 智慧注音輸入框 (自動切換編輯與注音展示)
+const ZYInput = ({ value, onChange, active, className, style = {}, list, placeholder, type = "text", maxLength, inputMode }) => {
+    const [focused, setFocused] = useState(false);
+    const inputRef = useRef(null);
+
+    useEffect(() => {
+        if (focused && inputRef.current) {
+            inputRef.current.focus();
+        }
+    }, [focused]);
+
+    // 注音模式開啟且未聚焦時，顯示純注音文字元素
+    if (active && !focused) {
+        const displayValue = value || placeholder || '';
+        const isPlaceholder = !value && placeholder;
+        // 修復：移除 overflow-hidden，防止左側文字(如"五")被強制切掉，並加入 shrink-0
+        let finalClassName = `${className} cursor-text inline-flex items-center justify-center whitespace-nowrap shrink-0`;
+        if (isPlaceholder) {
+            finalClassName += " opacity-50"; 
+        }
+
+        // 修復：將計算的 width 轉為 minWidth，讓容器可以根據內容自由撐開不折疊。並對 style 進行防呆處理避免 undefined。
+        const spanStyle = { ...style, minWidth: style.width, width: 'auto' };
+
+        return (
+            <span
+                onClick={() => setFocused(true)}
+                style={spanStyle}
+                className={finalClassName}
+            >
+                {displayValue ? <ZY active={true}>{displayValue}</ZY> : '\u00A0'}
+            </span>
+        );
+    }
+
+    // 原始輸入框狀態
+    return (
+        <input
+            ref={inputRef}
+            type={type}
+            list={list}
+            placeholder={placeholder}
+            value={value}
+            onChange={onChange}
+            onFocus={() => setFocused(true)}
+            onBlur={() => setTimeout(() => setFocused(false), 150)} // 加入 150ms 延遲，防止 datalist 點擊失效
+            maxLength={maxLength}
+            inputMode={inputMode}
+            style={style}
+            className={className}
+        />
+    );
+};
+
+// ==========================================
+// 3. 鐘聲合成器 (Web Audio API)
+
+// ==========================================
+// 4. 主應用程式 (Main App)
+// ==========================================
+
+// 依當下日期推算台灣學年度與學期
+// 規則：學年度8/1起算、以起始年的民國年命名；第一學期8/1~1/31、第二學期2/1~7/31；民國年=西元年-1911
+const getAcademicTerm = (date = new Date()) => {
+    const g = date.getFullYear();
+    const m = date.getMonth() + 1; // 1-12
+    let year, semester;
+    if (m >= 8)      { year = g - 1911; semester = '一'; } // 8-12月：上學期
+    else if (m === 1){ year = g - 1912; semester = '一'; } // 1月：仍屬上學期（去年8月開學）
+    else             { year = g - 1912; semester = '二'; } // 2-7月：下學期
+    return { year: String(year), semester };
+};
+
+function App() {
+  const [currentTime, setCurrentTime] = useState(new Date());
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  const defaultSchedule = [
+    { id: 1, startH: '09', startM: '35', endH: '10', endM: '15', subject: '國語', proctor: 'OOO老師' },
+    { id: 2, startH: '10', startM: '30', endH: '11', endM: '10', subject: '數學', proctor: 'OOO老師' },
+  ];
+  const defaultAttendance = { expected: 28, actual: 28, absentNumbers: '' };
+  const { year: autoYear, semester: autoSemester } = getAcademicTerm();
+  const defaultTitle = { year: autoYear, semester: autoSemester, grade: '五', examNum: '一', examName: '定期評量' };
+
+  const loadState = (key, defaultVal) => {
+      const saved = localStorage.getItem(key);
+      return saved ? JSON.parse(saved) : defaultVal;
+  };
+
+  const [schedule, setSchedule] = useState(() => loadState('examSchedule', defaultSchedule));
+  const [attendance, setAttendance] = useState(() => loadState('examAttendance', defaultAttendance));
+  const [titleData, setTitleData] = useState(() => {
+      const saved = loadState('examTitle', defaultTitle);
+      // 除非使用者曾手動覆寫學年度/學期，否則每次開啟都依當下日期自動校正
+      const termManual = loadState('examTitleTermManual', false);
+      return termManual ? saved : { ...saved, year: autoYear, semester: autoSemester };
+  });
+
+  const [theme, setTheme] = useState(() => loadState('examTheme', 'light'));
+  const [bopomofoMode, setBopomofoMode] = useState(() => loadState('examBopomofo', false));
+  const [timeMode, setTimeMode] = useState(() => loadState('examTimeMode', 'clock')); 
+  const [isBellEnabled, setIsBellEnabled] = useState(() => loadState('examBell', false));
+  const [isColorWarningEnabled, setIsColorWarningEnabled] = useState(() => loadState('examColorWarn', true));
+  const [lastRungId, setLastRungId] = useState(null); 
+
+  const [customTimer, setCustomTimer] = useState({
+      active: false,
+      endTime: null,
+      targetH: '12',
+      targetM: '00',
+      minutes: 10,
+      mode: 'schedule' 
+  });
+
+  const [draggedItemIndex, setDraggedItemIndex] = useState(null);
+  const [dragOverItemIndex, setDragOverItemIndex] = useState(null);
+
+  const [showSizeWarning, setShowSizeWarning] = useState(false);
+  const [hasDismissedWarning, setHasDismissedWarning] = useState(false);
+
+  useEffect(() => { localStorage.setItem('examSchedule', JSON.stringify(schedule)); }, [schedule]);
+  useEffect(() => { localStorage.setItem('examAttendance', JSON.stringify(attendance)); }, [attendance]);
+  useEffect(() => { localStorage.setItem('examTitle', JSON.stringify(titleData)); }, [titleData]);
+  useEffect(() => { 
+      localStorage.setItem('examTheme', JSON.stringify(theme)); 
+      if(theme === 'dark') document.documentElement.classList.add('dark');
+      else document.documentElement.classList.remove('dark');
+  }, [theme]);
+  useEffect(() => { localStorage.setItem('examBopomofo', JSON.stringify(bopomofoMode)); }, [bopomofoMode]);
+  useEffect(() => { localStorage.setItem('examTimeMode', JSON.stringify(timeMode)); }, [timeMode]);
+  useEffect(() => { localStorage.setItem('examBell', JSON.stringify(isBellEnabled)); }, [isBellEnabled]);
+  useEffect(() => { localStorage.setItem('examColorWarn', JSON.stringify(isColorWarningEnabled)); }, [isColorWarningEnabled]);
+
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    const handleFullscreenChange = () => setIsFullscreen(!!document.fullscreenElement);
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
+
+  useEffect(() => {
+    const checkSize = () => {
+        // 當寬度小於 1100px 或高度小於 700px 時觸發提示
+        if (window.innerWidth < 1100 || window.innerHeight < 700) {
+            setShowSizeWarning(true);
+        } else {
+            setShowSizeWarning(false);
+        }
+    };
+    checkSize(); // 初始檢查
+    window.addEventListener('resize', checkSize);
+    return () => window.removeEventListener('resize', checkSize);
+  }, []);
+
+  useEffect(() => {
+      if (!isBellEnabled) return;
+      const currentMinutes = currentTime.getHours() * 60 + currentTime.getMinutes();
+      const currentSeconds = currentTime.getSeconds();
+      const nowMs = currentTime.getTime();
+      let shouldRing = false; let ringId = null;
+      for (const exam of schedule) {
+          const sT = parseInt(exam.startH) * 60 + parseInt(exam.startM);
+          const eT = parseInt(exam.endH) * 60 + parseInt(exam.endM);
+          if (currentMinutes === sT && currentSeconds === 0) { shouldRing = true; ringId = `start-${exam.id}`; }
+          if (currentMinutes === eT && currentSeconds === 0) { shouldRing = true; ringId = `end-${exam.id}`; }
+      }
+      if (timeMode === 'countdown' && customTimer.mode !== 'schedule' && customTimer.active && customTimer.endTime) {
+          const diff = customTimer.endTime - nowMs;
+          if (diff <= 0 && diff > -1000) { shouldRing = true; ringId = `custom-${customTimer.endTime}`; }
+      }
+
+      if (shouldRing) {
+          if (lastRungId !== ringId) {
+              playSchoolBell(); 
+              setLastRungId(ringId);
+          }
+      } else {
+          if (lastRungId !== null) {
+              setLastRungId(null);
+          }
+      }
+  }, [currentTime, schedule, customTimer, isBellEnabled, timeMode, lastRungId]);
+
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(e=>console.error(e));
+    else if(document.exitFullscreen) document.exitFullscreen();
+  };
+
+  // 使用者手動更動學年度/學期 → 記錄為手動覆寫，之後不再自動校正（直到重置）
+  const handleTermChange = (field, value) => {
+    localStorage.setItem('examTitleTermManual', JSON.stringify(true));
+    setTitleData({ ...titleData, [field]: value });
+  };
+
+  const handleReset = () => {
+    if (window.confirm("確定要將所有內容重置為初始狀態嗎？所有編輯的資料都會消失。")) {
+      localStorage.setItem('examTitleTermManual', JSON.stringify(false));
+      const term = getAcademicTerm(); // 重置時依當下日期重算，確保學年度/學期正確
+      setSchedule(defaultSchedule); setAttendance(defaultAttendance);
+      setTitleData({ ...defaultTitle, year: term.year, semester: term.semester });
+      setCustomTimer(prev => ({...prev, active: false, endTime: null, mode: 'schedule'}));
+    }
+  };
+
+  const handleExamChange = (id, field, value) => {
+    setSchedule(schedule.map(exam => exam.id === id ? { ...exam, [field]: value } : exam));
+  };
+
+  const addExam = () => {
+    const newId = schedule.length > 0 ? Math.max(...schedule.map(ex => ex.id)) + 1 : 1;
+    let nH = '11', nM = '20';
+    if (schedule.length > 0) {
+      const last = schedule[schedule.length - 1];
+      let total = parseInt(last.endH) * 60 + parseInt(last.endM) + 10;
+      nH = Math.floor(total / 60 % 24).toString().padStart(2, '0');
+      nM = (total % 60).toString().padStart(2, '0');
+    }
+    setSchedule([...schedule, { id: newId, startH: nH, startM: nM, endH: nH, endM: ((parseInt(nM) + 40) % 60).toString().padStart(2, '0'), subject: '', proctor: 'OOO老師' }]);
+  };
+
+  const removeExam = (id) => { if (schedule.length > 1) setSchedule(schedule.filter(exam => exam.id !== id)); };
+
+  const handleDragStart = (e, idx) => { setDraggedItemIndex(idx); e.dataTransfer.effectAllowed = "move"; };
+  const handleDragOver = (e, idx) => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; if (draggedItemIndex !== null && draggedItemIndex !== idx) setDragOverItemIndex(idx); };
+  const handleDrop = (e, idx) => { e.preventDefault(); setDragOverItemIndex(null); if (draggedItemIndex !== null && draggedItemIndex !== idx) { const newSchedule = [...schedule]; const item = newSchedule.splice(draggedItemIndex, 1)[0]; newSchedule.splice(idx, 0, item); setSchedule(newSchedule); } setDraggedItemIndex(null); };
+
+  const startCustomTimer = () => {
+      const now = new Date(); let endTime = new Date(now);
+      if (customTimer.mode === 'duration') endTime.setMinutes(now.getMinutes() + parseInt(customTimer.minutes || 0));
+      else {
+          endTime.setHours(parseInt(customTimer.targetH), parseInt(customTimer.targetM), 0, 0);
+          if (endTime < now) endTime.setDate(endTime.getDate() + 1); 
+      }
+      setCustomTimer({...customTimer, active: true, endTime: endTime.getTime()});
+  };
+
+  const formatDate = (date) => {
+      const y = date.getFullYear();
+      const m = (date.getMonth() + 1).toString().padStart(2, '0');
+      const d = date.getDate().toString().padStart(2, '0');
+      const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
+      const w = weekdays[date.getDay()];
+      return `${y}年${m}月${d}日 星期${w}`;
+  };
+
+  const getTextColor = (val, def) => val === def ? 'text-slate-400 dark:text-zinc-500' : 'text-indigo-600 dark:text-indigo-400';
+
+  // 修復：為注音模式的中文字保留更巨大的寬度額度(charWidth = 2.5)，防止切換到 input 時空間不足
+  const getInputWidth = (text, minEm) => {
+      let ems = bopomofoMode ? 1.5 : 0.5; 
+      const charWidth = bopomofoMode ? 2.5 : 1.05; 
+      for (let i = 0; i < (text || '').length; i++) {
+          ems += text.charCodeAt(i) > 255 ? charWidth : 0.6;
+      }
+      return `${Math.max(minEm, ems)}em`;
+  };
+
+  const getWarningAndCountdown = () => {
+      const now = currentTime.getTime();
+      const curM = currentTime.getHours() * 60 + currentTime.getMinutes();
+      const curS = currentTime.getSeconds();
+      let warning = { active: false, text: '', isRed: false };
+      let displayTime = ''; let subText = '';
+
+      if (timeMode === 'countdown') {
+          if (customTimer.mode !== 'schedule' && customTimer.active && customTimer.endTime) {
+              const diff = customTimer.endTime - now;
+              if (diff <= 0) { displayTime = "00:00"; warning = { active: true, text: '時間到', isRed: isColorWarningEnabled }; subText = '自訂倒數結束'; }
+              else {
+                  const h = Math.floor(diff / 3600000); const m = Math.floor((diff % 3600000) / 60000); const s = Math.floor((diff % 60000) / 1000);
+                  displayTime = h > 0 ? `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}` : `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+                  if (diff <= 300000) warning = { active: true, text: diff <= 180000 ? '最後三分鐘' : '最後五分鐘', isRed: isColorWarningEnabled && diff <= 180000 }; 
+                  subText = '自訂倒數進行中';
+              }
+          } else {
+              let nextTargetMs = null;
+              const sorted = [...schedule].sort((a,b) => (parseInt(a.startH)*60+parseInt(a.startM)) - (parseInt(b.startH)*60+parseInt(b.startM)));
+              for (const exam of sorted) {
+                  const sT = parseInt(exam.startH) * 60 + parseInt(exam.startM);
+                  const eT = parseInt(exam.endH) * 60 + parseInt(exam.endM);
+                  if (sT - curM > 0 && sT - curM <= 5) warning = { active: true, text: '準備開始', isRed: false };
+                  if (eT - curM > 0 && eT - curM <= 5) warning = { active: true, text: (eT - curM <= 3) ? '即將收卷' : '準備收卷', isRed: isColorWarningEnabled && (eT - curM <= 3) };
+                  if (!nextTargetMs) {
+                      const tD = new Date(currentTime); tD.setSeconds(0); tD.setMilliseconds(0);
+                      if (curM < sT || (curM === sT && curS === 0)) { tD.setHours(parseInt(exam.startH), parseInt(exam.startM)); nextTargetMs = tD.getTime(); subText = `距離 ${exam.subject || '下一節'} 開始`; }
+                      else if (curM < eT || (curM === eT && curS === 0)) { tD.setHours(parseInt(exam.endH), parseInt(exam.endM)); nextTargetMs = tD.getTime(); subText = `考試中，距離 ${exam.subject || '本節'} 收卷`; }
+                  }
+              }
+              if (nextTargetMs) {
+                  const diff = nextTargetMs - now;
+                  const h = Math.floor(diff / 3600000); const m = Math.floor((diff % 3600000) / 60000); const s = Math.floor((diff % 60000) / 1000);
+                  displayTime = h > 0 ? `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}` : `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+              } else { displayTime = "--:--"; subText = "今日考試已全部結束"; }
+          }
+      } else {
+          displayTime = new Intl.DateTimeFormat('zh-TW', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }).format(currentTime);
+          subText = formatDate(currentTime);
+          for (const exam of schedule) {
+              const sT = parseInt(exam.startH) * 60 + parseInt(exam.startM);
+              const eT = parseInt(exam.endH) * 60 + parseInt(exam.endM);
+              if (sT - curM > 0 && sT - curM <= 5) warning = { active: true, text: '準備開始', isRed: false };
+              if (eT - curM > 0 && eT - curM <= 5) warning = { active: true, text: (eT - curM <= 3) ? '即將收卷' : '準備收卷', isRed: isColorWarningEnabled && (eT - curM <= 3) };
+          }
+      }
+      return { warning, displayTime, subText };
+  };
+
+  const { warning, displayTime, subText } = getWarningAndCountdown();
+
+  const expectedCount = parseInt(attendance.expected) || 0;
+  const actualCount = parseInt(attendance.actual) || 0;
+  const missingCount = Math.max(0, expectedCount - actualCount);
+
+  const hours = Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, '0'));
+  const minutes = Array.from({ length: 60 }, (_, i) => i.toString().padStart(2, '0'));
+
+  return (
+    <div className={`min-h-screen flex items-center justify-center sm:p-4 lg:p-6 font-sans-tc transition-colors duration-500 ${isFullscreen ? 'p-0 bg-black' : 'bg-slate-200 dark:bg-zinc-950'}`}>
+
+      {/* 全螢幕建議提示 */}
+      {showSizeWarning && !isFullscreen && !hasDismissedWarning && (
+          <div className="fixed top-6 left-1/2 transform -translate-x-1/2 z-[100] bg-slate-900/90 dark:bg-slate-100/90 text-white dark:text-slate-900 px-5 py-3 rounded-full shadow-2xl backdrop-blur-xl flex items-center gap-3 print:hidden border border-slate-700/50 dark:border-slate-300/50">
+              <Maximize className="w-5 h-5 opacity-80 shrink-0" />
+              <span className="font-bold tracking-widest text-xs lg:text-sm whitespace-nowrap"><ZY active={bopomofoMode}>建議開啟全螢幕以獲得最佳顯示效果</ZY></span>
+              <div className="flex items-center gap-2 border-l border-slate-700 dark:border-slate-300 pl-3 ml-1">
+                  <button onClick={toggleFullscreen} className="bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded-full transition-all font-black text-xs shadow-sm active:scale-95 whitespace-nowrap"><ZY active={bopomofoMode}>開啟</ZY></button>
+                  <button onClick={() => setHasDismissedWarning(true)} className="hover:bg-slate-800 dark:hover:bg-slate-200 p-1.5 rounded-full transition-colors opacity-80 hover:opacity-100"><XIcon className="w-4 h-4" /></button>
+              </div>
+          </div>
+      )}
+
+      <div className={`w-full h-full max-w-[1920px] flex flex-col bg-slate-50 dark:bg-[#0a0a0a] shadow-2xl relative transition-all duration-500 ${isFullscreen ? 'h-screen max-h-screen max-w-none rounded-none border-none' : 'h-[94vh] max-h-[1080px] rounded-[2.5rem] border border-white/60 dark:border-zinc-800/80 overflow-hidden'}`}>
+
+        {/* 頂部標題 */}
+        <div className="relative flex justify-center items-center px-4 lg:px-8 py-3 lg:py-4 bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl border-b border-slate-200/50 dark:border-zinc-800/50 z-30 shrink-0 shadow-sm print:bg-white print:border-b-2 print:border-black">
+          <button onClick={() => window.location.href = 'index.html'} className="absolute left-4 lg:left-8 p-2 rounded-xl bg-slate-100 hover:bg-indigo-600 dark:bg-zinc-800 dark:hover:bg-indigo-600 text-slate-500 hover:text-white dark:text-zinc-400 transition-all shadow-sm flex items-center gap-1 font-black group z-20 print:hidden">
+            <ChevronLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+            <span className="hidden sm:inline text-sm">智慧課堂助手</span>
+          </button>
+          <div className="flex items-center justify-center flex-wrap gap-x-1 gap-y-1 text-xl lg:text-3xl xl:text-4xl font-black font-tc text-slate-800 dark:text-zinc-100 relative z-10 tracking-wide w-full">
+
+            {!bopomofoMode && (
+                <>
+                    <ZYInput active={bopomofoMode} list="year-list" value={titleData.year} onChange={e => handleTermChange('year', e.target.value)} style={{ width: getInputWidth(titleData.year, 2.2) }} className={`shrink-0 text-center bg-transparent hover:bg-slate-200/60 dark:hover:bg-zinc-800/60 rounded-lg px-1 focus:outline-none transition-colors ${getTextColor(titleData.year, autoYear)}`} />
+                    <span className="shrink-0 px-0.5"><ZY active={bopomofoMode}>學年度第</ZY></span>
+                </>
+            )}
+
+            <ZYInput active={bopomofoMode} list="semester-list" value={titleData.semester} onChange={e => handleTermChange('semester', e.target.value)} style={{ width: getInputWidth(titleData.semester, 1.5) }} className={`shrink-0 text-center bg-transparent hover:bg-slate-200/60 dark:hover:bg-zinc-800/60 rounded-lg px-1 focus:outline-none transition-colors ${getTextColor(titleData.semester, autoSemester)}`} />
+            <span className="shrink-0 px-0.5"><ZY active={bopomofoMode}>學期</ZY></span>
+            <ZYInput active={bopomofoMode} list="grade-list" value={titleData.grade} onChange={e => setTitleData({...titleData, grade: e.target.value})} style={{ width: getInputWidth(titleData.grade, 1.5) }} className={`shrink-0 text-center bg-transparent hover:bg-slate-200/60 dark:hover:bg-zinc-800/60 rounded-lg px-1 focus:outline-none transition-colors ${getTextColor(titleData.grade, '五')}`} />
+            <span className="shrink-0 px-0.5"><ZY active={bopomofoMode}>年級第</ZY></span>
+            <ZYInput active={bopomofoMode} list="exam-num-list" value={titleData.examNum} onChange={e => setTitleData({...titleData, examNum: e.target.value})} style={{ width: getInputWidth(titleData.examNum, 1.5) }} className={`shrink-0 text-center bg-transparent hover:bg-slate-200/60 dark:hover:bg-zinc-800/60 rounded-lg px-1 focus:outline-none transition-colors ${getTextColor(titleData.examNum, '一')}`} />
+            <span className="shrink-0 px-0.5"><ZY active={bopomofoMode}>次</ZY></span>
+            <ZYInput active={bopomofoMode} type="text" value={titleData.examName} onChange={e => setTitleData({...titleData, examName: e.target.value})} style={{ width: getInputWidth(titleData.examName, 4.5) }} className={`shrink-0 text-center bg-transparent hover:bg-slate-200/60 dark:hover:bg-zinc-800/60 rounded-lg px-1 focus:outline-none transition-colors ${getTextColor(titleData.examName, '定期評量')}`} />
+          </div>
+        </div>
+
+        <div className="flex-1 min-h-0 flex flex-col lg:flex-row gap-4 lg:gap-6 p-4 lg:p-6 relative z-10">
+          {/* 左側考程表 */}
+          <div className="w-full lg:w-[44%] h-full min-h-0 flex flex-col bg-white dark:bg-zinc-900 rounded-[2rem] shadow-sm border border-slate-200/60 dark:border-zinc-800/60 overflow-hidden print:border-none print:shadow-none">
+
+            {/* 表頭：統一為單行顯示，確保「時間、科目、監考」對齊在同一排 */}
+            <div className="print-header flex w-full px-4 lg:px-6 py-3 lg:py-4 border-b border-slate-100 dark:border-zinc-800 shrink-0 bg-slate-50/50 dark:bg-zinc-950/50 items-center justify-between">
+              <div className="flex-1 text-sm lg:text-base font-black text-slate-400 dark:text-zinc-500 tracking-widest text-center uppercase">
+                  <ZY active={bopomofoMode}>時間</ZY>
+              </div>
+              <div className="flex-1 text-sm lg:text-base font-black text-slate-400 dark:text-zinc-500 tracking-widest text-center uppercase">
+                  <ZY active={bopomofoMode}>科目</ZY>
+              </div>
+              <div className="flex-1 text-sm lg:text-base font-black text-slate-400 dark:text-zinc-500 tracking-widest text-center uppercase">
+                  <ZY active={bopomofoMode}>{bopomofoMode ? '監考' : '監考老師'}</ZY>
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto custom-scrollbar flex flex-col w-full p-2 lg:p-3 relative">
+              {schedule.map((exam, index) => (
+                <div key={exam.id} draggable="true" onDragStart={e=>handleDragStart(e,index)} onDragOver={e=>handleDragOver(e,index)} onDragLeave={()=>setDragOverItemIndex(null)} onDrop={e=>handleDrop(e,index)} onDragEnd={()=>setDraggedItemIndex(null)}
+                  className={`group flex flex-col w-full items-center py-4 lg:py-6 gap-3 lg:gap-4 px-2 rounded-2xl border border-transparent transition-all relative cursor-move shrink-0 ${index%2===0 ? 'bg-transparent' : 'bg-slate-50/50 dark:bg-zinc-800/20'} hover:bg-slate-100/80 dark:hover:bg-zinc-800/80 hover:border-slate-200/80 dark:hover:border-zinc-700/80 ${draggedItemIndex===index?'dragging':''} ${dragOverItemIndex===index?'drag-over':''} min-h-[90px] lg:min-h-[110px]`}>
+                  <div className="drag-handle absolute top-3 left-2 lg:top-4 lg:left-4 text-slate-300 dark:text-zinc-600 opacity-0 group-hover:opacity-100 transition-opacity"><GripVertical className="w-5 h-5 lg:w-6 lg:h-6" /></div>
+
+                  {/* 考程時間區塊 */}
+                  <div className="w-full px-0 flex items-center justify-center font-bold font-num tabular-nums text-slate-700 dark:text-zinc-200 tracking-tight gap-0.5 text-3xl lg:text-[2.5rem]">
+                    <select value={exam.startH} onChange={e=>handleExamChange(exam.id,'startH',e.target.value)} className="bg-transparent hover:bg-white dark:hover:bg-zinc-700 rounded-lg focus:outline-none text-center no-arrow transition-colors">{hours.map(h=><option key={h} value={h} className="text-slate-800">{h}</option>)}</select>
+                    <span className="opacity-50 pb-1 lg:pb-2">:</span>
+                    <select value={exam.startM} onChange={e=>handleExamChange(exam.id,'startM',e.target.value)} className="bg-transparent hover:bg-white dark:hover:bg-zinc-700 rounded-lg focus:outline-none text-center no-arrow transition-colors">{minutes.map(m=><option key={m} value={m} className="text-slate-800">{m}</option>)}</select>
+                    <span className="mx-2 opacity-30 font-sans pb-1 lg:pb-2">-</span>
+                    <select value={exam.endH} onChange={e=>handleExamChange(exam.id,'endH',e.target.value)} className="bg-transparent hover:bg-white dark:hover:bg-zinc-700 rounded-lg focus:outline-none text-center no-arrow transition-colors">{hours.map(h=><option key={h} value={h} className="text-slate-800">{h}</option>)}</select>
+                    <span className="opacity-50 pb-1 lg:pb-2">:</span>
+                    <select value={exam.endM} onChange={e=>handleExamChange(exam.id,'endM',e.target.value)} className="bg-transparent hover:bg-white dark:hover:bg-zinc-700 rounded-lg focus:outline-none text-center no-arrow transition-colors">{minutes.map(m=><option key={m} value={m} className="text-slate-800">{m}</option>)}</select>
+                  </div>
+
+                  {/* 科目與監考區塊 */}
+                  <div className="w-full flex items-center justify-center gap-2 lg:gap-4">
+                    <div className="w-1/2 px-0 flex items-center justify-center">
+                      <ZYInput active={bopomofoMode} type="text" list="subject-list" value={exam.subject} onChange={e=>handleExamChange(exam.id,'subject',e.target.value)} placeholder="科目" className={`w-full shrink-0 text-center font-black font-tc tracking-widest bg-transparent hover:bg-white dark:hover:bg-zinc-700 rounded-xl focus:outline-none py-1 transition-colors placeholder:text-slate-300 dark:placeholder:text-zinc-600 ${getTextColor(exam.subject, '')} text-3xl lg:text-[2.2rem] xl:text-[2.5rem]`} />
+                    </div>
+                    <div className="w-1/2 px-0 flex items-center justify-center font-black tracking-wider text-slate-500 dark:text-zinc-400 text-2xl lg:text-[1.8rem] xl:text-[2rem]">
+                      <ZYInput active={bopomofoMode} type="text" value={exam.proctor} onChange={e=>handleExamChange(exam.id,'proctor',e.target.value)} className={`w-full shrink-0 text-center bg-transparent hover:bg-white dark:hover:bg-zinc-700 rounded-xl focus:outline-none py-1 transition-colors ${getTextColor(exam.proctor, 'OOO老師')}`} />
+                    </div>
+                  </div>
+
+                  <div className="absolute top-2 right-2 lg:top-4 lg:right-4 opacity-0 group-hover:opacity-100 print:hidden transition-opacity">
+                    <button onClick={()=>removeExam(exam.id)} className="p-1.5 text-rose-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-zinc-700 rounded-full transition-colors"><Trash2 className="w-6 h-6 lg:w-7 lg:h-7" /></button>
+                  </div>
+                </div>
+              ))}
+              <div className="flex w-full justify-center items-center py-6 print:hidden shrink-0 mt-auto">
+                <button onClick={addExam} className="flex items-center gap-3 text-indigo-600 dark:text-indigo-400 hover:text-white bg-indigo-50 dark:bg-indigo-900/10 hover:bg-indigo-600 dark:hover:bg-indigo-600 border-2 border-indigo-100 dark:border-indigo-800/50 px-8 py-3 rounded-full transition-all font-black tracking-widest text-base lg:text-lg shadow-md">
+                  <Plus className="w-6 h-6" /><ZY active={bopomofoMode}>新增考科</ZY>
+                </button>
+              </div>
+              <datalist id="subject-list">
+                {['國語', '數學', '自然', '社會', '英文', '自訂'].map(sub => <option key={sub} value={sub} />)}
+              </datalist>
+              <datalist id="year-list">
+                {[autoYear, String(Number(autoYear) + 1), '自訂'].map(y => <option key={y} value={y} />)}
+              </datalist>
+              <datalist id="semester-list">
+                {['一', '二'].map(s => <option key={s} value={s} />)}
+              </datalist>
+              <datalist id="grade-list">
+                {['一', '二', '三', '四', '五', '六'].map(g => <option key={g} value={g} />)}
+              </datalist>
+              <datalist id="exam-num-list">
+                {['一', '二'].map(e => <option key={e} value={e} />)}
+              </datalist>
+            </div>
+          </div>
+
+          {/* 右側資訊與時鐘 */}
+          <div className="w-full lg:w-[56%] flex flex-col gap-4 lg:gap-5 h-full relative z-20 min-h-0">
+
+            {/* 第一排：常駐設定功能區 */}
+            <div className="flex items-center justify-between bg-white dark:bg-zinc-900 rounded-2xl px-4 py-2 border border-slate-200/60 dark:border-zinc-800/60 shadow-sm shrink-0 print:hidden z-30">
+                <div className="flex gap-1 lg:gap-2">
+                     <IconButton icon={timeMode === 'clock' ? Clock : Timer} label="時間顯示切換" description="選擇顯示「目前標準時鐘」或「智慧考試追蹤」。追蹤模式會自動判斷目前是休息時間或考試時間，顯示精準的倒數進度。" onClick={() => setTimeMode(t => t === 'clock' ? 'countdown' : 'clock')} isActive={timeMode === 'countdown'} activeColor="bg-amber-50 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400" inactiveColor="hover:bg-slate-100 text-slate-500 dark:text-zinc-400 dark:hover:bg-zinc-800" />
+                     <IconButton icon={Languages} label="教科書注音模式" description="為畫面的標題與狀態文字加上標準直式注音標記，特別針對學齡兒童設計，協助辨識難字與正確讀音。" onClick={() => setBopomofoMode(!bopomofoMode)} isActive={bopomofoMode} activeColor="bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400" inactiveColor="hover:bg-slate-100 text-slate-500 dark:text-zinc-400 dark:hover:bg-zinc-800" />
+                     <IconButton icon={theme === 'light' ? Moon : Sun} label="深淺主題風格" description="切換「極簡亮白」或「專業鋅灰」色彩方案。深色模式能有效減少螢幕藍光刺激，適合光線較暗的教室環境。" onClick={() => setTheme(t => t === 'light' ? 'dark' : 'light')} isActive={false} inactiveColor="hover:bg-slate-100 text-slate-500 dark:text-zinc-400 dark:hover:bg-zinc-800" />
+                     <IconButton icon={isBellEnabled ? Volume2 : VolumeX} label="自動學校鐘聲" description="智慧鐘聲偵測。啟用後將根據考程表時間，在開始與結束的瞬間自動播放傳統經典的西敏寺鐘聲。" onClick={() => setIsBellEnabled(!isBellEnabled)} isActive={isBellEnabled} activeColor="bg-sky-50 text-sky-600 dark:bg-sky-900/30 dark:text-sky-400" inactiveColor="hover:bg-slate-100 text-slate-500 dark:text-zinc-400 dark:hover:bg-zinc-800" />
+                     <IconButton icon={Palette} label="三段式變色警示" description="視覺壓力警示開關。開啟後：結束前5分鐘背景變黃、3分鐘時巨型數字會變紅，提醒考生進入最後衝刺階段。" onClick={() => setIsColorWarningEnabled(!isColorWarningEnabled)} isActive={isColorWarningEnabled} activeColor="bg-rose-50 text-rose-600 dark:bg-rose-900/30 dark:text-rose-400" inactiveColor="hover:bg-slate-100 text-slate-500 dark:text-zinc-400 dark:hover:bg-zinc-800" />
+                </div>
+                <div className="flex gap-1 lg:gap-2">
+                     <IconButton icon={RotateCcw} label="全看板數據重置" description="清除所有自定義的考程安排、出缺勤人數與標題，將電子看板還原至最初始的出廠預設值。請謹慎使用。" onClick={handleReset} isActive={false} inactiveColor="hover:bg-rose-50 hover:text-rose-600 text-slate-500 dark:text-zinc-400 dark:hover:bg-rose-900/30 dark:hover:text-rose-400" />
+                     <IconButton icon={isFullscreen ? Minimize : Maximize} label="沉浸全螢幕" description="隱藏瀏覽器標籤與網址列，讓電子看板全屏佔滿整個顯示器。提供考生最純淨、無干擾的資訊閱覽體驗。" onClick={toggleFullscreen} isActive={false} inactiveColor="hover:bg-emerald-50 hover:text-emerald-600 text-slate-500 dark:text-zinc-400 dark:hover:bg-emerald-900/30 dark:hover:text-emerald-400" />
+                </div>
+            </div>
+
+            {/* 第二排：出缺勤資訊 */}
+            <div className="flex gap-2 lg:gap-3 shrink-0">
+                <div className="flex-1 bg-white dark:bg-zinc-900 rounded-2xl p-2 lg:p-3 flex flex-col items-center justify-center border border-slate-200/60 dark:border-zinc-800/60 shadow-sm relative overflow-hidden">
+                    <div className="text-[10px] lg:text-xs font-black text-slate-400 dark:text-zinc-500 tracking-widest"><ZY active={bopomofoMode}>應到</ZY></div>
+                    <div className="flex items-end gap-0.5 relative z-10">
+                        <input type="text" inputMode="numeric" maxLength="3" value={attendance.expected} 
+                               onChange={e => {
+                                   const val = e.target.value.replace(/\D/g, ''); 
+                                   setAttendance({...attendance, expected: val === '' ? '' : Math.min(999, parseInt(val, 10))});
+                               }} 
+                               className="w-[1.8em] text-center font-num text-2xl lg:text-3xl font-black text-indigo-600 dark:text-indigo-400 bg-transparent border-b-2 border-transparent hover:border-indigo-200 focus:border-indigo-600 focus:outline-none transition-colors" />
+                        <span className="text-xs text-slate-400 dark:text-zinc-500 font-bold pb-1"><ZY active={bopomofoMode}>人</ZY></span>
+                    </div>
+                </div>
+                <div className="flex-1 bg-white dark:bg-zinc-900 rounded-2xl p-2 lg:p-3 flex flex-col items-center justify-center border border-slate-200/60 dark:border-zinc-800/60 shadow-sm relative overflow-hidden">
+                    <div className="text-[10px] lg:text-xs font-black text-slate-400 dark:text-zinc-500 tracking-widest"><ZY active={bopomofoMode}>實到</ZY></div>
+                    <div className="flex items-end gap-0.5 relative z-10">
+                        <input type="text" inputMode="numeric" maxLength="3" value={attendance.actual} 
+                               onChange={e => {
+                                   const val = e.target.value.replace(/\D/g, ''); 
+                                   setAttendance({...attendance, actual: val === '' ? '' : Math.min(999, parseInt(val, 10))});
+                               }} 
+                               className="w-[1.8em] text-center font-num text-2xl lg:text-3xl font-black text-indigo-600 dark:text-indigo-400 bg-transparent border-b-2 border-transparent hover:border-indigo-200 focus:border-indigo-600 focus:outline-none transition-colors" />
+                        <span className="text-xs text-slate-400 dark:text-zinc-500 font-bold pb-1"><ZY active={bopomofoMode}>人</ZY></span>
+                    </div>
+                </div>
+                <div className={`flex-1 bg-white dark:bg-zinc-900 rounded-2xl p-2 lg:p-3 flex flex-col items-center justify-center border border-slate-200/60 dark:border-zinc-800/60 shadow-sm transition-colors ${missingCount > 0 ? 'ring-2 ring-rose-400/50 bg-rose-50/30 dark:bg-rose-900/10' : ''}`}>
+                    <div className={`text-[10px] lg:text-xs font-black tracking-widest ${missingCount > 0 ? 'text-rose-500 dark:text-rose-400' : 'text-slate-400 dark:text-zinc-500'}`}><ZY active={bopomofoMode}>缺考</ZY></div>
+                    <div className="flex items-end gap-0.5"><span className={`font-num text-2xl lg:text-3xl font-[900] ${missingCount > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-slate-300 dark:text-zinc-600'}`}>{missingCount}</span><span className={`text-xs font-bold pb-1 ${missingCount > 0 ? 'text-rose-400 dark:text-rose-500' : 'text-slate-300 dark:text-zinc-600'}`}><ZY active={bopomofoMode}>人</ZY></span></div>
+                </div>
+                <div className="flex-[1.5] bg-white dark:bg-zinc-900 rounded-2xl p-2 lg:p-3 flex flex-col items-center justify-center border border-slate-200/60 dark:border-zinc-800/60 shadow-sm relative overflow-hidden">
+                    <div className="text-[10px] lg:text-xs font-black text-slate-400 dark:text-zinc-500 tracking-widest"><ZY active={bopomofoMode}>缺席座號</ZY></div>
+                    <div className="w-full px-2"><ZYInput active={bopomofoMode} type="text" value={attendance.absentNumbers} onChange={e=>setAttendance({...attendance, absentNumbers: e.target.value})} placeholder="無" className={`w-full text-center font-num text-xl lg:text-2xl font-black bg-transparent border-b-2 border-slate-100 dark:border-zinc-800 hover:border-slate-300 focus:border-indigo-600 focus:outline-none pb-0.5 placeholder-slate-300 dark:placeholder-zinc-700 ${getTextColor(attendance.absentNumbers, '')}`} /></div>
+                </div>
+            </div>
+
+            {/* 第三排：自訂計時器控制 */}
+            {timeMode === 'countdown' && (
+              <div className="p-2 lg:p-3 bg-white/50 dark:bg-zinc-900/50 rounded-2xl border border-amber-200/50 dark:border-amber-900/30 print:hidden flex items-center justify-between shadow-inner shrink-0">
+                 <div className="flex items-center gap-2 lg:gap-4 w-full">
+                     <select value={customTimer.mode} onChange={e=>setCustomTimer({...customTimer, mode: e.target.value, active: false})} disabled={customTimer.active && customTimer.mode !== 'schedule'} className="bg-transparent font-black text-slate-700 dark:text-zinc-300 focus:outline-none disabled:opacity-50 text-sm lg:text-base cursor-pointer">
+                         <option value="schedule">自動追蹤考試表</option>
+                         <option value="duration">手動倒數 (分)</option>
+                         <option value="target">指定幾點結束</option>
+                     </select>
+                     {customTimer.mode !== 'schedule' ? (
+                         <>
+                             <div className="w-px h-6 bg-slate-300 dark:bg-zinc-700"></div>
+                             <div className="flex items-center font-num text-lg lg:text-xl font-black text-amber-600 dark:text-amber-500 flex-1">
+                                 {customTimer.mode === 'duration' ? <div className="flex items-center"><input type="number" value={customTimer.minutes} onChange={e=>setCustomTimer({...customTimer, minutes: e.target.value})} disabled={customTimer.active} className="w-[2.5em] text-center bg-white dark:bg-zinc-800 rounded-lg shadow-sm border border-amber-100 dark:border-zinc-700 py-0.5 focus:outline-none" min="1"/><span className="ml-1 lg:ml-2 text-xs lg:text-sm font-sans font-bold">分</span></div> : <div className="flex items-center bg-white dark:bg-zinc-800 rounded-lg px-2 lg:px-3 py-0.5 border border-amber-100 dark:border-zinc-700 shadow-sm"><select value={customTimer.targetH} onChange={e=>setCustomTimer({...customTimer, targetH: e.target.value})} disabled={customTimer.active} className="bg-transparent text-center focus:outline-none no-arrow cursor-pointer">{hours.map(h=><option key={h} value={h}>{h}</option>)}</select><span className="mx-1 opacity-50">:</span><select value={customTimer.targetM} onChange={e=>setCustomTimer({...customTimer, targetM: e.target.value})} disabled={customTimer.active} className="bg-transparent text-center focus:outline-none no-arrow cursor-pointer">{minutes.map(m=><option key={m} value={m}>{m}</option>)}</select></div>}
+                             </div>
+                             <button onClick={customTimer.active ? () => setCustomTimer({...customTimer, active: false}) : startCustomTimer} className={`${customTimer.active ? 'bg-rose-600 text-white shadow-rose-200' : 'bg-amber-600 text-white shadow-amber-200'} px-6 lg:px-8 py-1.5 lg:py-2 rounded-xl text-sm lg:text-base font-black transition-all shadow-md active:scale-95 shrink-0`}>{customTimer.active ? '停止' : '開始'}</button>
+                         </>
+                     ) : <div className="flex-1 flex justify-end"><div className="text-xs lg:text-sm font-black text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/40 px-3 lg:px-4 py-1.5 lg:py-2 rounded-xl flex items-center gap-2 border border-indigo-200 dark:border-indigo-800 shadow-sm animate-pulse"><Clock className="w-4 h-4 lg:w-5 lg:h-5"/> 智慧考程偵測中</div></div>}
+                 </div>
+              </div>
+            )}
+
+            {/* 下半部：巨型時鐘面板 (自適應 SVG 不溢出黑科技) */}
+            <div className={`flex-1 w-full min-h-0 flex flex-col items-center justify-center relative overflow-hidden rounded-[2.5rem] shadow-xl transition-all duration-700 border-[3px] p-2 lg:p-4 ${warning.isRed ? 'bg-rose-50 dark:bg-rose-950/40 border-rose-400 dark:border-rose-900/60' : (warning.active ? 'bg-amber-50 dark:bg-amber-950/40 border-amber-400 dark:border-amber-900/60' : 'bg-white dark:bg-zinc-900 border-slate-200/80 dark:border-zinc-800/80')}`}>
+              {(warning.isRed || warning.active) && <div className={`absolute inset-0 animate-pulse pointer-events-none transition-all duration-700 ${warning.isRed ? 'bg-rose-600/10' : 'bg-amber-500/10'}`}></div>}
+
+              {/* 上方：日期與提示 */}
+              <div className="flex flex-col items-center z-20 w-full mt-2 lg:mt-3 shrink-0 px-2 lg:px-4">
+                  {warning.active ? (
+                    <div className={`px-6 lg:px-10 py-2 lg:py-4 rounded-full font-black tracking-[0.2em] flex items-center gap-3 shadow-xl border-[3px] animate-bounce text-lg lg:text-3xl ${warning.isRed ? 'bg-white dark:bg-zinc-800 text-rose-600 dark:text-rose-400 border-rose-500' : 'bg-white dark:bg-zinc-800 text-amber-600 dark:text-amber-500 border-amber-500'}`}>
+                      <AlertTriangle className="w-6 h-6 lg:w-10 lg:h-10" /><ZY active={bopomofoMode}>{warning.text}</ZY>
+                    </div>
+                  ) : (
+                    <div className="text-slate-500 dark:text-zinc-500 font-black tracking-[0.2em] lg:tracking-[0.4em] text-sm lg:text-2xl uppercase opacity-80 flex flex-wrap justify-center items-center text-center gap-x-4 gap-y-2 lg:gap-y-4">
+                        {subText.split(' ').map((part, idx) => (
+                            <span key={idx} className="flex shrink-0">
+                                <ZY active={bopomofoMode}>{part}</ZY>
+                            </span>
+                        ))}
+                    </div>
+                  )}
+              </div>
+
+              {/* 下方：智慧時鐘主體 (SVG Auto-scaling) 保證永不切字與溢出 */}
+              <div className={`flex-1 w-full min-h-0 flex items-center justify-center z-10 p-1 ${warning.isRed ? 'text-rose-600 dark:text-rose-500 animate-[pulse_1.5s_infinite]' : 'text-slate-900 dark:text-white'}`}>
+                  <svg viewBox={displayTime.length > 5 ? "0 0 1100 280" : "0 0 700 280"} className="w-full h-full max-h-full drop-shadow-2xl">
+                      <text x="50%" y="54%" dominantBaseline="middle" textAnchor="middle" fill="currentColor" className="font-num font-black" style={{ fontSize: '240px' }}>
+                          {displayTime}
+                      </text>
+                  </svg>
+              </div>
+
+              {/* 裝飾背景圖 */}
+              <div className="absolute -bottom-10 -right-10 opacity-[0.06] dark:opacity-[0.03] pointer-events-none transform scale-[2.5] rotate-12">{timeMode === 'clock' ? <Clock className="w-64 h-64" /> : <Timer className="w-64 h-64" />}</div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App />);

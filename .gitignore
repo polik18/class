@@ -4,3 +4,4 @@ realtime-worker/.dev.vars
 realtime-worker/.env
 *.log
 .DS_Store
+tools/tailwind/node_modules/
