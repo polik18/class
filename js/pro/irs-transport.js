@@ -91,6 +91,12 @@
             this.onData = options.onData || (() => {});
             this.onServerEvent = options.onServerEvent || (() => {});
             this.onStateChange = options.onStateChange || (() => {});
+            this.swarm = window.IrsSwarm ? new window.IrsSwarm(this) : null;
+            this.media = window.IrsMedia ? new window.IrsMedia(this) : null;
+        }
+
+        static iceServers() {
+            return ICE_SERVERS;
         }
 
         static apiUrl() {
@@ -139,8 +145,9 @@
             this.roomId = room.roomId;
             this.ownerToken = room.ownerToken;
             this.directLimit = Number(room.directLimit || 0);
+            const swarmKeys = await this.swarm?.prepareTeacher(null).catch(() => null);
             await this.openSocket(room.websocketUrl, ['classroom.v1', `owner.${room.ownerToken}`], 'control');
-            return room;
+            return swarmKeys ? { ...room, swarmKeys } : room;
         }
 
         async joinStudent(roomId) {
@@ -162,8 +169,9 @@
             const status = await response.json().catch(() => ({}));
             if (!response.ok || !status.active) throw new Error(status.error || `room_resume_${response.status}`);
             this.directLimit = Number(status.directLimit || room.directLimit || 0);
+            const swarmKeys = await this.swarm?.prepareTeacher(room.swarmKeys).catch(() => null);
             await this.openSocket(this.websocketUrl(this.roomId), ['classroom.v1', `owner.${this.ownerToken}`], 'control');
-            return { ...room, ...status };
+            return { ...room, ...status, ...(swarmKeys ? { swarmKeys } : {}) };
         }
 
         websocketUrl(roomId) {
@@ -224,14 +232,17 @@
                 if (message.type === 'server.student-online' && this.role === 'teacher') {
                     const clientId = message.payload?.clientId;
                     if (clientId && message.payload?.mode === 'relay') {
+                        this.swarm?.release(clientId, true); // 子學生已自行改走雲端中繼
                         this.relayClients.add(clientId);
                         window.clearTimeout(this.offlineTimers.get(clientId));
                         this.offlineTimers.delete(clientId);
-                    } else if (clientId) {
+                    } else if (clientId && !this.swarm?.onStudentOnline(clientId)) {
                         this.startTeacherPeer(clientId);
                     }
                 }
                 if (message.type === 'server.student-offline' && message.payload?.clientId) {
+                    if (this.swarm?.childReady.has(message.payload.clientId)) return; // 已改經裝置中繼，忽略 DO 離線通知
+                    this.swarm?.release(message.payload.clientId, true);
                     this.connections.delete(message.payload.clientId);
                     this.relayClients.delete(message.payload.clientId);
                     this.closePeer(message.payload.clientId, false);
@@ -255,7 +266,10 @@
         async startTeacherPeer(clientId) {
             if (!clientId || this.peers.has(clientId)) return;
             const activePeers = [...this.peers.values()].filter(peer => !peer.closed).length;
-            if (activePeers >= this.directLimit) return;
+            if (activePeers >= this.directLimit) {
+                this.relayClients.add(clientId); // 直連額滿：維持雲端中繼
+                return;
+            }
 
             const record = this.createPeerRecord(clientId);
             const channel = record.pc.createDataChannel('irs-data', { ordered: true });
@@ -282,11 +296,16 @@
                 timer: null
             };
             if (this.role === 'teacher') this.peers.set(clientId, record);
-            else this.studentPeer = record;
+            else {
+                this.studentPeer = record;
+                this.media?.bindStudentPeer(record);
+            }
 
             pc.addEventListener('icecandidate', event => {
                 if (event.candidate && this.isOpen()) {
-                    this.sendControl('signal.ice', { candidate: event.candidate }, this.role === 'teacher' ? clientId : null);
+                    const payload = { candidate: event.candidate };
+                    if (record.via) payload.via = record.via;
+                    this.sendControl('signal.ice', payload, this.role === 'teacher' ? clientId : null);
                 }
             });
             pc.addEventListener('datachannel', event => this.attachDataChannel(record, event.channel));
@@ -310,9 +329,12 @@
                 record.ready = true;
                 window.clearTimeout(record.timer);
                 this.onStateChange({ state: 'direct', role: this.role, clientId: record.clientId });
+                if (this.role === 'teacher') this.media?.onTeacherPeerReady(record);
                 if (this.role === 'student') {
                     this.flushPendingMessages();
                     this.enterDirectStandby(record);
+                    this.swarm?.onStudentDirectOpen(record);
+                    if (record.via) this.swarm?.noteRelayAlive();
                 }
             });
             channel.addEventListener('message', event => this.handleDirectMessage(event.data, record.clientId));
@@ -326,15 +348,23 @@
         async handleSignal(message) {
             const senderId = message.senderId;
             const payload = message.payload || {};
+            if (this.role === 'teacher' && payload.via) {
+                this.swarm?.forwardFromChild(message);
+                return;
+            }
             try {
                 if (this.role === 'student' && message.type === 'signal.offer') {
                     if (this.fallbackOnly) return;
-                    const record = this.studentPeer || this.createPeerRecord('teacher');
+                    if (payload.via && !(await this.swarm?.acceptTeacherKeys(payload.teacherKeys))) return;
+                    const record = this.studentPeer || this.createPeerRecord(payload.via || 'teacher');
+                    if (payload.via) record.via = payload.via;
                     await record.pc.setRemoteDescription(payload.description);
                     await this.flushIceCandidates(record);
                     const answer = await record.pc.createAnswer();
                     await record.pc.setLocalDescription(answer);
-                    this.sendControl('signal.answer', { description: record.pc.localDescription });
+                    const reply = { description: record.pc.localDescription };
+                    if (record.via) reply.via = record.via;
+                    this.sendControl('signal.answer', reply);
                     return;
                 }
 
@@ -388,6 +418,7 @@
 
             if (this.role === 'teacher') {
                 this.peers.delete(record.clientId);
+                this.swarm?.onPeerClosed(record.clientId);
                 if (wasReady && this.isOpen()) {
                     this.sendControl('control.direct-left', { disconnectedAt: Date.now() }, record.clientId);
                     window.clearTimeout(this.offlineTimers.get(record.clientId));
@@ -399,6 +430,7 @@
                 }
             } else {
                 this.studentPeer = null;
+                if (!record.via) this.swarm?.closeAll(); // 自己失去老師直連，子學生改走雲端中繼
                 if (!this.shuttingDown) this.activateRelay();
             }
         }
@@ -441,12 +473,34 @@
             this.joinTicketExpiresAt = Number(result.expiresAt || 0);
         }
 
-        handleDirectMessage(rawMessage, peerId) {
+        handleDirectMessage(rawMessage, peerId, verified = false) {
             let message;
             try {
                 message = JSON.parse(rawMessage);
             } catch {
                 return;
+            }
+            if (this.media && typeof message.type === 'string' && message.type.startsWith('media.')) {
+                const record = this.role === 'teacher' ? this.peers.get(peerId) : this.studentPeer;
+                if (record?.pc) this.media.handle(record.pc, message, reply => record.channel?.readyState === 'open' && record.channel.send(JSON.stringify(reply)));
+                return;
+            }
+            if (this.swarm) {
+                if (this.role === 'teacher' && typeof message.type === 'string' && message.type.startsWith('swarm.')) {
+                    this.swarm.handleFromRelay(peerId, message);
+                    return;
+                }
+                if (this.role === 'student' && this.studentPeer?.via && !verified) {
+                    this.swarm.noteRelayAlive();
+                    if (message.type === 'swarm.ping') return;
+                    // 經中繼收到的封包必須帶老師簽章
+                    this.swarm.openDelivery(message, data => this.handleDirectMessage(data, peerId, true));
+                    return;
+                }
+                if (this.role === 'student' && typeof message.type === 'string' && message.type.startsWith('swarm.')) {
+                    this.swarm.handleFromTeacher(message);
+                    return;
+                }
             }
             const legacy = message.payload?.legacy;
             if (!legacy || typeof legacy !== 'object') return;
@@ -480,6 +534,20 @@
             if (targetClientId) envelope.targetClientId = targetClientId;
             this.socket.send(JSON.stringify(envelope));
             return true;
+        }
+
+        stats() {
+            let direct = 0;
+            let relay = 0;
+            let pending = 0;
+            let swarm = 0;
+            for (const clientId of this.connections.keys()) {
+                if (this.peerIsDirect(clientId)) direct += 1;
+                else if (this.swarm?.isChildReady(clientId)) swarm += 1;
+                else if (this.relayClients.has(clientId)) relay += 1;
+                else pending += 1;
+            }
+            return { total: this.connections.size, direct, relay, pending, swarm, relayNodes: this.swarm?.stats().relayNodes || 0, directLimit: this.directLimit };
         }
 
         connectionFor(clientId) {
@@ -524,11 +592,16 @@
 
         sendSerialized(serialized, targetClientId = null, queueIfOffline = true) {
             if (this.role === 'student' && this.hasDirectChannel()) {
-                this.studentPeer.channel.send(serialized);
+                if (this.studentPeer.via) this.swarm.sealAndSend(this.studentPeer.channel, serialized);
+                else this.studentPeer.channel.send(serialized);
                 return true;
             }
             if (this.role === 'teacher' && targetClientId && this.peerIsDirect(targetClientId)) {
                 this.peers.get(targetClientId).channel.send(serialized);
+                return true;
+            }
+            if (this.role === 'teacher' && targetClientId && this.swarm?.isChildReady(targetClientId)) {
+                this.swarm.sendDown(targetClientId, serialized);
                 return true;
             }
             if (this.isOpen()) {
@@ -582,6 +655,7 @@
                     record.channel.send(serialized);
                 }
             });
+            this.swarm?.broadcastDown(serialized, excludeClientId);
             if (this.isOpen()) this.socket.send(serialized);
         }
 
@@ -623,6 +697,7 @@
 
         close() {
             this.shuttingDown = true;
+            this.swarm?.closeAll();
             this.peers.forEach((_, clientId) => this.closePeer(clientId, false));
             if (this.studentPeer) {
                 this.studentPeer.closed = true;

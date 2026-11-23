@@ -158,14 +158,34 @@
       if (boardState.currentPath && boardState.currentPath.points.length > 0) {
           boardState.paths.push(boardState.currentPath);
           
-          if (irsState.hostConn && irsState.hostConn.open) {
-              irsState.hostConn.send({ type: 'draw_path', path: boardState.currentPath });
-          } else if (typeof sendToAllStudents === 'function') {
-              sendToAllStudents({ type: 'draw_path', path: boardState.currentPath });
-          }
+          // 筆劃同步：座標取一位小數、去除過密點，並切成小段，避免超過中繼的 8 KiB 訊息上限
+          strokeChunksForSync(boardState.currentPath).forEach(path => {
+              if (irsState.hostConn && irsState.hostConn.open) {
+                  irsState.hostConn.send({ type: 'draw_path', path });
+              } else if (typeof sendToAllStudents === 'function') {
+                  sendToAllStudents({ type: 'draw_path', path });
+              }
+          });
 
           boardState.currentPath = null;
       }
+    };
+
+    const STROKE_CHUNK_POINTS = 120;
+    const strokeChunksForSync = (path) => {
+        const round = v => Math.round(v * 10) / 10;
+        const points = [];
+        path.points.forEach((pt, i) => {
+            const last = points[points.length - 1];
+            const isEnd = i === path.points.length - 1;
+            if (!last || isEnd || Math.hypot(pt.x - last.x, pt.y - last.y) >= 1.5) points.push({ x: round(pt.x), y: round(pt.y) });
+        });
+        const chunks = [];
+        for (let start = 0; start < points.length; start += STROKE_CHUNK_POINTS - 1) {
+            chunks.push({ ...path, points: points.slice(start, start + STROKE_CHUNK_POINTS) });
+            if (start + STROKE_CHUNK_POINTS >= points.length) break;
+        }
+        return chunks.length ? chunks : [{ ...path, points }];
     };
 
     // RAF throttle state for draw
