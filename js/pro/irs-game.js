@@ -15,6 +15,27 @@
     ];
     const SHAPE_NAMES = ['菱形', '圓形', '三角形', '方形'];
     const COLORS = ['#6366f1', '#10b981', '#f59e0b', '#f43f5e'];
+    // 原創幾何頭像：12 款（漸層底＋幾何圖紋），以索引傳送
+    const AVATARS = [
+        ['#6366f1', '#a855f7', '<circle cx="20" cy="20" r="8" fill="#fff"/>'],
+        ['#10b981', '#06b6d4', '<path d="M20 9l11 19H9z" fill="#fff"/>'],
+        ['#f59e0b', '#ef4444', '<rect x="12" y="12" width="16" height="16" rx="3" fill="#fff"/>'],
+        ['#ec4899', '#8b5cf6', '<path d="M20 8l3.5 7.6 8.3.9-6.2 5.6 1.8 8.2L20 26l-7.4 4.3 1.8-8.2-6.2-5.6 8.3-.9z" fill="#fff"/>'],
+        ['#0ea5e9', '#6366f1', '<path d="M20 9l9.5 5.5v11L20 31l-9.5-5.5v-11z" fill="#fff"/>'],
+        ['#84cc16', '#10b981', '<path d="M20 9l11 11-11 11L9 20z" fill="#fff"/>'],
+        ['#f43f5e', '#f97316', '<circle cx="14" cy="20" r="5" fill="#fff"/><circle cx="26" cy="20" r="5" fill="#fff"/>'],
+        ['#a855f7', '#ec4899', '<path d="M10 26a10 10 0 0 1 20 0z" fill="#fff"/><circle cx="20" cy="13" r="3" fill="#fff"/>'],
+        ['#14b8a6', '#3b82f6', '<path d="M11 13h18v4H11zM11 19h18v4H11zM11 25h18v4H11z" fill="#fff"/>'],
+        ['#eab308', '#84cc16', '<path d="M23 8a12 12 0 1 0 9 19A10 10 0 0 1 23 8z" fill="#fff"/>'],
+        ['#64748b', '#6366f1', '<path d="M20 9v22M9 20h22" stroke="#fff" stroke-width="5" stroke-linecap="round"/>'],
+        ['#f97316', '#ec4899', '<path d="M9 27l6-12 5 8 4-6 7 10z" fill="#fff"/>']
+    ];
+    const avatarSVG = (i, size = 40) => {
+        const [c1, c2, art] = AVATARS[((i % AVATARS.length) + AVATARS.length) % AVATARS.length];
+        const id = `av${i}_${size}`;
+        return `<svg class="gm-av" width="${size}" height="${size}" viewBox="0 0 40 40" aria-hidden="true"><defs><linearGradient id="${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${c1}"/><stop offset="1" stop-color="${c2}"/></linearGradient></defs><rect width="40" height="40" rx="12" fill="url(#${id})"/>${art}</svg>`;
+    };
+    const defaultAvatar = name => { let h = 2166136261; for (const c of String(name || '')) { h ^= c.codePointAt(0); h = Math.imul(h, 16777619) >>> 0; } return h % AVATARS.length; };
     const PREVIEW_MS = 3000;
     const SETTINGS_KEY = 'class_irs_game_settings_v1';
 
@@ -74,7 +95,8 @@
     function ensurePlayer(clientId) {
         if (!T.players.has(clientId)) {
             const info = irsState.studentsInfo[clientId];
-            T.players.set(clientId, { name: info?.name || '同學', score: 0, streak: 0, correctCount: 0, rank: 0, prevRank: 0, answers: [] });
+            const name = info?.name || '同學';
+            T.players.set(clientId, { name, avatar: defaultAvatar(name), score: 0, streak: 0, correctCount: 0, rank: 0, prevRank: 0, answers: [] });
         }
         return T.players.get(clientId);
     }
@@ -392,7 +414,7 @@
               <span class="gm-kicker"><b>READY</b> · ${T.quiz.questions.length} 題</span>
               <h2>${esc(T.quiz.title)}</h2>
               <div style="display:flex;align-items:baseline;gap:12px"><span class="gm-count" data-count>${T.players.size}</span><span style="color:var(--g-muted);font-size:18px">位同學已加入</span></div>
-              <div class="gm-chips" data-chips>${[...T.players.values()].map(p => `<span class="gm-chip">${esc(p.name)}</span>`).join('')}</div>
+              <div class="gm-chips" data-chips>${[...T.players.entries()].map(([cid, p]) => chipHTML(cid, p)).join('')}</div>
             </div>
           </div></div>`);
         try { new QRCode(T.root.querySelector('[data-qr]'), { text: url, width: 220, height: 220, correctLevel: QRCode.CorrectLevel.M }); } catch {}
@@ -409,12 +431,27 @@
         if (T.phase === 'lobby' && isNew) {
             safeSfx('join');
             const chips = T.root.querySelector('[data-chips]');
-            chips?.appendChild(el(`<span class="gm-chip">${esc(p.name)}</span>`));
+            chips?.appendChild(el(chipHTML(clientId, p)));
             const count = T.root.querySelector('[data-count]');
             if (count) count.textContent = T.players.size;
         }
         syncStudent(clientId, conn);
         return true;
+    }
+
+    function chipHTML(cid, p) {
+        return `<span class="gm-chip" data-chip="${esc(cid)}">${avatarSVG(p.avatar, 26)}${esc(p.name)}</span>`;
+    }
+
+    /** 學生端送來的遊戲訊息（目前只有選頭像）。 */
+    function onPlayerMessage(clientId, data) {
+        if (data.g !== 'avatar' || !irsState.studentsInfo[clientId]) return;
+        const a = Number(data.a);
+        if (!Number.isInteger(a) || a < 0 || a >= AVATARS.length) return;
+        const p = ensurePlayer(clientId);
+        p.avatar = a;
+        const chip = T.root?.querySelector(`[data-chip="${CSS.escape(clientId)}"]`);
+        if (chip) chip.outerHTML = chipHTML(clientId, p);
     }
 
     function syncStudent(clientId, conn) {
@@ -615,7 +652,7 @@
         const teams = teamStandings();
         const rowsData = teams
             ? teams.slice(0, 5).map((t, i) => ({ id: `team_${t.id}`, name: `${t.name}（${t.n} 人）`, score: t.avg, rank: i + 1, prev: null, streak: 0 }))
-            : rankPlayers().slice(0, 5).map(cid => { const p = T.players.get(cid); return { id: cid, name: p.name, score: p.score, rank: p.rank, prev: p.prevRank, streak: p.streak }; });
+            : rankPlayers().slice(0, 5).map(cid => { const p = T.players.get(cid); return { id: cid, name: p.name, avatar: p.avatar, score: p.score, rank: p.rank, prev: p.prevRank, streak: p.streak }; });
         const prevOrder = T.prevBoard;
         let mvp = null;
         if (!teams) {
@@ -629,7 +666,7 @@
                 const start = prevOrder.indexOf(r.id);
                 const startPos = start >= 0 ? start : rowsData.length;
                 return `<div class="gm-board-row ${r.rank === 1 ? 'first' : ''}" data-row="${esc(r.id)}" data-target="${rowsData.indexOf(r)}" style="top:${startPos * 90}px">
-                  <span class="gm-rank">${r.rank}</span><span class="gm-name">${esc(r.name)}</span>
+                  <span class="gm-rank">${r.rank}</span>${r.avatar !== undefined ? avatarSVG(r.avatar, 46) : ''}<span class="gm-name">${esc(r.name)}</span>
                   ${r.prev && r.rank < r.prev ? `<span class="gm-up">▲${r.prev - r.rank}</span>` : ''}
                   ${r.streak >= 3 ? `<span class="gm-fire">🔥${r.streak}</span>` : ''}
                   <span class="gm-score" data-score="${r.score}">0</span></div>`;
@@ -666,9 +703,9 @@
         const teams = teamStandings();
         const top = teams
             ? teams.slice(0, 3).map((t, i) => ({ name: t.name, score: t.avg, rank: i + 1 }))
-            : ranking.slice(0, 3).map(cid => ({ name: T.players.get(cid).name, score: T.players.get(cid).score, rank: T.players.get(cid).rank }));
+            : ranking.slice(0, 3).map(cid => ({ name: T.players.get(cid).name, avatar: T.players.get(cid).avatar, score: T.players.get(cid).score, rank: T.players.get(cid).rank }));
         top.forEach((x, i) => { if (i > 0 && x.score === top[i - 1].score) x.rank = top[i - 1].rank; });
-        const slot = (place, cls) => top[place - 1] ? `<div class="gm-step ${cls}" data-step="${place}"><span class="gm-who">${esc(top[place - 1].name)}</span>${top[place - 1].rank !== place ? `<span class="gm-tie">同分並列第 ${top[place - 1].rank} 名</span>` : ''}<span class="gm-pts">${top[place - 1].score.toLocaleString()} 分</span><div class="gm-block">${place}</div></div>` : '<div class="gm-step"></div>';
+        const slot = (place, cls) => top[place - 1] ? `<div class="gm-step ${cls}" data-step="${place}">${top[place - 1].avatar !== undefined ? avatarSVG(top[place - 1].avatar, place === 1 ? 84 : 64) : ''}<span class="gm-who">${esc(top[place - 1].name)}</span>${top[place - 1].rank !== place ? `<span class="gm-tie">同分並列第 ${top[place - 1].rank} 名</span>` : ''}<span class="gm-pts">${top[place - 1].score.toLocaleString()} 分</span><div class="gm-block">${place}</div></div>` : '<div class="gm-step"></div>';
         render(`<div class="gm-view">
             <span class="gm-kicker"><b>PODIUM</b> · ${esc(T.quiz.title)}</span>
             <div class="gm-podium">${slot(2, 'p2')}${slot(1, 'p1')}${slot(3, 'p3')}</div>
@@ -765,6 +802,13 @@
         S.root.addEventListener('click', e => {
             const b = e.target.closest('[data-choice]');
             if (b) submit(Number(b.dataset.choice));
+            const av = e.target.closest('[data-avatar]');
+            if (av) {
+                try { localStorage.setItem('class_irs_game_avatar', av.dataset.avatar); } catch {}
+                studentSfx('tap');
+                renderAvatarPicker();
+                sendAvatar();
+            }
         });
         document.body.appendChild(S.root);
         return S.root;
@@ -783,11 +827,13 @@
     const myName = () => (typeof irsState !== 'undefined' && irsState.studentName) || '';
 
     function onStudentMessage(d) {
+        if (!S.avatarSent && d.g !== 'lobby') { S.avatarSent = true; sendAvatar(); }
         switch (d.g) {
             case 'lobby':
                 S.total = d.total; S.lastRank = 0;
                 sTitle(d.title || '闖關模式');
-                sBody(`<div class="gm-s-big">已加入！</div><div class="gm-s-sub">${esc(myName())}<br>請看大螢幕，等老師開始</div><div class="gm-s-chosen gm-pulse" style="background:linear-gradient(135deg,#6366f1,#ec4899)">${SHAPES[0]}</div>`);
+                renderAvatarPicker();
+                sendAvatar();
                 break;
             case 'preview':
                 S.i = d.i; S.total = d.total;
@@ -851,6 +897,26 @@
         }
     }
 
+    function storedAvatar() {
+        try {
+            const raw = localStorage.getItem('class_irs_game_avatar');
+            if (raw === null || raw === '') return null;
+            const v = Number(raw);
+            return Number.isInteger(v) && v >= 0 && v < AVATARS.length ? v : null;
+        } catch { return null; }
+    }
+    function sendAvatar() {
+        const a = storedAvatar();
+        if (a === null || typeof irsState === 'undefined' || !irsState.hostConn) return;
+        try { irsState.hostConn.send({ type: 'game', g: 'avatar', a }); } catch {}
+    }
+    function renderAvatarPicker() {
+        const mine = storedAvatar() ?? defaultAvatar(myName());
+        sBody(`<div class="gm-s-big">已加入！</div>
+            <div class="gm-s-sub">${esc(myName())}，選一個頭像<br>然後看大螢幕等老師開始</div>
+            <div class="gm-s-avatars">${AVATARS.map((_, i) => `<button type="button" data-avatar="${i}" class="${i === mine ? 'on' : ''}" aria-label="頭像 ${i + 1}">${avatarSVG(i, 52)}</button>`).join('')}</div>`);
+    }
+
     function submit(choice) {
         if (S.answered || !S.qid || typeof irsState === 'undefined' || !irsState.hostConn) return;
         S.answered = true; S.chosen = choice;
@@ -861,5 +927,5 @@
         studentRoot().querySelector('[data-s-body]').style.padding = '';
     }
 
-    window.IrsGame = { open, close, onAnswer, onStudentJoin, onStudentMessage, isActive: () => !['closed', 'library', 'editor'].includes(T.phase), _test: { scoreAnswer, trustedElapsed, T, S } };
+    window.IrsGame = { open, close, onAnswer, onStudentJoin, onStudentMessage, onPlayerMessage, avatarSVG, isActive: () => !['closed', 'library', 'editor'].includes(T.phase), _test: { scoreAnswer, trustedElapsed, T, S } };
 })();

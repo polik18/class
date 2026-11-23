@@ -644,6 +644,10 @@
 
 
     const handleTeacherReceive = (peerId, data, conn) => {
+      if (data.type === 'game') {
+        window.IrsGame?.onPlayerMessage(peerId, data);
+        return;
+      }
       if (data.type === 'join') {
         irsState.connections[peerId] = conn;
         const previous = irsState.studentsInfo[peerId];

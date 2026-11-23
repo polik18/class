@@ -95,6 +95,7 @@ async def main(a):
         if a.shots:
             await t.screenshot(path=f"{a.shots}/g-podium.png")
             await studs[0].screenshot(path=f"{a.shots}/g-s-end.png")
+        report["podiumAvatars"] = await t.evaluate("document.querySelectorAll('.gm-step svg.gm-av').length")
         actual = await t.evaluate("Object.fromEntries([...IrsGame._test.T.players.values()].map(p=>[p.name,p.score]))")
         report["scoresMatch"] = actual == expected
         report["scores"] = actual

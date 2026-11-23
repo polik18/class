@@ -58,7 +58,7 @@
 .gm-lobby h2 { font-size: clamp(30px, 4vw, 54px); margin: 6px 0 4px; font-weight: 900; }
 .gm-count { font: 900 64px/1 "JetBrains Mono", monospace; background: linear-gradient(110deg, #c7d2fe, var(--g-acc2)); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .gm-chips { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; max-height: 46vh; overflow: auto; }
-.gm-chip { padding: 9px 16px; border-radius: 999px; background: rgba(129, 140, 248, .16); border: 1px solid rgba(129, 140, 248, .35); font-weight: 700; animation: gm-pop .45s cubic-bezier(.2, 1.4, .4, 1) both; }
+.gm-chip { display: inline-flex; align-items: center; gap: 8px; padding: 6px 16px 6px 6px; border-radius: 999px; background: rgba(129, 140, 248, .16); border: 1px solid rgba(129, 140, 248, .35); font-weight: 700; animation: gm-pop .45s cubic-bezier(.2, 1.4, .4, 1) both; }
 @keyframes gm-pop { from { transform: scale(.4) translateY(14px); opacity: 0; } }
 
 /* 題目與作答 */
@@ -120,6 +120,14 @@
 .gm-step.p3 .gm-block { height: 17vh; background: linear-gradient(180deg, #fb923c, #9a3412); }
 .gm-confetti { position: fixed; inset: 0; pointer-events: none; z-index: 2147483630; }
 .gm-end-actions { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+
+/* 頭像 */
+.gm-av { flex: none; display: block; }
+.gm-chip .gm-av { border-radius: 999px; }
+.gm-step .gm-av { filter: drop-shadow(0 10px 18px rgba(0, 0, 0, .5)); }
+.gm-student .gm-s-avatars { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; width: min(340px, 100%); }
+.gm-student .gm-s-avatars button { border: 3px solid transparent; background: rgba(255, 255, 255, .06); border-radius: 18px; padding: 6px; display: grid; place-items: center; cursor: pointer; }
+.gm-student .gm-s-avatars button.on { border-color: #fff; background: rgba(255, 255, 255, .16); transform: scale(1.06); }
 
 /* 學生手機 */
 .gm-student { position: fixed; inset: 0; z-index: 2147483620; display: flex; flex-direction: column; color: #fff; font-family: "Space Grotesk", "Noto Sans TC", system-ui, sans-serif; background: radial-gradient(60rem 40rem at 50% -10%, rgba(129, 140, 248, .3), transparent 60%), #05070d; transition: background .4s; }

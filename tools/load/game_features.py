@@ -76,6 +76,14 @@ async def main():
         await t.click(".gm-card:has-text('測試題庫') [data-act=start]")
         await t.wait_for_selector("[data-count]")
         await t.wait_for_function("document.querySelector('[data-count]').textContent==='4'", timeout=10000)
+        # 頭像：學生在大廳選第 6 款，老師端大廳泡泡與玩家資料同步
+        await studs[0].wait_for_selector("[data-avatar='5']", timeout=10000)
+        await studs[0].click("[data-avatar='5']")
+        await asyncio.sleep(1.5)
+        av = await t.evaluate("[...IrsGame._test.T.players.values()].find(p=>p.name==='王小明')?.avatar")
+        chip = await t.evaluate("!!document.querySelector('.gm-chip svg.gm-av')")
+        picked = await studs[0].evaluate("document.querySelector('[data-avatar].on')?.dataset.avatar")
+        r["avatarSynced"] = av == 5 and chip and picked == "5"
         await t.click("[data-act=next]")
         await t.wait_for_function("IrsGame._test.T.phase==='answer'", timeout=15000)
         # 4) 暫停／繼續：暫停 2 秒後剩餘時間不應減少
