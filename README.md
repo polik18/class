@@ -63,7 +63,10 @@
 * `js/pro/irs-swarm.js`、`js/pro/irs-media.js`：Swarm 裝置互助中繼（問答資料簽章＋加密）與混合模式畫面廣播。
 * `src/exam.jsx`：考場看板的 JSX 原始碼，編譯成 `js/exam.js`。
 * `tools/tailwind/`：Tailwind 與 esbuild 建置設定。**修改 HTML／JS 裡的 class 或 `src/exam.jsx` 後**，在此目錄執行 `npm install`（第一次）與 `npm run build`，並提交 `css/`、`js/exam.js` 的產物。
-* `tools/load/swarm_browser_load.py`：混合模式／Swarm 本機瀏覽器壓測。
+* `js/pro/irs-game.js`、`js/pro/irs-quiz-bank.js`、`js/pro/irs-sound.js`、`css/game.css`：闖關模式（題庫、倒數搶分、排行榜、頒獎台、原創合成音樂與音效）。
+* `sound-lab.html`：闖關音效試聽室。
+* `docs/IRS_GAME_MODE_PLAN.md`、`docs/IRS_GAME_TRIAL_GUIDE.md`：闖關模式計畫與試教手冊。
+* `tools/load/swarm_browser_load.py`：混合模式／Swarm 本機瀏覽器壓測；`game_e2e.py`、`game_features.py`：闖關模式端到端與功能測試。
 * `sw.js`、`manifest.webmanifest`：離線快取與安裝設定；**更新快取清單時記得改 `sw.js` 的 `VERSION`**。
 
 ---
@@ -83,6 +86,11 @@
 **🏆 計分板與噪音偵測系統 (Scoreboard & Noise Tracker)**
 * (核心特色) 計分板附帶**全班噪音偵測**。打開麥克風讓系統聆聽班級音量，一旦過於吵雜超過您的紅線標準（系統滑桿自訂），系統會自動懲罰扣分；如果整班維持圖書館層級的安靜數十秒，系統會自動給予正增強加分獎勵！
 * 可以點開各小組，針對組內的「每一位同學獨立加分/扣分」，個人成績會加總至整個小組成績，雙軌並行計算。
+
+**🎮 闖關模式（IRS 遊戲）**
+* 在「即時問答」按「闖關模式」：題目顯示在大螢幕，學生手機只按顏色＋形狀色塊；倒數、速度計分、連對加分、排行榜與頒獎台。
+* 背景音樂與音效全部由瀏覽器即時合成（原創、無版權素材、離線可用）；音樂只在投影幕播放，學生手機只有短音效與震動。
+* 題庫存在老師瀏覽器，可用 JSON 或 Excel（CSV）匯入匯出；支援團隊模式並可把小組分數加到計分板；成績可下載 CSV。
 
 **📱 IRS 即時互動系統**
 * 老師建立教室代碼後，學生可用平板或手機掃描 QR Code，「無須安裝 App」即可加入課堂。
