@@ -210,8 +210,8 @@
 
           if (m === 'irs') {
               if (typeof irsState !== 'undefined' && !irsState.roomId && !irsState.hostConn && !window._irsIsStudentMode) {
-                  // 如果尚未建立過連線，且不是學生掃碼進入的模式，自動以老師身分初始化
-                  if (typeof initIRSTeacher === 'function') initIRSTeacher();
+                  // 尚未建立教室：先顯示開始卡片，由老師按下「建立教室」才建房
+                  if (typeof showIRSStartCard === 'function') showIRSStartCard();
               }
           }
 

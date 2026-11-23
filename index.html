@@ -79,81 +79,29 @@
     ]
   }
   </script>
-  <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23818cf8'/%3E%3Cstop offset='1' stop-color='%23f472b6'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='16' fill='%2305070d'/%3E%3Crect x='3' y='3' width='58' height='58' rx='13' fill='none' stroke='url(%23g)' stroke-width='3'/%3E%3Cpath d='M16 40V22h32v18M12 44h40M28 44v6h8v-6' fill='none' stroke='url(%23g)' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+  <meta name="theme-color" content="#05070d">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="icon.svg">
 
-  <!-- 引入 Tailwind CSS -->
-  <script>
-    const originalWarn = console.warn;
-    console.warn = function(...args) {
-        if (args[0] && typeof args[0] === 'string' && args[0].includes('cdn.tailwindcss.com should not be used in production')) return;
-        originalWarn.apply(console, args);
-    };
-  </script>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- 設定 Tailwind 自訂動畫 -->
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          fontFamily: {
-            mono: ['"Courier New"', 'Courier', 'monospace'],
-          },
-          animation: {
-            'pop-in': 'popIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards',
-            'glow': 'pulseGlow 2s infinite',
-            'float': 'float 3s ease-in-out infinite',
-            'shimmer': 'shimmer 2.5s linear infinite',
-            'spin-slow': 'spin 8s linear infinite',
-            'gradient-xy': 'gradientXY 10s ease infinite',
-            'bounce-soft': 'bounceSoft 2s infinite',
-            'ping-slow': 'ping 2s cubic-bezier(0, 0, 0.2, 1) infinite',
-          },
-          keyframes: {
-            popIn: {
-              '0%': { transform: 'scale(0.8) translateY(20px)', opacity: '0' },
-              '100%': { transform: 'scale(1) translateY(0)', opacity: '1' },
-            },
-            pulseGlow: {
-              '0%, 100%': { boxShadow: '0 0 20px 0px rgba(99, 102, 241, 0.4)' },
-              '50%': { boxShadow: '0 0 40px 15px rgba(99, 102, 241, 0.7)' },
-            },
-            float: {
-              '0%, 100%': { transform: 'translateY(0)' },
-              '50%': { transform: 'translateY(-10px)' },
-            },
-            shimmer: {
-              '0%': { transform: 'translateX(-150%) skewX(-15deg)' },
-              '100%': { transform: 'translateX(250%) skewX(-15deg)' },
-            },
-            gradientXY: {
-              '0%, 100%': { backgroundSize: '400% 400%', backgroundPosition: '0% 50%' },
-              '50%': { backgroundSize: '400% 400%', backgroundPosition: '100% 50%' },
-            },
-            bounceSoft: {
-              '0%, 100%': { transform: 'translateY(-5%)', animationTimingFunction: 'cubic-bezier(0.8,0,1,1)' },
-              '50%': { transform: 'translateY(0)', animationTimingFunction: 'cubic-bezier(0,0,0.2,1)' },
-            }
-          }
-        }
-      }
-    }
-  </script>
+  <!-- Tailwind：預先建置的靜態 CSS（來源設定在 tools/tailwind，修改 class 後需重新 npm run build） -->
+  <link rel="stylesheet" href="css/tailwind.css">
 
   <!-- 引入 Lucide Icons (CDN，避免本地路徑問題) -->
-  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <script src="https://unpkg.com/lucide@1.77.0/dist/umd/lucide.min.js"></script>
   <!-- 引入 PeerJS (WebRTC) 用於 即時問答 系統 (CDN) -->
   <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
   <!-- 引入 QRCode.js 用於生成掃描加入條碼 -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
   <link rel="stylesheet" href="css/pro.css">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Space+Grotesk:wght@500;700&display=swap">
-  <script src="https://polik18.github.io/assets/polik-shell.js" data-cat="education" data-accent="#818cf8" data-accent2="#f472b6" data-side="left" defer></script>
+  <link rel="stylesheet" href="css/projector.css">
+  <script>try { if (new URLSearchParams(location.search).get("theme") === "light" || localStorage.getItem("class_theme") === "light") document.documentElement.classList.add("cl-light"); } catch (e) {}</script>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Noto+Sans+TC:wght@400;500;700;900&family=Space+Grotesk:wght@500;600;700&display=swap">
+  <script src="https://polik18.github.io/assets/polik-shell.js" data-cat="education" data-skin="neo" data-grain="off" data-accent="#818cf8" data-accent2="#f472b6" data-accent3="#a855f7" data-side="left" defer></script>
   <style id="polik-skin">
     /* Polik Neo-Lab 外觀：課堂舞台 */
     @property --cl-spin { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
-    body.bg-slate-950 { background: radial-gradient(70rem 40rem at 50% -12%, rgba(129, 140, 248, .22), transparent 62%), radial-gradient(50rem 36rem at 100% 100%, rgba(244, 114, 182, .12), transparent 60%), #04050d !important; }
-    body::before { content: ""; position: fixed; inset: 0; z-index: 0; pointer-events: none; background-image: radial-gradient(rgba(170, 180, 240, .14) 1px, transparent 1.4px); background-size: 26px 26px; -webkit-mask-image: radial-gradient(ellipse 75% 60% at 50% 25%, #000, transparent 75%); mask-image: radial-gradient(ellipse 75% 60% at 50% 25%, #000, transparent 75%); }
     header.sticky { background: rgba(4, 5, 13, .6) !important; backdrop-filter: blur(20px) saturate(160%) !important; }
     header.sticky::after { content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 1px; background: linear-gradient(90deg, transparent, #818cf8, #f472b6, transparent); opacity: .7; }
     header h1 { font-family: "Space Grotesk", "Noto Sans TC", sans-serif; letter-spacing: -.01em; }
@@ -169,24 +117,33 @@
     #draw-btn.bg-indigo-600 { background: linear-gradient(115deg, #6366f1, #a855f7 50%, #ec4899) !important; background-size: 170% 100% !important; box-shadow: 0 22px 50px -18px rgba(168, 85, 247, .95), inset 0 1px 0 rgba(255, 255, 255, .3) !important; transition: background-position .5s, transform .2s !important; }
     #draw-btn.bg-indigo-600:hover { background-position: 100% 0 !important; }
     main .rounded-\[2rem\]:not(:has(> #display-area)) { border-color: rgba(129, 140, 248, .16) !important; }
-    @media (prefers-reduced-motion: reduce) { div:has(> #display-area)::before { animation: none; } }
+    /* Neo 層保護：Neo 會把淺色工具類別轉深色，以下元素必須維持原色 */
+    html.pk-neo body :is(#qrcode-container, #student-join-qrcode, #global-qrcode, .qr-card, .color-btn.bg-white, .rounded-full.bg-white, #noise-threshold-marker) { background-color: #fff !important; }
+    html.pk-neo body .qr-card .text-indigo-700 { color: #4338ca !important; }
+    html.pk-neo body .qr-card :is(.text-slate-800, .text-slate-900, .text-slate-700, .text-slate-600, .text-slate-500) { color: #0f172a !important; }
+    html.pk-neo body :is(.shadow, .shadow-sm, .shadow-md, .shadow-lg, .shadow-xl, .shadow-2xl) { box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow) !important; }
+    html.pk-neo body .font-mono { font-family: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace; }
+    /* 品牌標頭 */
+    .cl-brand-mark { position: relative; display: grid; place-items: center; width: 46px; height: 46px; border-radius: 14px; background: #070a18; isolation: isolate; box-shadow: 0 10px 30px -10px rgba(168, 85, 247, .8); }
+    .cl-brand-mark::before { content: ""; position: absolute; inset: 0; z-index: -1; border-radius: inherit; padding: 1.5px; background: conic-gradient(from var(--cl-spin), #818cf8, #a855f7, #f472b6, #818cf8); -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; animation: cl-spin 6s linear infinite; }
+    .cl-brand-mark svg { color: #c7d2fe; filter: drop-shadow(0 0 10px rgba(129, 140, 248, .8)); }
+    .cl-kicker { font: 700 10px/1 "JetBrains Mono", monospace; letter-spacing: .28em; color: #a5b4fc; text-transform: uppercase; }
+    .cl-kicker b { background: linear-gradient(90deg, #818cf8, #f472b6); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    /* 投影／觀看畫面時隱藏浮動元件；學生尚未加入前隱藏聊天室 */
+    body:has(#screen-view-modal:not(.hidden)) :is(.pk-dock, #global-chat-widget),
+    body:has(#irs-student-login:not(.hidden)) #global-chat-widget { display: none !important; }
+    @media (max-width: 767px) { footer { padding-bottom: 92px !important; } }
+    @media (prefers-reduced-motion: reduce) { div:has(> #display-area)::before, .cl-brand-mark::before { animation: none; } }
   </style>
 </head>
 <body class="min-h-screen bg-slate-950 text-slate-100 font-sans selection:bg-indigo-500/30 overflow-x-hidden relative flex flex-col m-0 p-0">
-  <a data-polik-category-return href="https://polik18.github.io/education.html" aria-label="回到教學現場分類" style="position:fixed;left:14px;bottom:14px;z-index:2147483647;display:inline-flex;align-items:center;min-height:40px;padding:0 14px;border:1px solid rgba(23,79,60,.3);border-radius:999px;background:rgba(255,253,248,.94);color:#0d3528;font:700 13px/1 system-ui,-apple-system,sans-serif;text-decoration:none;box-shadow:0 8px 24px rgba(0,0,0,.2);backdrop-filter:blur(10px)">← 回教學現場分類</a>
-
-  <!-- FOUC 防閃爍遮罩層 (待 Tailwind CDN 編譯完成後淡出移除) -->
-  <div id="fouc-overlay" style="position:fixed;inset:0;background:#020617;z-index:99999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;">
-    <style>@keyframes spin-loader{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}</style>
-    <div style="width:48px;height:48px;border:4px solid rgba(99,102,241,0.3);border-top-color:#6366f1;border-radius:50%;animation:spin-loader 0.8s linear infinite;"></div>
-    <div style="color:#94a3b8;font-family:sans-serif;font-size:14px;">載入中...</div>
-  </div>
+  <a data-polik-category-return href="https://polik18.github.io/education.html" aria-label="回到教學現場分類" style="position:fixed;left:14px;bottom:14px;z-index:2147483647;display:inline-flex;align-items:center;min-height:40px;padding:0 14px;border:1px solid rgba(148,163,196,.26);border-radius:999px;background:rgba(8,12,24,.72);color:#dbe5f5;font:700 13px/1 system-ui,-apple-system,sans-serif;text-decoration:none;box-shadow:0 8px 24px rgba(0,0,0,.2);backdrop-filter:blur(10px)">← 回教學現場分類</a>
 
   <!-- 連線救援 Modal -->
   <div id="webrtc-rescue-modal" class="hidden fixed inset-0 z-[110] flex items-center justify-center p-4">
     <div class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm" onclick="document.getElementById('webrtc-rescue-modal').classList.add('hidden')"></div>
     <div class="relative bg-slate-900 border border-rose-500/30 rounded-3xl p-6 md:p-8 max-w-lg w-full shadow-[0_0_40px_rgba(225,29,72,0.2)] animate-pop-in overflow-y-auto max-h-[90vh]">
-      <button onclick="document.getElementById('webrtc-rescue-modal').classList.add('hidden')" class="absolute top-4 right-4 text-slate-400 hover:text-rose-400 transition-colors"><i data-lucide="x" class="w-6 h-6"></i></button>
+      <button aria-label="關閉" onclick="document.getElementById('webrtc-rescue-modal').classList.add('hidden')" class="absolute top-4 right-4 text-slate-400 hover:text-rose-400 transition-colors"><i data-lucide="x" class="w-6 h-6"></i></button>
       <h3 class="text-xl font-bold text-rose-400 flex items-center gap-2 mb-4"><i data-lucide="life-buoy" class="w-6 h-6"></i> 連線救援 / 連不上怎麼辦？</h3>
       <div class="space-y-5 text-sm text-slate-300 leading-relaxed">
         <div class="bg-slate-800/60 p-4 rounded-2xl border border-white/5">
@@ -230,14 +187,12 @@
   <!-- 完整功能新手導覽 Modal -->
   <div id="welcome-guide-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4">
     <div class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm" onclick="closeWelcomeGuide()"></div>
-    <div class="relative bg-slate-900 border border-yellow-500/30 rounded-3xl p-6 md:p-8 max-w-md w-full shadow-[0_0_40px_rgba(251,191,36,0.2)] animate-pop-in">
-       <div class="absolute -top-6 left-1/2 -translate-x-1/2 w-14 h-14 bg-gradient-to-br from-yellow-400 to-amber-600 rounded-full flex items-center justify-center shadow-lg shadow-yellow-500/50 border-4 border-slate-900 animate-bounce">
-          <i data-lucide="crown" class="w-7 h-7 text-white"></i>
-       </div>
+    <div class="relative bg-slate-900 border border-indigo-400/30 rounded-3xl p-6 md:p-8 max-w-md w-full shadow-[0_0_50px_rgba(129,140,248,0.25)] animate-pop-in">
+       <div class="cl-brand-mark absolute -top-7 left-1/2 -translate-x-1/2" style="width:56px;height:56px"><svg aria-hidden="true" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4h18v11H3z"/><path d="M8 20h8M12 15v5"/><path d="m8 11 2.5-3 2 2L16 7"/></svg></div>
        <h3 class="text-2xl font-black text-white mt-5 mb-1 text-center flex items-center justify-center gap-1.5">
           智慧課堂助手
        </h3>
-       <p class="text-center text-amber-400 font-bold mb-6 text-sm">完整課堂工具與聯動功能</p>
+       <p class="text-center font-bold mb-6 text-sm"><span class="cl-kicker"><b>POLIK</b> · CLASSROOM</span><br><span class="text-indigo-300">完整課堂工具與聯動功能</span></p>
 
        <div class="space-y-4 text-slate-300 text-sm">
           <div class="flex gap-3 items-start bg-slate-800/50 p-3 rounded-xl border border-white/5">
@@ -265,24 +220,28 @@
           </div>
        </div>
 
-       <button onclick="closeWelcomeGuide()" class="w-full mt-8 py-3.5 rounded-xl bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-400 hover:to-amber-500 text-slate-900 font-black text-lg transition-all shadow-lg shadow-yellow-500/30 active:scale-95">開始使用</button>
+       <button onclick="closeWelcomeGuide()" class="w-full mt-8 py-3.5 rounded-xl bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 hover:brightness-110 text-white font-black text-lg transition-all shadow-lg shadow-purple-500/30 active:scale-95">開始使用</button>
     </div>
   </div>
 
   <!-- 頂部導覽列 -->
   <header class="p-4 md:p-6 flex flex-col md:flex-row justify-between items-center gap-4 border-b border-white/10 bg-slate-900/50 backdrop-blur-md sticky top-0 z-40 shadow-lg shadow-black/20">
     <div class="flex items-center gap-3">
-      <!-- 更換為金黃色跳動皇冠 -->
-      <div class="p-2 bg-gradient-to-br from-yellow-400 to-amber-600 rounded-xl shadow-lg shadow-yellow-500/30 shrink-0">
-        <i data-lucide="crown" class="w-6 h-6 text-white animate-bounce"></i>
-      </div>
+      <!-- Polik 品牌標誌 -->
+      <div class="cl-brand-mark shrink-0"><svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4h18v11H3z"/><path d="M8 20h8M12 15v5"/><path d="m8 11 2.5-3 2 2L16 7"/></svg></div>
       <div class="flex flex-col">
+        <span class="cl-kicker"><b>POLIK</b> · CLASSROOM</span>
         <!-- 正式版統一名稱 -->
         <h1 class="text-2xl md:text-3xl font-black whitespace-nowrap leading-tight flex items-center gap-1">
           <span class="bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent drop-shadow-sm">智慧課堂助手</span>
         </h1>
-        <div id="header-time" class="text-sm font-mono text-slate-400 flex items-center gap-1.5 mt-0.5">
+        <div class="flex items-center gap-2 mt-0.5">
+          <div id="header-time" class="text-sm font-mono text-slate-400 flex items-center gap-1.5">
           <i data-lucide="clock" class="w-3.5 h-3.5"></i> <span>00:00:00</span>
+        </div>
+          <button id="theme-btn" type="button" onclick="toggleProjectorTheme()" aria-label="切換投影淺色模式" title="投影機畫面太淡時，切換為淺底深字" class="hidden md:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold text-amber-200 bg-amber-400/10 border border-amber-300/25 hover:bg-amber-400/20 transition-colors">
+            <i data-lucide="sun-moon" class="w-3.5 h-3.5"></i> 投影模式
+          </button>
         </div>
       </div>
     </div>
@@ -290,7 +249,7 @@
     <!-- 主功能切換導覽列 (加入動態左右滑動提示) -->
     <div class="relative w-full md:w-auto flex items-center">
       <!-- 左右滑動提示按鈕 (左) -->
-      <button id="nav-scroll-left" onclick="scrollMainNav(-1)" class="absolute left-1 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-slate-800 border border-white/20 flex items-center justify-center z-20 opacity-0 transition-all duration-300 md:hidden shadow-[0_0_15px_rgba(0,0,0,0.8)] hover:bg-slate-700 active:scale-90 pointer-events-none hover:border-white/40">
+      <button aria-label="向左捲動" id="nav-scroll-left" onclick="scrollMainNav(-1)" class="absolute left-1 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-slate-800 border border-white/20 flex items-center justify-center z-20 opacity-0 transition-all duration-300 md:hidden shadow-[0_0_15px_rgba(0,0,0,0.8)] hover:bg-slate-700 active:scale-90 pointer-events-none hover:border-white/40">
           <i data-lucide="chevron-left" class="w-5 h-5 text-white"></i>
       </button>
 
@@ -319,7 +278,7 @@
       </div>
 
       <!-- 左右滑動提示按鈕 (右) -->
-      <button id="nav-scroll-right" onclick="scrollMainNav(1)" class="absolute right-1 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-indigo-600 border border-indigo-400/50 flex items-center justify-center z-20 opacity-0 transition-all duration-300 md:hidden shadow-[0_0_15px_rgba(79,70,229,0.8)] hover:bg-indigo-500 active:scale-90 pointer-events-none hover:border-indigo-300">
+      <button aria-label="向右捲動" id="nav-scroll-right" onclick="scrollMainNav(1)" class="absolute right-1 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-indigo-600 border border-indigo-400/50 flex items-center justify-center z-20 opacity-0 transition-all duration-300 md:hidden shadow-[0_0_15px_rgba(79,70,229,0.8)] hover:bg-indigo-500 active:scale-90 pointer-events-none hover:border-indigo-300">
           <i data-lucide="chevron-right" class="w-5 h-5 text-white animate-pulse"></i>
       </button>
     </div>
@@ -335,7 +294,7 @@
       <input type="file" id="import-file-input" class="hidden" accept=".csv" onchange="importClassData(event)">
     </div>
 
-    <button id="mute-btn" class="p-3 rounded-full bg-white/5 hover:bg-white/20 transition-all duration-300 border border-white/10 hover:scale-110 hidden md:block shrink-0">
+    <button id="mute-btn" aria-label="切換音效" class="p-3 rounded-full bg-white/5 hover:bg-white/20 transition-all duration-300 border border-white/10 hover:scale-110 hidden md:block shrink-0">
       <i data-lucide="volume-2" id="mute-icon" class="w-5 h-5 text-indigo-400 transition-colors"></i>
     </button>
   </header>
@@ -348,7 +307,7 @@
         <h3 class="text-2xl font-bold text-indigo-400 flex items-center gap-3">
           <i data-lucide="package" class="w-6 h-6"></i> 課堂資料管理中心
         </h3>
-        <button onclick="hideDataModal()" class="text-slate-400 hover:text-rose-400 transition-colors p-1"><i data-lucide="x" class="w-6 h-6"></i></button>
+        <button aria-label="關閉" onclick="hideDataModal()" class="text-slate-400 hover:text-rose-400 transition-colors p-1"><i data-lucide="x" class="w-6 h-6"></i></button>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -628,7 +587,7 @@
             <div id="draw-btn-fx" class="absolute inset-0 -translate-x-full group-hover:animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none" style="transform-origin: left"></div>
           </button>
 
-          <button id="reset-btn" class="w-20 sm:w-24 flex-none rounded-3xl py-4 sm:py-5 bg-slate-800 hover:bg-slate-700 text-slate-300 transition-all border border-white/10 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center shadow-lg hover:shadow-xl active:scale-95 hover:-translate-y-1" title="重新開始 / 重置紀錄" disabled>
+          <button aria-label="重新開始 / 重置紀錄" id="reset-btn" class="w-20 sm:w-24 flex-none rounded-3xl py-4 sm:py-5 bg-slate-800 hover:bg-slate-700 text-slate-300 transition-all border border-white/10 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center shadow-lg hover:shadow-xl active:scale-95 hover:-translate-y-1" title="重新開始 / 重置紀錄" disabled>
             <i data-lucide="rotate-ccw" class="w-7 h-7 pointer-events-none"></i>
           </button>
         </div>
@@ -834,7 +793,7 @@
                               class="px-3 py-1 text-xs bg-indigo-600/20 hover:bg-indigo-600 text-indigo-300 rounded border border-indigo-500/30 flex items-center gap-1"><i data-lucide="upload" class="w-3 h-3"></i>選取檔案</button>
                           <button id="bell-start-preview-btn" onclick="previewBell('start')" class="px-2 py-1 text-xs bg-indigo-600/20 hover:bg-indigo-600 text-indigo-300 rounded border border-indigo-500/30 flex items-center gap-1">
                               <i data-lucide="play" class="w-3 h-3"></i><i data-lucide="square" class="w-3 h-3 hidden"></i><span class="bell-preview-label">播放</span></button>
-                          <button onclick="clearBell('start')" class="px-2 py-1 text-xs bg-slate-700 hover:bg-slate-600 text-slate-300 rounded border border-white/10"><i data-lucide="rotate-ccw" class="w-3 h-3"></i></button>
+                          <button aria-label="重設" onclick="clearBell('start')" class="px-2 py-1 text-xs bg-slate-700 hover:bg-slate-600 text-slate-300 rounded border border-white/10"><i data-lucide="rotate-ccw" class="w-3 h-3"></i></button>
                           <span id="bell-start-file-name" class="text-[10px] text-slate-500 truncate max-w-[200px] ml-1"></span>
                       </div>
                   </div>
@@ -847,7 +806,7 @@
                               class="px-3 py-1 text-xs bg-indigo-600/20 hover:bg-indigo-600 text-indigo-300 rounded border border-indigo-500/30 flex items-center gap-1"><i data-lucide="upload" class="w-3 h-3"></i>選取檔案</button>
                           <button id="bell-end-preview-btn" onclick="previewBell('end')" class="px-2 py-1 text-xs bg-indigo-600/20 hover:bg-indigo-600 text-indigo-300 rounded border border-indigo-500/30 flex items-center gap-1">
                               <i data-lucide="play" class="w-3 h-3"></i><i data-lucide="square" class="w-3 h-3 hidden"></i><span class="bell-preview-label">播放</span></button>
-                          <button onclick="clearBell('end')" class="px-2 py-1 text-xs bg-slate-700 hover:bg-slate-600 text-slate-300 rounded border border-white/10"><i data-lucide="rotate-ccw" class="w-3 h-3"></i></button>
+                          <button aria-label="重設" onclick="clearBell('end')" class="px-2 py-1 text-xs bg-slate-700 hover:bg-slate-600 text-slate-300 rounded border border-white/10"><i data-lucide="rotate-ccw" class="w-3 h-3"></i></button>
                           <span id="bell-end-file-name" class="text-[10px] text-slate-500 truncate max-w-[200px] ml-1"></span>
                       </div>
                   </div>
@@ -1130,7 +1089,7 @@
               <i data-lucide="play" id="timer-toggle-icon" class="w-6 h-6 fill-current group-hover:scale-110 transition-transform"></i>
               <span id="timer-toggle-text">開始計時</span>
             </button>
-            <button id="timer-reset-btn" class="group p-4 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-2xl transition-all duration-300 border border-white/10 hover:border-slate-500 shadow-md" title="重置時間">
+            <button aria-label="重置時間" id="timer-reset-btn" class="group p-4 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-2xl transition-all duration-300 border border-white/10 hover:border-slate-500 shadow-md" title="重置時間">
               <i data-lucide="rotate-ccw" class="w-6 h-6 group-hover:-rotate-90 transition-transform duration-500 pointer-events-none"></i>
             </button>
           </div>
@@ -1342,7 +1301,7 @@
          <div class="relative bg-slate-900 border border-cyan-500/30 rounded-3xl p-6 md:p-8 max-w-lg w-full shadow-[0_0_40px_rgba(6,182,212,0.2)] animate-pop-in">
             <div class="flex justify-between items-center mb-6">
                <h3 class="text-2xl font-bold text-cyan-400 flex items-center gap-2"><i data-lucide="info" class="w-6 h-6"></i> 使用須知</h3>
-               <button onclick="hideIRSInfo()" class="text-slate-400 hover:text-rose-400 transition-colors p-1"><i data-lucide="x" class="w-6 h-6"></i></button>
+               <button aria-label="關閉" onclick="hideIRSInfo()" class="text-slate-400 hover:text-rose-400 transition-colors p-1"><i data-lucide="x" class="w-6 h-6"></i></button>
             </div>
             <div class="space-y-4 text-slate-300 text-sm leading-relaxed">
                <p><strong class="text-white">人數限制：</strong>由於依賴老師端裝置作為主機處理所有連線，建議單次課堂連線人數在 <span class="text-emerald-400 font-bold">30 ~ 50 人</span> 以內，以確保最佳的連線品質與流暢度。</p>
@@ -1364,7 +1323,7 @@
       <!-- QRCode Modal (預設隱藏) -->
       <div id="irs-qr-modal" class="hidden fixed inset-0 z-[70] flex items-center justify-center p-4">
          <div class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm" onclick="hideIRSQR()"></div>
-         <div class="relative bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl flex flex-col items-center animate-pop-in">
+         <div class="qr-card relative bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl flex flex-col items-center animate-pop-in">
             <h3 class="text-2xl font-bold text-slate-800 mb-2">掃描加入課堂</h3>
             <p class="text-slate-500 mb-6 text-sm">請學生使用手機相機掃描</p>
             <div id="qrcode-container" class="bg-white p-4 rounded-xl shadow-inner border border-slate-100 flex justify-center items-center min-h-[256px] min-w-[256px]"></div>
@@ -1375,8 +1334,25 @@
                 <i data-lucide="link" class="w-5 h-5"></i> 複製邀請連結，直接發給學生
               </button>
             </div>
-            <button onclick="hideIRSQR()" class="absolute top-4 right-4 text-slate-400 hover:text-rose-500 transition-colors"><i data-lucide="x" class="w-6 h-6"></i></button>
+            <button aria-label="關閉" onclick="hideIRSQR()" class="absolute top-4 right-4 text-slate-400 hover:text-rose-500 transition-colors"><i data-lucide="x" class="w-6 h-6"></i></button>
          </div>
+      </div>
+
+      <!-- 老師端：尚未建立教室時的開始卡片（避免一進分頁就建房） -->
+      <div id="irs-start-card" class="hidden flex-1 items-center justify-center py-10">
+        <div class="w-full max-w-lg text-center rounded-3xl border border-indigo-400/25 bg-slate-900/70 backdrop-blur-md p-8 md:p-10 shadow-2xl">
+          <span class="cl-kicker"><b>POLIK</b> · LIVE IRS</span>
+          <h2 class="mt-3 text-3xl font-black text-white">即時問答</h2>
+          <p class="mt-3 text-sm text-slate-300 leading-relaxed">按下「建立教室」後會產生教室代碼與 QR Code，學生用手機或平板掃描即可加入，無須安裝 App。</p>
+          <ul class="mt-5 text-left text-xs text-slate-400 space-y-2 bg-slate-950/50 rounded-2xl p-4 border border-white/5">
+            <li>・題目、名單與作答只保存在這台電腦的瀏覽器，不上傳雲端資料庫。</li>
+            <li>・師生在同一個 Wi-Fi 時連線最穩定；目前已驗證 30 人以內。</li>
+          </ul>
+          <button id="irs-start-btn" onclick="startIRSClassroom()" class="mt-7 w-full py-4 rounded-2xl bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 hover:brightness-110 text-white font-black text-lg shadow-lg shadow-purple-500/30 active:scale-95 transition-all flex items-center justify-center gap-2">
+            <i data-lucide="radio" class="w-5 h-5"></i> 建立教室
+          </button>
+          <button onclick="showIRSStudentLogin()" class="mt-3 text-sm text-slate-400 hover:text-white transition-colors">我是學生，要加入教室</button>
+        </div>
       </div>
 
       <!-- 老師端視角 -->
@@ -1473,10 +1449,16 @@
               <div class="flex items-center justify-between text-sm mt-2 border-t border-white/5 pt-3">
                 <span class="text-slate-400">在線學生數</span>
                 <span id="irs-student-count" class="font-bold text-emerald-400 bg-emerald-500/20 px-2.5 py-0.5 rounded-full">0</span>
-               <!-- 校外模式10台上限警告 (由 JS 依人數動態顯示) -->
+               <div id="irs-transport-stats" class="hidden mt-2 grid grid-cols-3 gap-2 text-center text-[11px]" aria-live="polite">
+                 <div class="rounded-lg bg-emerald-500/10 border border-emerald-500/25 py-1.5"><div id="irs-stat-direct" class="text-base font-black text-emerald-300">0</div><div class="text-slate-400">直連</div></div>
+                 <div class="rounded-lg bg-sky-500/10 border border-sky-500/25 py-1.5"><div id="irs-stat-relay" class="text-base font-black text-sky-300">0</div><div class="text-slate-400">雲端中繼</div></div>
+                 <div class="hidden rounded-lg bg-fuchsia-500/10 border border-fuchsia-500/25 py-1.5"><div id="irs-stat-swarm" class="text-base font-black text-fuchsia-300">0</div><div class="text-slate-400">裝置中繼</div></div>
+                 <div class="rounded-lg bg-amber-500/10 border border-amber-500/25 py-1.5"><div id="irs-stat-pending" class="text-base font-black text-amber-300">0</div><div class="text-slate-400">連線中</div></div>
+               </div>
+               <!-- 人數超過已驗證範圍提醒 (由 JS 依人數動態顯示) -->
                <div id="irs-capacity-warning" class="hidden mt-2 p-2.5 bg-amber-500/15 border border-amber-500/40 rounded-xl flex items-start gap-2 text-xs text-amber-200">
                  <i data-lucide="alert-triangle" class="w-4 h-4 shrink-0 mt-0.5 text-amber-400"></i>
-                 <span>⚠️ <strong>校外模式建議最多 10 台</strong>同時連線。目前已接近上限，建議剩餘學生切換至「校內模式」或改用個人熱點。</span>
+                 <span>⚠️ <strong>連線人數已超過 30 人</strong>（目前已驗證的穩定範圍）。教師電腦負載會隨人數上升；若出現延遲，請暫停螢幕廣播與畫板同步，或讓部分學生稍後加入。</span>
                </div>
               </div>
             </div>
@@ -1498,7 +1480,7 @@
                      <div id="irs-q-panel" class="hidden absolute top-full left-0 right-0 mt-2 bg-slate-800/95 backdrop-blur-xl p-4 rounded-2xl border border-white/10 shadow-[0_10px_40px_rgba(0,0,0,0.5)] animate-pop-in flex-col gap-3">
                          <div class="flex justify-between items-center mb-1 px-1">
                              <span class="text-sm font-bold text-slate-300">請選擇測驗題型</span>
-                             <button onclick="toggleIRSQuestionPanel()" class="text-slate-400 hover:text-rose-400 transition-colors"><i data-lucide="x" class="w-5 h-5"></i></button>
+                             <button aria-label="關閉" onclick="toggleIRSQuestionPanel()" class="text-slate-400 hover:text-rose-400 transition-colors"><i data-lucide="x" class="w-5 h-5"></i></button>
                          </div>
                          <div class="grid grid-cols-2 gap-3">
                              <button onclick="sendIRSQuestion('ABCD')" class="py-4 rounded-xl bg-gradient-to-br from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white font-bold shadow-md hover:shadow-indigo-500/40 transition-all flex flex-col items-center justify-center gap-2 text-sm border border-white/10">
@@ -1620,8 +1602,8 @@
           </div>
 
           <!-- 區域網路權限前導提示 -->
-          <div class="p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl">
-            <p class="text-xs text-rose-300 font-bold leading-relaxed">⚠️ 首次連線時，請務必【允許】瀏覽器尋找區域網路上的裝置，否則將無法連線！</p>
+          <div class="p-3 bg-indigo-500/10 border border-indigo-400/25 rounded-xl">
+            <p class="text-xs text-indigo-200 leading-relaxed">若瀏覽器詢問是否允許「尋找區域網路上的裝置」，請選擇<strong class="text-white">允許</strong>；連不上時可點下方「連線救援」。</p>
           </div>
           <div class="space-y-4">
             <div>
@@ -1680,7 +1662,7 @@
                <button id="student-cast-btn" onclick="requestCastToTeacher()" class="py-1.5 px-3 rounded-lg bg-cyan-600/20 hover:bg-cyan-600 text-cyan-400 hover:text-white text-sm font-bold transition-all border border-cyan-500/30 flex items-center gap-1.5 shadow-sm active:scale-95" title="向老師申請投影我的畫面">
                  <i data-lucide="monitor-up" class="w-4 h-4"></i> <span id="cast-text">投影給老師</span>
                </button>
-               <button onclick="leaveIRS()" class="p-2 rounded-lg bg-slate-800 hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 transition-all border border-white/5" title="離開教室">
+               <button aria-label="離開教室" onclick="leaveIRS()" class="p-2 rounded-lg bg-slate-800 hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 transition-all border border-white/5" title="離開教室">
                  <i data-lucide="log-out" class="w-5 h-5"></i>
                </button>
              </div>
@@ -1731,6 +1713,8 @@
   <script defer src="js/pro/board.js"></script>
   <script defer src="js/pro/irs-protocol.js"></script>
   <script defer src="js/pro/irs-persistence.js"></script>
+  <script defer src="js/pro/irs-swarm.js"></script>
+  <script defer src="js/pro/irs-media.js"></script>
   <script defer src="js/pro/irs-transport.js"></script>
   <script defer src="js/pro/irs.js"></script>
   <script defer src="js/pro/data.js"></script>
@@ -1797,7 +1781,7 @@
 
   <!-- 全域教室代碼浮動視窗 (預設隱藏) -->
   <div id="global-room-widget" class="hidden fixed top-24 right-6 z-[90] bg-slate-900/90 backdrop-blur-md border border-indigo-500/50 rounded-2xl shadow-[0_10px_30px_rgba(99,102,241,0.3)] p-4 pr-10 flex-col gap-2 animate-pop-in group max-w-xs transition-all duration-300 pointer-events-auto">
-     <button onclick="hideGlobalRoomWidget()" class="absolute top-2 right-2 text-slate-400 hover:text-white bg-slate-800 hover:bg-rose-500/80 rounded-full p-1 transition-colors">
+     <button aria-label="關閉" onclick="hideGlobalRoomWidget()" class="absolute top-2 right-2 text-slate-400 hover:text-white bg-slate-800 hover:bg-rose-500/80 rounded-full p-1 transition-colors">
        <i data-lucide="x" class="w-3.5 h-3.5"></i>
      </button>
 
@@ -1822,7 +1806,7 @@
     <div id="chat-panel" class="w-80 h-96 bg-slate-900/90 backdrop-blur-md rounded-2xl border border-indigo-500/30 shadow-2xl flex flex-col mb-4 overflow-hidden pointer-events-none transition-all duration-300 origin-bottom-right scale-0 opacity-0 relative group">
       <div class="bg-indigo-600/50 p-3 border-b border-indigo-500/30 flex justify-between items-center backdrop-blur-md">
         <h4 class="text-white font-bold flex items-center gap-2"><i data-lucide="message-circle" class="w-4 h-4"></i> 課堂聊天室</h4>
-        <button onclick="toggleChatPanel()" class="text-indigo-200 hover:text-white transition-colors p-1"><i data-lucide="minus" class="w-4 h-4"></i></button>
+        <button aria-label="縮小" onclick="toggleChatPanel()" class="text-indigo-200 hover:text-white transition-colors p-1"><i data-lucide="minus" class="w-4 h-4"></i></button>
       </div>
       <!-- 訊息區 -->
       <div id="chat-messages" class="flex-1 p-3 overflow-y-auto flex flex-col gap-3 scroll-smooth no-scrollbar select-text pointer-events-auto">
@@ -1832,7 +1816,7 @@
       <div class="p-3 border-t border-white/10 bg-slate-950/50 pointer-events-auto">
         <div class="flex items-center gap-2">
           <input type="text" id="chat-input" class="flex-1 bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500 transition-colors" placeholder="輸入訊息..." onkeydown="if(event.key==='Enter') sendChatMessage()">
-          <button onclick="sendChatMessage()" class="p-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white transition-colors shadow-md">
+          <button aria-label="送出" onclick="sendChatMessage()" class="p-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white transition-colors shadow-md">
             <i data-lucide="send" class="w-4 h-4"></i>
           </button>
         </div>
@@ -1851,5 +1835,13 @@
     </button>
   </div>
 <script src="https://polik18.github.io/assets/site-stats.js" defer></script>
+<script>
+  window.toggleProjectorTheme = () => {
+    const on = document.documentElement.classList.toggle('cl-light');
+    try { localStorage.setItem('class_theme', on ? 'light' : 'dark'); } catch (e) {}
+    if (typeof showGlobalToast === 'function') showGlobalToast(on ? '已切換投影淺色模式' : '已切回深色模式', 'sun-moon', 'text-amber-400');
+  };
+</script>
+<script>if ("serviceWorker" in navigator && location.protocol !== "file:") window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));</script>
 </body>
 </html>

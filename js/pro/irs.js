@@ -24,6 +24,8 @@
         const joinUrl = new URL(window.location.href.split('?')[0]);
         joinUrl.searchParams.set('room', roomId);
         if (window.IrsHybridTransport?.isEnabled()) joinUrl.searchParams.set('transport', 'hybrid');
+        const swarmFingerprint = irsState.transport?.swarm?.fingerprint;
+        if (swarmFingerprint) joinUrl.searchParams.set('k', swarmFingerprint);
         if (window._irsNetworkMode === 'lan') joinUrl.searchParams.set('lan', '1');
         return joinUrl.toString();
     };
@@ -77,15 +79,13 @@
                 { urls: 'stun:stun1.l.google.com:19302' }
             ];
         }
-        // 校外模式：完整 STUN + TURN (建議最多 10 台同時連線)
+        // 校外模式：僅使用公開 STUN 探測外部位址。
+        // 原本的 openrelay.metered.ca 公用 TURN 已停止服務（網域解析到 192.0.2.1），2026-11 移除。
+        // 若直連失敗，請改用混合模式（Cloudflare 中繼備援）或同一 Wi-Fi 的校內模式。
         return [
-            { urls: 'stun:stun.l.google.com:19302' },
-            { urls: 'stun:stun1.l.google.com:19302' },
             { urls: 'stun:stun.cloudflare.com:3478' },
-            { urls: 'stun:stun2.l.google.com:19302' },
-            { urls: 'turn:openrelay.metered.ca:80', username: 'openrelayproject', credential: 'openrelayproject' },
-            { urls: 'turn:openrelay.metered.ca:443', username: 'openrelayproject', credential: 'openrelayproject' },
-            { urls: 'turn:openrelay.metered.ca:443?transport=tcp', username: 'openrelayproject', credential: 'openrelayproject' }
+            { urls: 'stun:stun.l.google.com:19302' },
+            { urls: 'stun:stun1.l.google.com:19302' }
         ];
     };
 
@@ -96,7 +96,7 @@
         if (window._irsNetworkMode === 'lan') {
             btn.textContent = '校內模式';
             btn.className = 'shrink-0 px-3 py-1.5 rounded-lg text-xs font-black transition-all bg-emerald-600/40 hover:bg-emerald-600 text-emerald-300 hover:text-white border border-emerald-500/40 whitespace-nowrap';
-            if (desc) desc.textContent = '校內：師生須同 Wi-Fi，可突破 10 台連線限制';
+            if (desc) desc.textContent = '校內：師生須同 Wi-Fi，直連最穩定';
         } else {
             btn.textContent = '校外模式';
             btn.className = 'shrink-0 px-3 py-1.5 rounded-lg text-xs font-black transition-all bg-indigo-600/30 hover:bg-indigo-600 text-indigo-300 hover:text-white border border-indigo-500/40 whitespace-nowrap';
@@ -303,7 +303,7 @@
       if (window._irsIsStudentMode) {
           showIRSStudentLogin();
       } else {
-          initIRSTeacher();
+          showIRSStartCard();
       }
     };
 
@@ -389,6 +389,7 @@
           expiresAt: room.expiresAt,
           maxStudents: room.maxStudents,
           directLimit: room.directLimit,
+          swarmKeys: room.swarmKeys || recoveryRecord?.swarmKeys || null,
           status: 'active',
           createdAt: recoveryRecord?.createdAt || Date.now()
         };
@@ -478,6 +479,24 @@
         irsEls.roomId.textContent = '連線失敗';
         irsEls.roomIdMini.textContent = '連線失敗';
       });
+    };
+
+    window.showIRSStartCard = () => {
+      const card = document.getElementById('irs-start-card');
+      if (!card) { initIRSTeacher(); return; }
+      irsEls.teacherView.classList.add('hidden');
+      irsEls.teacherView.classList.remove('flex');
+      irsEls.studentLogin.classList.add('hidden');
+      irsEls.studentLogin.classList.remove('flex');
+      card.classList.remove('hidden');
+      card.classList.add('flex');
+      if (window.lucide) lucide.createIcons({ root: card });
+    };
+
+    window.startIRSClassroom = () => {
+      const card = document.getElementById('irs-start-card');
+      if (card) { card.classList.add('hidden'); card.classList.remove('flex'); }
+      initIRSTeacher();
     };
 
     window.initIRSTeacher = () => {
@@ -850,7 +869,27 @@
       irsState.studentsInfo = students;
     };
 
+    const updateTransportStats = () => {
+      const box = document.getElementById('irs-transport-stats');
+      if (!box) return;
+      const stats = irsState.transportMode === 'hybrid-relay' && irsState.role === 'teacher' ? irsState.transport?.stats?.() : null;
+      box.classList.toggle('hidden', !stats);
+      if (!stats) return;
+      document.getElementById('irs-stat-direct').textContent = stats.directLimit ? `${stats.direct}/${stats.directLimit}` : stats.direct;
+      document.getElementById('irs-stat-relay').textContent = stats.relay;
+      document.getElementById('irs-stat-pending').textContent = stats.pending;
+      const swarmCell = document.getElementById('irs-stat-swarm');
+      if (swarmCell) {
+        swarmCell.textContent = stats.relayNodes ? `${stats.swarm}·${stats.relayNodes}台` : stats.swarm;
+        swarmCell.parentElement.classList.toggle('hidden', !irsState.transport?.swarm?.enabled);
+        box.classList.toggle('grid-cols-4', Boolean(irsState.transport?.swarm?.enabled));
+        box.classList.toggle('grid-cols-3', !irsState.transport?.swarm?.enabled);
+      }
+    };
+    window.setInterval(updateTransportStats, 2000);
+
     const updateTeacherUI = () => {
+      updateTransportStats();
       // 學生人數
       const totalStudents = Object.keys(irsState.studentsInfo).length;
       irsEls.studentCount.textContent = totalStudents;
@@ -1136,6 +1175,7 @@
     // ===== 學生端邏輯 =====
     
     window.showIRSStudentLogin = () => {
+      document.getElementById('irs-start-card')?.classList.replace('flex', 'hidden');
       irsEls.teacherView.classList.add('hidden');
       irsEls.teacherView.classList.remove('flex');
       irsEls.studentLogin.classList.replace('hidden', 'flex');
@@ -1175,6 +1215,8 @@
             irsEls.studentWaiting.innerHTML = '<div class="p-6 rounded-full bg-amber-500/20 inline-block mb-4 border border-amber-500/30"><i data-lucide="refresh-cw" class="w-12 h-12 text-amber-400 mx-auto"></i></div><p class="text-xl font-bold text-amber-200">尚未收到教師端確認</p><p class="text-sm text-slate-400 mt-2">系統已自動重送；請保留畫面並告知老師</p>';
             if (window.lucide) lucide.createIcons({ root: irsEls.studentWaiting });
           }
+          if (event.state === 'media-stream' && event.stream) openScreenViewModal(event.stream, '老師畫面廣播中...');
+          if (event.state === 'media-stopped') closeScreenViewModal();
         }
       });
       irsState.transport = transport;
@@ -1501,13 +1543,14 @@
             return;
         }
 
-        if (irsState.transportMode === 'hybrid-relay') {
-            showGlobalToast('混合測試模式目前只傳送問答資料；螢幕廣播仍使用原有 P2P 模式', 'monitor-x', 'text-amber-400');
+        const hybridMedia = irsState.transportMode === 'hybrid-relay' ? irsState.transport?.media : null;
+        if (irsState.transportMode === 'hybrid-relay' && !hybridMedia) {
+            showGlobalToast('目前的連線模式不支援螢幕廣播', 'monitor-x', 'text-amber-400');
             return;
         }
 
         try {
-            localScreenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+            localScreenStream = await navigator.mediaDevices.getDisplayMedia({ video: { frameRate: { ideal: 15, max: 15 }, height: { max: 1080 } } });
             isBroadcasting = true;
 
             const btn = document.getElementById('teacher-broadcast-btn');
@@ -1527,10 +1570,17 @@
                 window.stopTeacherBroadcast();
             });
 
-            // 播打給目前所有連線的學生
-            Object.keys(irsState.connections).forEach(peerId => {
-                if(irsState.peer) irsState.peer.call(peerId, localScreenStream);
-            });
+            if (hybridMedia) {
+                // 混合模式：沿用直連與裝置中繼樹傳送，雲端中繼的學生無法收看
+                hybridMedia.startTeacher(localScreenStream);
+                const stats = irsState.transport.stats?.();
+                if (stats?.relay) showGlobalToast(`有 ${stats.relay} 位學生走雲端中繼，無法收看廣播`, 'monitor-x', 'text-amber-400');
+            } else {
+                // 播打給目前所有連線的學生
+                Object.keys(irsState.connections).forEach(peerId => {
+                    if(irsState.peer) irsState.peer.call(peerId, localScreenStream);
+                });
+            }
             
             showGlobalToast("正在廣播螢幕畫面給全班", "monitor-up", "text-emerald-400");
         } catch (err) {
@@ -1540,6 +1590,7 @@
     };
 
     window.stopTeacherBroadcast = () => {
+        if (irsState.transportMode === 'hybrid-relay') irsState.transport?.media?.stopTeacher();
         if (localScreenStream) {
             localScreenStream.getTracks().forEach(t => t.stop());
             localScreenStream = null;

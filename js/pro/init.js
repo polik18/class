@@ -86,7 +86,7 @@
     })();
 
     // ===========================================================================
-    // ✨ 三(JS)：MutationObserver 自動更新10台上限警告
+    // ✨ 三(JS)：MutationObserver 人數超過已驗證範圍時提醒
     // ===========================================================================
     (() => {
         const countEl = document.getElementById('irs-student-count');
@@ -95,8 +95,7 @@
             const w = document.getElementById('irs-capacity-warning');
             if (!w) return;
             const count = parseInt(countEl.textContent || '0');
-            const isInternet = window._irsNetworkMode !== 'lan';
-            if (isInternet && count >= 8) {
+            if (count > 30) {
                 w.classList.remove('hidden');
                 w.classList.add('flex');
                 if (window.lucide) lucide.createIcons({ root: w });

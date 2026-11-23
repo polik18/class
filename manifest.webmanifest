@@ -1,0 +1,14 @@
+{
+  "name": "智慧課堂助手｜Polik Classroom",
+  "short_name": "課堂助手",
+  "description": "抽籤、計時、計分、白板與 IRS 即時問答的課堂工具",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#05070d",
+  "theme_color": "#05070d",
+  "lang": "zh-Hant-TW",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

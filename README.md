@@ -59,6 +59,12 @@
 * `index.html`：正式版唯一入口，具備抽籤、時間管理、計分、白板、資料匯出入與 IRS 即時問答。
 * `exam.html`：考場資訊大螢幕，可由正式版的時間管理功能進入。
 * `docs/IRS_HYBRID_IMPROVEMENT_PLAN.md`：IRS 採用 P2P 優先、Cloudflare 協助配對與備援中繼、本機保存資料的分階段改善計畫。
+* `docs/CLASS_IMPROVEMENT_PLAN_2026-11.md`：2026-11 全面改善計畫（Polik 識別、介面、離線、Swarm 裝置互助中繼）與完成度。
+* `js/pro/irs-swarm.js`、`js/pro/irs-media.js`：Swarm 裝置互助中繼（問答資料簽章＋加密）與混合模式畫面廣播。
+* `src/exam.jsx`：考場看板的 JSX 原始碼，編譯成 `js/exam.js`。
+* `tools/tailwind/`：Tailwind 與 esbuild 建置設定。**修改 HTML／JS 裡的 class 或 `src/exam.jsx` 後**，在此目錄執行 `npm install`（第一次）與 `npm run build`，並提交 `css/`、`js/exam.js` 的產物。
+* `tools/load/swarm_browser_load.py`：混合模式／Swarm 本機瀏覽器壓測。
+* `sw.js`、`manifest.webmanifest`：離線快取與安裝設定；**更新快取清單時記得改 `sw.js` 的 `VERSION`**。
 
 ---
 
@@ -90,7 +96,9 @@
 
 ### 1. WebRTC (IRS) 最大連線人數與環境要求
 * IRS 優先使用 WebRTC 點對點連線技術；混合傳輸仍在分階段驗證。
-* **推薦人數上限**：大約在 **30 - 50 名學生之內**是最穩定的。一旦一次性連入的裝置突破 60 台，老師端電腦（主機）的瀏覽器需要大量的 CPU 及頻寬處理每一條線，可能會產生系統卡頓或斷線。
+* **已驗證人數**：目前以 **30 人以內**為穩定範圍；更高人數仍在實機壓測中（見 `docs/CLASS_IMPROVEMENT_PLAN_2026-11.md`），驗證完成前不宣稱支援 60 人以上。
+* **TURN 中繼**：原本使用的公用 openrelay TURN 已停止服務並於 2026-11 移除；直連失敗時請改用同一 Wi-Fi 的校內模式，或等待混合模式（Cloudflare 中繼備援）轉為預設。
+* **混合模式與裝置互助（測試中）**：老師網址加 `?transport=hybrid` 啟用「P2P 直連＋Cloudflare 雲端中繼備援」；再加 `&swarm=1` 讓已直連的學生裝置升格為中繼，分擔老師的連線與畫面廣播。本機壓測結果見改善計畫第 8 節；完成校園實機驗收前不設為預設。
 * **學校防火牆限制**：WebRTC 協定非常容易被某些中小學極嚴格的防火牆或 MIS 阻擋。若您發現「產生不出連線代碼」或「學生打入代碼一直轉圈圈進不來」，極大機率是您校內的網段封鎖了 P2P UDP 連線通訊埠。
 
 ### 2. 關於資料保存

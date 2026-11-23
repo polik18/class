@@ -1,0 +1,8 @@
+/* 投影高對比（淺色）模式：教室投影機容易把深色畫面洗白，切換後整頁反轉為淺底深字。
+   以根元素濾鏡反轉明暗、保留色相；影像、影片與 QR Code 再反轉回原色。 */
+html.cl-light { filter: invert(1) hue-rotate(180deg); background: #05070d; }
+html.cl-light :is(img, video, picture, #qrcode-container, #student-join-qrcode, #global-qrcode, .qr-card) { filter: invert(1) hue-rotate(180deg); }
+html.cl-light .qr-card :is(#qrcode-container) { filter: none; }
+html.cl-light .pk-atmo { opacity: .35; }
+html.cl-light [class*="shadow-[0_0"], html.cl-light [class*="drop-shadow"] { --tw-drop-shadow: none; }
+@media print { html.cl-light { filter: none; } }
