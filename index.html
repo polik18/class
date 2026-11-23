@@ -96,6 +96,7 @@
 
   <link rel="stylesheet" href="css/pro.css">
   <link rel="stylesheet" href="css/projector.css">
+  <link rel="stylesheet" href="css/game.css">
   <script>try { if (new URLSearchParams(location.search).get("theme") === "light" || localStorage.getItem("class_theme") === "light") document.documentElement.classList.add("cl-light"); } catch (e) {}</script>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Noto+Sans+TC:wght@400;500;700;900&family=Space+Grotesk:wght@500;600;700&display=swap">
   <script src="https://polik18.github.io/assets/polik-shell.js" data-cat="education" data-skin="neo" data-grain="off" data-accent="#818cf8" data-accent2="#f472b6" data-accent3="#a855f7" data-side="left" defer></script>
@@ -1467,6 +1468,16 @@
           <div class="bg-slate-900/60 rounded-3xl border border-white/10 backdrop-blur-sm shadow-xl p-6 flex-1 flex flex-col gap-4 relative">
              <h3 class="font-bold text-emerald-400 flex items-center gap-2 mb-1"><i data-lucide="send" class="w-5 h-5"></i> 課堂互動</h3>
 
+             <!-- 闖關模式入口 -->
+             <button type="button" id="irs-game-btn" onclick="IrsGame.open()" class="group w-full text-left rounded-2xl p-4 bg-gradient-to-r from-indigo-600/40 via-purple-600/30 to-pink-600/30 hover:from-indigo-600/60 hover:to-pink-600/50 border border-indigo-400/40 transition-all active:scale-[.98] flex items-center gap-3 shadow-lg shadow-purple-500/20">
+               <span class="cl-brand-mark shrink-0" style="width:42px;height:42px"><i data-lucide="gamepad-2" class="w-5 h-5"></i></span>
+               <span class="flex flex-col">
+                 <span class="font-black text-white text-base">闖關模式</span>
+                 <span class="text-xs text-indigo-200">題目上大螢幕、倒數搶分、排行榜與頒獎</span>
+               </span>
+               <i data-lucide="chevron-right" class="w-5 h-5 ml-auto text-indigo-200 group-hover:translate-x-1 transition-transform"></i>
+             </button>
+
              <!-- 待命狀態：發佈題目啟動器 -->
              <div id="irs-q-launcher" class="flex flex-col flex-1 relative gap-3">
                  <!-- 1. 測驗題型 (下拉面板) -->
@@ -1713,6 +1724,9 @@
   <script defer src="js/pro/board.js"></script>
   <script defer src="js/pro/irs-protocol.js"></script>
   <script defer src="js/pro/irs-persistence.js"></script>
+  <script defer src="js/pro/irs-sound.js"></script>
+  <script defer src="js/pro/irs-quiz-bank.js"></script>
+  <script defer src="js/pro/irs-game.js"></script>
   <script defer src="js/pro/irs-swarm.js"></script>
   <script defer src="js/pro/irs-media.js"></script>
   <script defer src="js/pro/irs-transport.js"></script>

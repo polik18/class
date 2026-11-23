@@ -689,8 +689,11 @@
             conn.send({ type: 'chat_toggle', enabled: isChatAllowed });
         }
 
-        // 如果目前有題目，補發給剛加入的學生
-        if (irsState.currentQ) {
+        // 闖關模式進行中：交給遊戲模組補送目前階段
+        if (window.IrsGame?.onStudentJoin(peerId, conn)) {
+           // 已由 IrsGame 同步
+        } else if (irsState.currentQ && irsState.currentQ !== 'GAME') {
+           // 如果目前有題目，補發給剛加入的學生
            conn.send({ type: 'question', qType: irsState.currentQ, questionId: irsState.currentQuestionId });
         }
       } else if (data.type === 'answer') {
@@ -709,6 +712,8 @@
                    // 文字作答送出提示音
                    if (audioCtx.state === 'suspended') audioCtx.resume();
                    playScoreSound('add'); 
+               } else if (irsState.currentQ === 'GAME') {
+                   window.IrsGame?.onAnswer(peerId, data);
                }
                updateTeacherUI();
            }
@@ -1239,6 +1244,7 @@
     };
 
     window.joinIRS = () => {
+      try { window.IrsSound?.unlock(); } catch (e) {}
       if (audioCtx.state === 'suspended') audioCtx.resume();
       const joinId = irsEls.joinId.value.trim().toUpperCase();
       const joinName = irsEls.joinName.value.trim();
@@ -1331,6 +1337,10 @@
     };
 
     const handleStudentReceive = (data) => {
+       if (data && data.type === 'game') {
+          window.IrsGame?.onStudentMessage(data);
+          return;
+       }
        if (data.type === 'sync_mode') {
           if (data.mode !== appState.currentMode) {
              switchAppMode(data.mode);

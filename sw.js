@@ -2,14 +2,14 @@
    - 本站檔案：網路優先，失敗時用快取（確保更新後立即生效，斷網仍可開啟）
    - 鎖定版本的 CDN 程式庫：快取優先
    - 不快取：即時問答 API、統計、分析與任何非 GET 請求 */
-const VERSION = 'class-v2026-11-23';
+const VERSION = 'class-v2026-11-23-game';
 const SHELL = [
   './', './index.html', './exam.html', './manifest.webmanifest',
-  './css/tailwind.css', './css/pro.css', './css/projector.css', './css/exam-tailwind.css',
+  './css/tailwind.css', './css/pro.css', './css/projector.css', './css/exam-tailwind.css', './css/game.css', './sound-lab.html',
   './js/exam.js', './icon.svg',
   './js/pro/utils.js', './js/pro/app.js', './js/pro/draw.js', './js/pro/clock.js', './js/pro/timer.js',
   './js/pro/score.js', './js/pro/board.js', './js/pro/irs-protocol.js', './js/pro/irs-persistence.js',
-  './js/pro/irs-swarm.js', './js/pro/irs-media.js', './js/pro/irs-transport.js', './js/pro/irs.js', './js/pro/data.js', './js/pro/init.js',
+  './js/pro/irs-sound.js', './js/pro/irs-quiz-bank.js', './js/pro/irs-game.js', './js/pro/irs-swarm.js', './js/pro/irs-media.js', './js/pro/irs-transport.js', './js/pro/irs.js', './js/pro/data.js', './js/pro/init.js',
   './audio/start.mp3', './audio/end.mp3'
 ];
 const CDN_HOSTS = ['unpkg.com', 'cdnjs.cloudflare.com', 'fonts.googleapis.com', 'fonts.gstatic.com'];

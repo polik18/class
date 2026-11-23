@@ -20,7 +20,9 @@
         stop_screen_share: 'app.stop-screen-share',
         teacher_request_screen: 'app.teacher-request-screen',
         approve_screen_share: 'app.approve-screen-share',
-        deny_screen_share: 'app.deny-screen-share'
+        deny_screen_share: 'app.deny-screen-share',
+        // 闖關模式訊息借用後端已允許的 app.question 型別，免重新部署 Worker；接收端依 payload.legacy.type 分派
+        game: 'app.question'
     });
 
     function randomId(prefix = 'msg') {
